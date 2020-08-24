@@ -26,7 +26,7 @@ func (q *Queries) CreateTimezone(ctx context.Context, arg CreateTimezoneParams) 
 }
 
 const deleteTimezone = `-- name: DeleteTimezone :exec
-delete from timezones where id == $1 or "name" == $1
+delete from timezones where id = $1 or "name" = $1
 `
 
 func (q *Queries) DeleteTimezone(ctx context.Context, id int64) error {
@@ -36,7 +36,7 @@ func (q *Queries) DeleteTimezone(ctx context.Context, id int64) error {
 
 const getTimezone = `-- name: GetTimezone :one
 select id, name, zone from timezones where 
-id == $1 or "name" == $1 limit 1
+id = $1 or "name" = $1 limit 1
 `
 
 func (q *Queries) GetTimezone(ctx context.Context, id int64) (Timezone, error) {
@@ -74,7 +74,7 @@ func (q *Queries) GetTimezones(ctx context.Context) ([]Timezone, error) {
 }
 
 const updateTimezone = `-- name: UpdateTimezone :one
-update timezones set "name" = $1, "zone" = $2 where "name" == $3
+update timezones set "name" = $1, "zone" = $2 where "name" = $3
 returning id, name, zone
 `
 

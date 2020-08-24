@@ -9,7 +9,7 @@ import (
 )
 
 const deleteCountry = `-- name: DeleteCountry :exec
-delete from countries where id == $1 or "name" == $1 or flag_image_url == $1
+delete from countries where id = $1 or "name" = $1 or flag_image_url = $1
 `
 
 func (q *Queries) DeleteCountry(ctx context.Context, id int64) error {
@@ -45,7 +45,7 @@ func (q *Queries) GetCountries(ctx context.Context) ([]Country, error) {
 }
 
 const getCountry = `-- name: GetCountry :one
-select id, name, flag_image_url from countries where id == $1 or "name" == $1 limit 1
+select id, name, flag_image_url from countries where id = $1 or "name" = $1 limit 1
 `
 
 func (q *Queries) GetCountry(ctx context.Context, id int64) (Country, error) {
@@ -56,7 +56,7 @@ func (q *Queries) GetCountry(ctx context.Context, id int64) (Country, error) {
 }
 
 const updateCountry = `-- name: UpdateCountry :one
-update countries set "name" = $1, flag_image_url = $2 where "name" == $3
+update countries set "name" = $1, flag_image_url = $2 where "name" = $3
 returning id, name, flag_image_url
 `
 

@@ -18,19 +18,14 @@ FROM alpine
 
 RUN apk --no-cache update && \
       apk --no-cache add ca-certificates && \
-      rm -rf /var/cache/apk/*
+      rm -rf /var/cache/apk/* &&\
+      mkdir /usr/local/bin/log && \
+      touch /usr/local/bin/log/authengine.log
       
 COPY --from=builder /opt/app/app /usr/local/bin/app
-RUN mkdir /usr/local/bin/log && \
-      touch /usr/local/bin/log/authengine.log 
+ 
 
-ENV LOG_FILE_LOCATION=/usr/local/bin/log/authengine.log
-ENV DB_HOST=127.0.0.1
-ENV DB_PORT=8669
-ENV DB_USER=postgres
-ENV DB_PASSWORD=Sarah4Daprinz
-ENV DB_NAME=persian_black
-ENV DB_SSL_MODE=disable
+ENV LOG_FILE_LOCATION=/usr/local/bin/log/authengine.log DB_HOST=host.docker.internal DB_PORT=8669 DB_USER=postgres DB_PASSWORD=Sarah4Daprinz DB_NAME=persian_black DB_SSL_MODE=disable
 
 
 CMD ["/usr/local/bin/app", "--help"]

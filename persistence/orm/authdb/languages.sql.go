@@ -8,7 +8,7 @@ import (
 )
 
 const deleteLanguage = `-- name: DeleteLanguage :exec
-delete from languages where id == $1 or "name" == $1
+delete from languages where id = $1 or "name" = $1
 `
 
 func (q *Queries) DeleteLanguage(ctx context.Context, id int64) error {
@@ -17,7 +17,7 @@ func (q *Queries) DeleteLanguage(ctx context.Context, id int64) error {
 }
 
 const getLanguage = `-- name: GetLanguage :one
-select id, name from languages where id == $1 or "name" == $1 limit 1
+select id, name from languages where id = $1 or "name" = $1 limit 1
 `
 
 func (q *Queries) GetLanguage(ctx context.Context, id int64) (Language, error) {
@@ -55,7 +55,7 @@ func (q *Queries) GetLanguages(ctx context.Context) ([]Language, error) {
 }
 
 const updateLanguage = `-- name: UpdateLanguage :one
-update languages set "name" = $1 where "name" == $2
+update languages set "name" = $1 where "name" = $2
 returning id, name
 `
 

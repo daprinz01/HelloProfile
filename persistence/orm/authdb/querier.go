@@ -7,10 +7,6 @@ import (
 	"database/sql"
 )
 
-type DB struct {
-	*sql.DB
-}
-
 type Querier interface {
 	AddApplicationRole(ctx context.Context, arg AddApplicationRoleParams) (ApplicationsRole, error)
 	AddUserLanguage(ctx context.Context, arg AddUserLanguageParams) (UserLanguage, error)
@@ -58,14 +54,3 @@ type Querier interface {
 }
 
 var _ Querier = (*Queries)(nil)
-
-func NewDB(dataSourceName string) (*DB, error) {
-	db, err := sql.Open("postgres", dataSourceName)
-	if err != nil {
-		return nil, err
-	}
-	if err = db.Ping(); err != nil {
-		return nil, err
-	}
-	return &DB{db}, nil
-}

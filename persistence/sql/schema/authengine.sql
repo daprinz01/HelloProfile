@@ -116,7 +116,7 @@ create TABLE "states" (
 -- full join identity_providers m on m.id == (select identity_provider_id from user_providers n where n.user_id == b.id);
 
 create table  user_details(
-    "id" bigserial primary key,
+    
   "firstname" varchar  null,
   "lastname" varchar  null,
   "username" varchar  null,

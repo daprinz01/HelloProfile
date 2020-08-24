@@ -43,7 +43,7 @@ func (q *Queries) CreateIdentityProvider(ctx context.Context, arg CreateIdentity
 }
 
 const deleteIdentityProvider = `-- name: DeleteIdentityProvider :exec
-delete from identity_providers where id == $1 or "name" == $1
+delete from identity_providers where id = $1 or "name" = $1
 `
 
 func (q *Queries) DeleteIdentityProvider(ctx context.Context, id int64) error {
@@ -52,7 +52,7 @@ func (q *Queries) DeleteIdentityProvider(ctx context.Context, id int64) error {
 }
 
 const getIdentityProvider = `-- name: GetIdentityProvider :one
-select id, name, client_id, client_secret, image_url from identity_providers where id == $1 or "name" == $1 limit 1
+select id, name, client_id, client_secret, image_url from identity_providers where id = $1 or "name" = $1 limit 1
 `
 
 func (q *Queries) GetIdentityProvider(ctx context.Context, id int64) (IdentityProvider, error) {
@@ -102,7 +102,7 @@ func (q *Queries) GetIdentityProviders(ctx context.Context) ([]IdentityProvider,
 }
 
 const updateIdentityProvider = `-- name: UpdateIdentityProvider :one
-update identity_providers set "name" = $1, "client_id" = $2, client_secret = $3, image_url = $4 where "name" == $5
+update identity_providers set "name" = $1, "client_id" = $2, client_secret = $3, image_url = $4 where "name" = $5
 returning id, name, client_id, client_secret, image_url
 `
 

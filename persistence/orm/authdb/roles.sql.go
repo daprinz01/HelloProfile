@@ -26,7 +26,7 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 }
 
 const deleteRoles = `-- name: DeleteRoles :exec
-delete from roles where id == $1 or "name" == $1
+delete from roles where id = $1 or "name" = $1
 `
 
 func (q *Queries) DeleteRoles(ctx context.Context, id int64) error {
@@ -36,7 +36,7 @@ func (q *Queries) DeleteRoles(ctx context.Context, id int64) error {
 
 const getRole = `-- name: GetRole :one
 select id, name, description from roles where 
-id == $1 or "name" == $1 limit 1
+id = $1 or "name" = $1 limit 1
 `
 
 func (q *Queries) GetRole(ctx context.Context, id int64) (Role, error) {
@@ -74,7 +74,7 @@ func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
 }
 
 const updateRole = `-- name: UpdateRole :one
-update roles set "name" = $1, "description" = $2 where "name" == $3
+update roles set "name" = $1, "description" = $2 where "name" = $3
 returning id, name, description
 `
 

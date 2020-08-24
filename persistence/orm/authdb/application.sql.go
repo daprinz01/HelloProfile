@@ -11,8 +11,8 @@ import (
 const addApplicationRole = `-- name: AddApplicationRole :one
 insert into applications_roles (
     applications_id, roles_id) 
-values ((select a.id from applications a where a.id == $1 or a."name" == $1), 
-(select b.id from roles b where b.id == $2 or b."name" == $2))
+values ((select a.id from applications a where a.id = $1 or a."name" = $1), 
+(select b.id from roles b where b.id = $2 or b."name" = $2))
 returning id, applications_id, roles_id
 `
 
@@ -56,7 +56,7 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 }
 
 const deleteApplication = `-- name: DeleteApplication :exec
-delete from applications where id == $1 or "name" == $1
+delete from applications where id = $1 or "name" = $1
 `
 
 func (q *Queries) DeleteApplication(ctx context.Context, id int64) error {
@@ -65,7 +65,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, id int64) error {
 }
 
 const getApplication = `-- name: GetApplication :one
-select id, name, description, created_at from applications where id == $1 or "name" == $1 limit 1
+select id, name, description, created_at from applications where id = $1 or "name" = $1 limit 1
 `
 
 func (q *Queries) GetApplication(ctx context.Context, id int64) (Application, error) {
@@ -114,7 +114,7 @@ func (q *Queries) GetApplications(ctx context.Context) ([]Application, error) {
 
 const updateApplication = `-- name: UpdateApplication :one
 update applications set "name" = $1, "description" = $2, created_at = $3 
-where "name" == $4
+where "name" = $4
 returning id, name, description, created_at
 `
 
@@ -143,10 +143,10 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 }
 
 const updateApplicationRole = `-- name: UpdateApplicationRole :one
-update applications_roles set applications_id = (select a.id from applications a where a.id == $1 or a."name" == $1 limit 1) , 
-roles_id = (select b.id from roles b where b.id == $2 or b."name" == $2) 
-where applications_id == (select c.id from applications c where c.id == $3 or c."name" == $3 limit 1) 
-and roles_id == (select d.id from roles d where d.id == $4 or d.name == $4 limit 1) 
+update applications_roles set applications_id = (select a.id from applications a where a.id = $1 or a."name" = $1 limit 1) , 
+roles_id = (select b.id from roles b where b.id = $2 or b."name" = $2) 
+where applications_id = (select c.id from applications c where c.id = $3 or c."name" = $3 limit 1) 
+and roles_id = (select d.id from roles d where d.id = $4 or d.name = $4 limit 1) 
 returning id, applications_id, roles_id
 `
 

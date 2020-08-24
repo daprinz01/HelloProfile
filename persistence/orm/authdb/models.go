@@ -77,7 +77,6 @@ type User struct {
 }
 
 type UserDetail struct {
-	ID                        int64          `json:"id"`
 	Firstname                 sql.NullString `json:"firstname"`
 	Lastname                  sql.NullString `json:"lastname"`
 	Username                  sql.NullString `json:"username"`
@@ -91,7 +90,7 @@ type UserDetail struct {
 	Country                   sql.NullString `json:"country"`
 	CreatedAt                 time.Time      `json:"created_at"`
 	IsLockedOut               bool           `json:"is_locked_out"`
-	ImageUrl                  sql.NullString `json:"image_url"`
+	ProfilePicture            sql.NullString `json:"profile_picture"`
 	IsActive                  bool           `json:"is_active"`
 	LanguageName              sql.NullString `json:"language_name"`
 	RoleName                  sql.NullString `json:"role_name"`
