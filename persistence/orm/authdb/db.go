@@ -43,6 +43,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createIdentityProviderStmt, err = db.PrepareContext(ctx, createIdentityProvider); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateIdentityProvider: %w", err)
 	}
+	if q.createRefreshTokenStmt, err = db.PrepareContext(ctx, createRefreshToken); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateRefreshToken: %w", err)
+	}
 	if q.createRoleStmt, err = db.PrepareContext(ctx, createRole); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateRole: %w", err)
 	}
@@ -63,6 +66,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteLanguageStmt, err = db.PrepareContext(ctx, deleteLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteLanguage: %w", err)
+	}
+	if q.deleteRefreshTokenStmt, err = db.PrepareContext(ctx, deleteRefreshToken); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteRefreshToken: %w", err)
 	}
 	if q.deleteRolesStmt, err = db.PrepareContext(ctx, deleteRoles); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteRoles: %w", err)
@@ -97,6 +103,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getLanguagesStmt, err = db.PrepareContext(ctx, getLanguages); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLanguages: %w", err)
 	}
+	if q.getRefreshTokenStmt, err = db.PrepareContext(ctx, getRefreshToken); err != nil {
+		return nil, fmt.Errorf("error preparing query GetRefreshToken: %w", err)
+	}
+	if q.getRefreshTokensStmt, err = db.PrepareContext(ctx, getRefreshTokens); err != nil {
+		return nil, fmt.Errorf("error preparing query GetRefreshTokens: %w", err)
+	}
 	if q.getRoleStmt, err = db.PrepareContext(ctx, getRole); err != nil {
 		return nil, fmt.Errorf("error preparing query GetRole: %w", err)
 	}
@@ -129,6 +141,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateLanguageStmt, err = db.PrepareContext(ctx, updateLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateLanguage: %w", err)
+	}
+	if q.updateRefreshTokenStmt, err = db.PrepareContext(ctx, updateRefreshToken); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateRefreshToken: %w", err)
 	}
 	if q.updateRoleStmt, err = db.PrepareContext(ctx, updateRole); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateRole: %w", err)
@@ -191,6 +206,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createIdentityProviderStmt: %w", cerr)
 		}
 	}
+	if q.createRefreshTokenStmt != nil {
+		if cerr := q.createRefreshTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createRefreshTokenStmt: %w", cerr)
+		}
+	}
 	if q.createRoleStmt != nil {
 		if cerr := q.createRoleStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createRoleStmt: %w", cerr)
@@ -224,6 +244,11 @@ func (q *Queries) Close() error {
 	if q.deleteLanguageStmt != nil {
 		if cerr := q.deleteLanguageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteLanguageStmt: %w", cerr)
+		}
+	}
+	if q.deleteRefreshTokenStmt != nil {
+		if cerr := q.deleteRefreshTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteRefreshTokenStmt: %w", cerr)
 		}
 	}
 	if q.deleteRolesStmt != nil {
@@ -281,6 +306,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getLanguagesStmt: %w", cerr)
 		}
 	}
+	if q.getRefreshTokenStmt != nil {
+		if cerr := q.getRefreshTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getRefreshTokenStmt: %w", cerr)
+		}
+	}
+	if q.getRefreshTokensStmt != nil {
+		if cerr := q.getRefreshTokensStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getRefreshTokensStmt: %w", cerr)
+		}
+	}
 	if q.getRoleStmt != nil {
 		if cerr := q.getRoleStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getRoleStmt: %w", cerr)
@@ -334,6 +369,11 @@ func (q *Queries) Close() error {
 	if q.updateLanguageStmt != nil {
 		if cerr := q.updateLanguageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateLanguageStmt: %w", cerr)
+		}
+	}
+	if q.updateRefreshTokenStmt != nil {
+		if cerr := q.updateRefreshTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateRefreshTokenStmt: %w", cerr)
 		}
 	}
 	if q.updateRoleStmt != nil {
@@ -417,6 +457,7 @@ type Queries struct {
 	addUserTimezoneStmt        *sql.Stmt
 	createApplicationStmt      *sql.Stmt
 	createIdentityProviderStmt *sql.Stmt
+	createRefreshTokenStmt     *sql.Stmt
 	createRoleStmt             *sql.Stmt
 	createTimezoneStmt         *sql.Stmt
 	createUserStmt             *sql.Stmt
@@ -424,6 +465,7 @@ type Queries struct {
 	deleteCountryStmt          *sql.Stmt
 	deleteIdentityProviderStmt *sql.Stmt
 	deleteLanguageStmt         *sql.Stmt
+	deleteRefreshTokenStmt     *sql.Stmt
 	deleteRolesStmt            *sql.Stmt
 	deleteTimezoneStmt         *sql.Stmt
 	deleteUserStmt             *sql.Stmt
@@ -435,6 +477,8 @@ type Queries struct {
 	getIdentityProvidersStmt   *sql.Stmt
 	getLanguageStmt            *sql.Stmt
 	getLanguagesStmt           *sql.Stmt
+	getRefreshTokenStmt        *sql.Stmt
+	getRefreshTokensStmt       *sql.Stmt
 	getRoleStmt                *sql.Stmt
 	getRolesStmt               *sql.Stmt
 	getTimezoneStmt            *sql.Stmt
@@ -446,6 +490,7 @@ type Queries struct {
 	updateCountryStmt          *sql.Stmt
 	updateIdentityProviderStmt *sql.Stmt
 	updateLanguageStmt         *sql.Stmt
+	updateRefreshTokenStmt     *sql.Stmt
 	updateRoleStmt             *sql.Stmt
 	updateTimezoneStmt         *sql.Stmt
 	updateUserStmt             *sql.Stmt
@@ -466,6 +511,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		addUserTimezoneStmt:        q.addUserTimezoneStmt,
 		createApplicationStmt:      q.createApplicationStmt,
 		createIdentityProviderStmt: q.createIdentityProviderStmt,
+		createRefreshTokenStmt:     q.createRefreshTokenStmt,
 		createRoleStmt:             q.createRoleStmt,
 		createTimezoneStmt:         q.createTimezoneStmt,
 		createUserStmt:             q.createUserStmt,
@@ -473,6 +519,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteCountryStmt:          q.deleteCountryStmt,
 		deleteIdentityProviderStmt: q.deleteIdentityProviderStmt,
 		deleteLanguageStmt:         q.deleteLanguageStmt,
+		deleteRefreshTokenStmt:     q.deleteRefreshTokenStmt,
 		deleteRolesStmt:            q.deleteRolesStmt,
 		deleteTimezoneStmt:         q.deleteTimezoneStmt,
 		deleteUserStmt:             q.deleteUserStmt,
@@ -484,6 +531,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getIdentityProvidersStmt:   q.getIdentityProvidersStmt,
 		getLanguageStmt:            q.getLanguageStmt,
 		getLanguagesStmt:           q.getLanguagesStmt,
+		getRefreshTokenStmt:        q.getRefreshTokenStmt,
+		getRefreshTokensStmt:       q.getRefreshTokensStmt,
 		getRoleStmt:                q.getRoleStmt,
 		getRolesStmt:               q.getRolesStmt,
 		getTimezoneStmt:            q.getTimezoneStmt,
@@ -495,6 +544,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateCountryStmt:          q.updateCountryStmt,
 		updateIdentityProviderStmt: q.updateIdentityProviderStmt,
 		updateLanguageStmt:         q.updateLanguageStmt,
+		updateRefreshTokenStmt:     q.updateRefreshTokenStmt,
 		updateRoleStmt:             q.updateRoleStmt,
 		updateTimezoneStmt:         q.updateTimezoneStmt,
 		updateUserStmt:             q.updateUserStmt,

@@ -8,7 +8,7 @@ import (
 )
 
 const createRole = `-- name: CreateRole :one
-insert into roles ("name", "description")
+insert into roles (name, "description")
 values ($1, $2)
 returning id, name, description
 `
@@ -26,21 +26,21 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 }
 
 const deleteRoles = `-- name: DeleteRoles :exec
-delete from roles where id = $1 or "name" = $1
+delete from roles where name = $1
 `
 
-func (q *Queries) DeleteRoles(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.deleteRolesStmt, deleteRoles, id)
+func (q *Queries) DeleteRoles(ctx context.Context, name string) error {
+	_, err := q.exec(ctx, q.deleteRolesStmt, deleteRoles, name)
 	return err
 }
 
 const getRole = `-- name: GetRole :one
 select id, name, description from roles where 
-id = $1 or "name" = $1 limit 1
+name = $1  limit 1
 `
 
-func (q *Queries) GetRole(ctx context.Context, id int64) (Role, error) {
-	row := q.queryRow(ctx, q.getRoleStmt, getRole, id)
+func (q *Queries) GetRole(ctx context.Context, name string) (Role, error) {
+	row := q.queryRow(ctx, q.getRoleStmt, getRole, name)
 	var i Role
 	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
@@ -74,7 +74,7 @@ func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
 }
 
 const updateRole = `-- name: UpdateRole :one
-update roles set "name" = $1, "description" = $2 where "name" = $3
+update roles set name = $1, "description" = $2 where name = $3
 returning id, name, description
 `
 

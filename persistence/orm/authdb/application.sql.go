@@ -11,18 +11,18 @@ import (
 const addApplicationRole = `-- name: AddApplicationRole :one
 insert into applications_roles (
     applications_id, roles_id) 
-values ((select a.id from applications a where a.id = $1 or a."name" = $1), 
-(select b.id from roles b where b.id = $2 or b."name" = $2))
+values ((select a.id from applications a where  a.name = $1), 
+(select b.id from roles b where  b.name = $2))
 returning id, applications_id, roles_id
 `
 
 type AddApplicationRoleParams struct {
-	ID   int64 `json:"id"`
-	ID_2 int64 `json:"id_2"`
+	Name   string `json:"name"`
+	Name_2 string `json:"name_2"`
 }
 
 func (q *Queries) AddApplicationRole(ctx context.Context, arg AddApplicationRoleParams) (ApplicationsRole, error) {
-	row := q.queryRow(ctx, q.addApplicationRoleStmt, addApplicationRole, arg.ID, arg.ID_2)
+	row := q.queryRow(ctx, q.addApplicationRoleStmt, addApplicationRole, arg.Name, arg.Name_2)
 	var i ApplicationsRole
 	err := row.Scan(&i.ID, &i.ApplicationsID, &i.RolesID)
 	return i, err
@@ -30,7 +30,7 @@ func (q *Queries) AddApplicationRole(ctx context.Context, arg AddApplicationRole
 
 const createApplication = `-- name: CreateApplication :one
 insert into applications (
-  "name",
+  name,
   "description",
   "created_at")
   values($1, $2, $3)
@@ -56,20 +56,20 @@ func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationPa
 }
 
 const deleteApplication = `-- name: DeleteApplication :exec
-delete from applications where id = $1 or "name" = $1
+delete from applications where name = $1
 `
 
-func (q *Queries) DeleteApplication(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.deleteApplicationStmt, deleteApplication, id)
+func (q *Queries) DeleteApplication(ctx context.Context, name string) error {
+	_, err := q.exec(ctx, q.deleteApplicationStmt, deleteApplication, name)
 	return err
 }
 
 const getApplication = `-- name: GetApplication :one
-select id, name, description, created_at from applications where id = $1 or "name" = $1 limit 1
+select id, name, description, created_at from applications where name = $1  limit 1
 `
 
-func (q *Queries) GetApplication(ctx context.Context, id int64) (Application, error) {
-	row := q.queryRow(ctx, q.getApplicationStmt, getApplication, id)
+func (q *Queries) GetApplication(ctx context.Context, name string) (Application, error) {
+	row := q.queryRow(ctx, q.getApplicationStmt, getApplication, name)
 	var i Application
 	err := row.Scan(
 		&i.ID,
@@ -113,8 +113,8 @@ func (q *Queries) GetApplications(ctx context.Context) ([]Application, error) {
 }
 
 const updateApplication = `-- name: UpdateApplication :one
-update applications set "name" = $1, "description" = $2, created_at = $3 
-where "name" = $4
+update applications set name = $1, "description" = $2, created_at = $3 
+where name = $4
 returning id, name, description, created_at
 `
 
@@ -143,26 +143,26 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 }
 
 const updateApplicationRole = `-- name: UpdateApplicationRole :one
-update applications_roles set applications_id = (select a.id from applications a where a.id = $1 or a."name" = $1 limit 1) , 
-roles_id = (select b.id from roles b where b.id = $2 or b."name" = $2) 
-where applications_id = (select c.id from applications c where c.id = $3 or c."name" = $3 limit 1) 
-and roles_id = (select d.id from roles d where d.id = $4 or d.name = $4 limit 1) 
+update applications_roles set applications_id = (select a.id from applications a where  a.name = $1 limit 1) , 
+roles_id = (select b.id from roles b where  b.name = $2) 
+where applications_id = (select c.id from applications c where  c.name = $3 limit 1) 
+and roles_id = (select d.id from roles d where  d.name = $4 limit 1) 
 returning id, applications_id, roles_id
 `
 
 type UpdateApplicationRoleParams struct {
-	ID   int64 `json:"id"`
-	ID_2 int64 `json:"id_2"`
-	ID_3 int64 `json:"id_3"`
-	ID_4 int64 `json:"id_4"`
+	Name   string `json:"name"`
+	Name_2 string `json:"name_2"`
+	Name_3 string `json:"name_3"`
+	Name_4 string `json:"name_4"`
 }
 
 func (q *Queries) UpdateApplicationRole(ctx context.Context, arg UpdateApplicationRoleParams) (ApplicationsRole, error) {
 	row := q.queryRow(ctx, q.updateApplicationRoleStmt, updateApplicationRole,
-		arg.ID,
-		arg.ID_2,
-		arg.ID_3,
-		arg.ID_4,
+		arg.Name,
+		arg.Name_2,
+		arg.Name_3,
+		arg.Name_4,
 	)
 	var i ApplicationsRole
 	err := row.Scan(&i.ID, &i.ApplicationsID, &i.RolesID)

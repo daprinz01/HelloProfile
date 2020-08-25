@@ -39,6 +39,13 @@ type Language struct {
 	Name string `json:"name"`
 }
 
+type RefreshToken struct {
+	ID        int64     `json:"id"`
+	UserID    int64     `json:"user_id"`
+	Token     string    `json:"token"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Role struct {
 	ID          int64  `json:"id"`
 	Name        string `json:"name"`
@@ -77,6 +84,7 @@ type User struct {
 }
 
 type UserDetail struct {
+	ID                        int64          `json:"id"`
 	Firstname                 sql.NullString `json:"firstname"`
 	Lastname                  sql.NullString `json:"lastname"`
 	Username                  sql.NullString `json:"username"`

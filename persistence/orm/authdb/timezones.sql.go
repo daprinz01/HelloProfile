@@ -8,7 +8,7 @@ import (
 )
 
 const createTimezone = `-- name: CreateTimezone :one
-insert into timezones ("name", "zone")
+insert into timezones (name, "zone")
 values ($1, $2)
 returning id, name, zone
 `
@@ -26,21 +26,21 @@ func (q *Queries) CreateTimezone(ctx context.Context, arg CreateTimezoneParams) 
 }
 
 const deleteTimezone = `-- name: DeleteTimezone :exec
-delete from timezones where id = $1 or "name" = $1
+delete from timezones where name = $1
 `
 
-func (q *Queries) DeleteTimezone(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.deleteTimezoneStmt, deleteTimezone, id)
+func (q *Queries) DeleteTimezone(ctx context.Context, name string) error {
+	_, err := q.exec(ctx, q.deleteTimezoneStmt, deleteTimezone, name)
 	return err
 }
 
 const getTimezone = `-- name: GetTimezone :one
 select id, name, zone from timezones where 
-id = $1 or "name" = $1 limit 1
+name = $1 limit 1
 `
 
-func (q *Queries) GetTimezone(ctx context.Context, id int64) (Timezone, error) {
-	row := q.queryRow(ctx, q.getTimezoneStmt, getTimezone, id)
+func (q *Queries) GetTimezone(ctx context.Context, name string) (Timezone, error) {
+	row := q.queryRow(ctx, q.getTimezoneStmt, getTimezone, name)
 	var i Timezone
 	err := row.Scan(&i.ID, &i.Name, &i.Zone)
 	return i, err
@@ -74,7 +74,7 @@ func (q *Queries) GetTimezones(ctx context.Context) ([]Timezone, error) {
 }
 
 const updateTimezone = `-- name: UpdateTimezone :one
-update timezones set "name" = $1, "zone" = $2 where "name" = $3
+update timezones set name = $1, "zone" = $2 where name = $3
 returning id, name, zone
 `
 

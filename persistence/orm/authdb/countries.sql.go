@@ -9,11 +9,11 @@ import (
 )
 
 const deleteCountry = `-- name: DeleteCountry :exec
-delete from countries where id = $1 or "name" = $1 or flag_image_url = $1
+delete from countries where name = $1  or flag_image_url = $1
 `
 
-func (q *Queries) DeleteCountry(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.deleteCountryStmt, deleteCountry, id)
+func (q *Queries) DeleteCountry(ctx context.Context, name string) error {
+	_, err := q.exec(ctx, q.deleteCountryStmt, deleteCountry, name)
 	return err
 }
 
@@ -45,18 +45,18 @@ func (q *Queries) GetCountries(ctx context.Context) ([]Country, error) {
 }
 
 const getCountry = `-- name: GetCountry :one
-select id, name, flag_image_url from countries where id = $1 or "name" = $1 limit 1
+select id, name, flag_image_url from countries where name = $1  limit 1
 `
 
-func (q *Queries) GetCountry(ctx context.Context, id int64) (Country, error) {
-	row := q.queryRow(ctx, q.getCountryStmt, getCountry, id)
+func (q *Queries) GetCountry(ctx context.Context, name string) (Country, error) {
+	row := q.queryRow(ctx, q.getCountryStmt, getCountry, name)
 	var i Country
 	err := row.Scan(&i.ID, &i.Name, &i.FlagImageUrl)
 	return i, err
 }
 
 const updateCountry = `-- name: UpdateCountry :one
-update countries set "name" = $1, flag_image_url = $2 where "name" = $3
+update countries set name = $1, flag_image_url = $2 where name = $3
 returning id, name, flag_image_url
 `
 

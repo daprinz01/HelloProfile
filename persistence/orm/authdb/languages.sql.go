@@ -8,20 +8,20 @@ import (
 )
 
 const deleteLanguage = `-- name: DeleteLanguage :exec
-delete from languages where id = $1 or "name" = $1
+delete from languages where name = $1
 `
 
-func (q *Queries) DeleteLanguage(ctx context.Context, id int64) error {
-	_, err := q.exec(ctx, q.deleteLanguageStmt, deleteLanguage, id)
+func (q *Queries) DeleteLanguage(ctx context.Context, name string) error {
+	_, err := q.exec(ctx, q.deleteLanguageStmt, deleteLanguage, name)
 	return err
 }
 
 const getLanguage = `-- name: GetLanguage :one
-select id, name from languages where id = $1 or "name" = $1 limit 1
+select id, name from languages where name = $1  limit 1
 `
 
-func (q *Queries) GetLanguage(ctx context.Context, id int64) (Language, error) {
-	row := q.queryRow(ctx, q.getLanguageStmt, getLanguage, id)
+func (q *Queries) GetLanguage(ctx context.Context, name string) (Language, error) {
+	row := q.queryRow(ctx, q.getLanguageStmt, getLanguage, name)
 	var i Language
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
@@ -55,7 +55,7 @@ func (q *Queries) GetLanguages(ctx context.Context) ([]Language, error) {
 }
 
 const updateLanguage = `-- name: UpdateLanguage :one
-update languages set "name" = $1 where "name" = $2
+update languages set name = $1 where name = $2
 returning id, name
 `
 
