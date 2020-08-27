@@ -19,6 +19,7 @@ type Querier interface {
 	CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error)
 	CreateTimezone(ctx context.Context, arg CreateTimezoneParams) (Timezone, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	CreateUserLogin(ctx context.Context, arg CreateUserLoginParams) (UserLogin, error)
 	DeleteApplication(ctx context.Context, name string) error
 	DeleteCountry(ctx context.Context, name string) error
 	DeleteIdentityProvider(ctx context.Context, name string) error
@@ -27,6 +28,7 @@ type Querier interface {
 	DeleteRoles(ctx context.Context, name string) error
 	DeleteTimezone(ctx context.Context, name string) error
 	DeleteUser(ctx context.Context) error
+	DeleteUserLogin(ctx context.Context, arg DeleteUserLoginParams) error
 	GetApplication(ctx context.Context, name string) (Application, error)
 	GetApplicationRole(ctx context.Context, arg GetApplicationRoleParams) (ApplicationsRole, error)
 	GetApplications(ctx context.Context) ([]Application, error)
@@ -42,7 +44,10 @@ type Querier interface {
 	GetRoles(ctx context.Context) ([]Role, error)
 	GetTimezone(ctx context.Context, name string) (Timezone, error)
 	GetTimezones(ctx context.Context) ([]Timezone, error)
+	GetUnResoledLogins(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error)
 	GetUser(ctx context.Context, username sql.NullString) (UserDetail, error)
+	GetUserLogin(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error)
+	GetUserLogins(ctx context.Context) ([]UserLogin, error)
 	GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]string, error)
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error)
@@ -51,6 +56,7 @@ type Querier interface {
 	UpdateIdentityProvider(ctx context.Context, arg UpdateIdentityProviderParams) (IdentityProvider, error)
 	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (Language, error)
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (RefreshToken, error)
+	UpdateResolvedLogin(ctx context.Context, userID sql.NullInt64) error
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)
 	UpdateTimezone(ctx context.Context, arg UpdateTimezoneParams) (Timezone, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)

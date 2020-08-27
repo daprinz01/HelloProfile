@@ -148,3 +148,19 @@ create table refresh_token(
     "token" varchar not null,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
+
+create table user_login(
+    id bigserial primary KEY,
+    user_id bigserial,
+    application_id bigserial,
+    login_time TIMESTAMPtz not NULL DEFAULT (now()),
+    login_status BOOLEAN not null DEFAULT FALSE,
+    response_code VARCHAR null,
+    response_description VARCHAR null,
+    device VARCHAR NULL,
+    ip_address VARCHAR null,
+    longitude DECIMAL NULL,
+    latitude DECIMAL NULL,
+    resolved BOOLEAN not null default TRUE
+    
+);

@@ -116,6 +116,21 @@ type UserLanguage struct {
 	LanguageID sql.NullInt64 `json:"language_id"`
 }
 
+type UserLogin struct {
+	ID                  int64          `json:"id"`
+	UserID              sql.NullInt64  `json:"user_id"`
+	ApplicationID       sql.NullInt64  `json:"application_id"`
+	LoginTime           time.Time      `json:"login_time"`
+	LoginStatus         bool           `json:"login_status"`
+	ResponseCode        sql.NullString `json:"response_code"`
+	ResponseDescription sql.NullString `json:"response_description"`
+	Device              sql.NullString `json:"device"`
+	IpAddress           sql.NullString `json:"ip_address"`
+	Longitude           sql.NullString `json:"longitude"`
+	Latitude            sql.NullString `json:"latitude"`
+	Resolved            bool           `json:"resolved"`
+}
+
 type UserProvider struct {
 	ID                 int64         `json:"id"`
 	UserID             sql.NullInt64 `json:"user_id"`

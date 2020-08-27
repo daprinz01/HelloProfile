@@ -23,6 +23,7 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 	log.Println("Login Request received")
 	pathParams := mux.Vars(r)
 	w.Header().Set("Content-Type", "application/json")
+
 	var application string
 	var errorResponse models.Errormessage
 	var err error
@@ -33,6 +34,7 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 			errorResponse.Errorcode = "01"
 			errorResponse.ErrorMessage = "Application not specified"
 			log.Println("Application not specified")
+
 			response, err := json.MarshalIndent(errorResponse, "", "")
 			if err != nil {
 				log.Println(err)
@@ -90,6 +92,18 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 		w.Write(response)
 		return
 	}
+	if user.IsLockedOut {
+		errorResponse.Errorcode = "13"
+		errorResponse.ErrorMessage = "Sorry you exceeded the maximum login attempts... Kindly reset your password to continue..."
+		log.Println("Account was locked out....")
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
 	if util.VerifyHash(user.Password.String, request.Password) {
 		log.Println("Verifying that user is in the role access is being requested...")
 		role := r.Header.Get("Role")
@@ -103,7 +117,7 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 		// log.Println(userRoles)
 		for i := 0; i < len(userRoles); i++ {
 
-			if userRoles[i] == role {
+			if userRoles[i] == strings.ToLower(role) {
 				testRole = userRoles[i]
 				break
 			}
@@ -116,6 +130,7 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errorResponse.Errorcode = "05"
 			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
+
 			response, err := json.MarshalIndent(errorResponse, "", "")
 			if err != nil {
 				log.Println(err)
@@ -136,6 +151,22 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 			}
 
 			log.Println(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
+		}()
+		go func() {
+			err = env.saveLogin(authdb.CreateUserLoginParams{
+				ApplicationID:       sql.NullInt64{Int64: applicationObject.ID, Valid: true},
+				UserID:              sql.NullInt64{Int64: user.ID, Valid: true},
+				ResponseCode:        sql.NullString{String: "00", Valid: true},
+				ResponseDescription: sql.NullString{String: "Success", Valid: true},
+				LoginStatus:         true,
+			})
+			if err != nil {
+				log.Println("Successful login...")
+			}
+			err := env.AuthDb.UpdateResolvedLogin(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
+			if err != nil {
+				log.Println("Error occured clearing failed user logins after successful login...")
+			}
 		}()
 		loginResponse := &models.SuccessResponse{
 			ResponseCode:    "00",
@@ -172,6 +203,70 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "04"
 		errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
 		log.Println("Password incorrect...")
+		go func() {
+			err = env.saveLogin(authdb.CreateUserLoginParams{
+				ApplicationID:       sql.NullInt64{Int64: applicationObject.ID, Valid: true},
+				UserID:              sql.NullInt64{Int64: user.ID, Valid: true},
+				ResponseCode:        sql.NullString{String: errorResponse.Errorcode, Valid: true},
+				ResponseDescription: sql.NullString{String: errorResponse.ErrorMessage, Valid: true},
+				LoginStatus:         false,
+				Resolved:            false,
+			})
+			if err != nil {
+				log.Println(fmt.Sprintf("Password incorrect... %s", err))
+			}
+		}()
+		userLogins, err := env.AuthDb.GetUnResoledLogins(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
+		if err != nil {
+			log.Println(fmt.Sprintf("Error ocurred fetching user logins: %s", err))
+		}
+		var lockoutCount int
+		lockOutCountKey := os.Getenv("LOCK_OUT_COUNT")
+		if lockOutCountKey == "" {
+			log.Println("LOCK_OUT_COUNT cannot be empty")
+			log.Println("LOCK_OUT_COUNT cannot be empty, setting default of 5...")
+		} else {
+			log.Println(fmt.Sprintf("Setting lock out count..."))
+			lockoutCount, err = strconv.Atoi(lockOutCountKey)
+			if err != nil {
+				log.Println(fmt.Sprintf("Error occured while converting lock out count: %s", err))
+			}
+		}
+		// Check if account has exceeded the lockout count
+		if len(userLogins) >= lockoutCount {
+			lockoutUpdate, err := env.AuthDb.UpdateUser(context.Background(), authdb.UpdateUserParams{
+				Username_2:                user.Username,
+				IsLockedOut:               true,
+				Address:                   user.Address,
+				City:                      user.City,
+				Country:                   user.Country,
+				CreatedAt:                 user.CreatedAt,
+				Email:                     user.Email,
+				Firstname:                 user.Firstname,
+				ImageUrl:                  user.ProfilePicture,
+				IsActive:                  user.IsActive,
+				IsEmailConfirmed:          user.IsEmailConfirmed,
+				IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
+				Lastname:                  user.Lastname,
+				Password:                  user.Password,
+				State:                     user.State,
+				Username:                  user.Username,
+			})
+			if err != nil {
+				log.Println(fmt.Sprintf("Error occured while trying to lockout account: %s", err))
+			}
+			log.Println(fmt.Sprintf("Account with username: %s has been locked out", lockoutUpdate.Username.String))
+			errorResponse.Errorcode = "12"
+			errorResponse.ErrorMessage = fmt.Sprintf("Account locked out, kindly reset your password to continue...")
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+
 		response, err := json.MarshalIndent(errorResponse, "", "")
 		if err != nil {
 			log.Println(err)
@@ -182,6 +277,18 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	return
 
+}
+
+// saveLogin is used to log a login request that failed with incorrect password or was successful
+func (env *Env) saveLogin(createParams authdb.CreateUserLoginParams) error {
+
+	userLogin, err := env.AuthDb.CreateUserLogin(context.Background(), createParams)
+	if err != nil {
+		log.Println(fmt.Sprintf("Error occured saving user login: %s", err))
+		return err
+	}
+	log.Println(fmt.Sprintf("Successfully saved user login, user login id: %d", userLogin.ID))
+	return err
 }
 
 // Register is used to register new users
@@ -248,21 +355,21 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 	log.Println("Successfully hashed password")
 	log.Println("Inserting user...")
 	user, err := env.AuthDb.CreateUser(context.Background(), authdb.CreateUserParams{
-		// Address: sql.NullString{String: request.Address, Valid: true},
-		// City:    sql.NullString{String: request.City, Valid: true},
-		// Country: sql.NullString{String: request.Country, Valid: false},
-		CreatedAt: time.Now(),
-		Email:     strings.ToLower(request.Email),
-		// Firstname:                 sql.NullString{String: request.Firstname, Valid: false},
-		// ImageUrl:                  sql.NullString{String: request.ProfilePicture, Valid: false},
-		IsActive: true,
-		// IsEmailConfirmed:          request.IsEmailConfirmed,
-		// IsLockedOut:               request.IsLockedOut,
-		// IsPasswordSystemGenerated: request.IsPasswordSystemGenerated,
-		// Lastname:                  sql.NullString{String: request.Lastname, Valid: false},
-		Password: sql.NullString{String: hashedPassword, Valid: true},
-		// State:                     sql.NullString{String: request.State, Valid: false},
-		Username: sql.NullString{String: strings.ToLower(request.Username), Valid: true},
+		Address:                   sql.NullString{String: request.Address, Valid: request.Address != ""},
+		City:                      sql.NullString{String: request.City, Valid: request.City != ""},
+		Country:                   sql.NullString{String: request.Country, Valid: request.Country != ""},
+		CreatedAt:                 time.Now(),
+		Email:                     strings.ToLower(request.Email),
+		Firstname:                 sql.NullString{String: request.Firstname, Valid: request.Firstname != ""},
+		ImageUrl:                  sql.NullString{String: request.ProfilePicture, Valid: request.ProfilePicture != ""},
+		IsActive:                  true,
+		IsEmailConfirmed:          request.IsEmailConfirmed,
+		IsLockedOut:               request.IsLockedOut,
+		IsPasswordSystemGenerated: request.IsPasswordSystemGenerated,
+		Lastname:                  sql.NullString{String: request.Lastname, Valid: request.Lastname != ""},
+		Password:                  sql.NullString{String: hashedPassword, Valid: hashedPassword != ""},
+		State:                     sql.NullString{String: request.State, Valid: request.State != ""},
+		Username:                  sql.NullString{String: strings.ToLower(request.Username), Valid: request.Username != ""},
 	})
 
 	if err != nil {
@@ -277,6 +384,18 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 		w.Write(response)
 		return
 	}
+	go func() {
+		err = env.saveLogin(authdb.CreateUserLoginParams{
+			ApplicationID:       sql.NullInt64{Int64: application.ID, Valid: true},
+			UserID:              sql.NullInt64{Int64: user.ID, Valid: true},
+			ResponseCode:        sql.NullString{String: "00", Valid: true},
+			ResponseDescription: sql.NullString{String: "Registration successful...", Valid: true},
+			LoginStatus:         true,
+		})
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occured while saving login... %s", err))
+		}
+	}()
 	registerResponse := &models.SuccessResponse{
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
