@@ -209,6 +209,33 @@ func (q *Queries) GetUser(ctx context.Context, username sql.NullString) (UserDet
 	return i, err
 }
 
+const getUserRoles = `-- name: GetUserRoles :many
+select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1)
+`
+
+func (q *Queries) GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]string, error) {
+	rows, err := q.query(ctx, q.getUserRolesStmt, getUserRoles, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		items = append(items, name)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUsers = `-- name: GetUsers :many
 select id, firstname, lastname, username, email, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, language_name, role_name, timezone_name, zone, provider_name, client_id, client_secret, provider_logo from user_details
 `

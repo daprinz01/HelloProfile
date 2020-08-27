@@ -28,6 +28,7 @@ type Querier interface {
 	DeleteTimezone(ctx context.Context, name string) error
 	DeleteUser(ctx context.Context) error
 	GetApplication(ctx context.Context, name string) (Application, error)
+	GetApplicationRole(ctx context.Context, arg GetApplicationRoleParams) (ApplicationsRole, error)
 	GetApplications(ctx context.Context) ([]Application, error)
 	GetCountries(ctx context.Context) ([]Country, error)
 	GetCountry(ctx context.Context, name string) (Country, error)
@@ -42,6 +43,7 @@ type Querier interface {
 	GetTimezone(ctx context.Context, name string) (Timezone, error)
 	GetTimezones(ctx context.Context) ([]Timezone, error)
 	GetUser(ctx context.Context, username sql.NullString) (UserDetail, error)
+	GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]string, error)
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error)
 	UpdateApplicationRole(ctx context.Context, arg UpdateApplicationRoleParams) (ApplicationsRole, error)

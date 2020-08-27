@@ -56,6 +56,9 @@ returning *;
 update user_providers set user_id = (select id from users a where  a.username = $1 or a.email = $1 limit 1) , 
 identity_provider_id = (select b.id from identity_providers b where  b.name = $2) where user_id = (select c.id from users c where c.username = $1 or c.email = $1 limit 1) and identity_provider_id = (select d.id from identity_providers d where  d.name = $2)  returning *;
 
+-- name: GetUserRoles :many
+select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1);
+
 
 -- name: AddUserRole :one
 insert into user_roles (

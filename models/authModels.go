@@ -52,3 +52,9 @@ type UserDetail struct {
 	ClientSecret              string    `json:"client_secret"`
 	ProviderLogo              string    `json:"provider_logo"`
 }
+
+// RefreshResponse is used to send success message for a successful refresh of auth token
+type RefreshResponse struct {
+	ResponseCode    string `json:"responseCode"`
+	ResponseMessage string `json:"responseMessage"`
+}

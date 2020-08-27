@@ -10,6 +10,7 @@ insert into roles (name, "description")
 values ($1, $2)
 returning *;
 
+
 -- name: UpdateRole :one
 update roles set name = $1, "description" = $2 where name = $3
 returning *;

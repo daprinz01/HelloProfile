@@ -5,6 +5,7 @@ package authdb
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -77,6 +78,22 @@ func (q *Queries) GetApplication(ctx context.Context, name string) (Application,
 		&i.Description,
 		&i.CreatedAt,
 	)
+	return i, err
+}
+
+const getApplicationRole = `-- name: GetApplicationRole :one
+select id, applications_id, roles_id from applications_roles where roles_id = $1 and applications_id = $2 limit 1
+`
+
+type GetApplicationRoleParams struct {
+	RolesID        sql.NullInt64 `json:"roles_id"`
+	ApplicationsID sql.NullInt64 `json:"applications_id"`
+}
+
+func (q *Queries) GetApplicationRole(ctx context.Context, arg GetApplicationRoleParams) (ApplicationsRole, error) {
+	row := q.queryRow(ctx, q.getApplicationRoleStmt, getApplicationRole, arg.RolesID, arg.ApplicationsID)
+	var i ApplicationsRole
+	err := row.Scan(&i.ID, &i.ApplicationsID, &i.RolesID)
 	return i, err
 }
 

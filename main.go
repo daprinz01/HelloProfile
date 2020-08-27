@@ -89,6 +89,7 @@ func main() {
 	// r.HandleFunc("/", handler)
 	// r.HandleFunc("/user", getUser)
 	api.HandleFunc("/{application}/login", env.Login).Methods(http.MethodPost)
+	api.HandleFunc("/{application}/refresh", env.RefreshToken).Methods(http.MethodGet)
 	api.HandleFunc("/{application}/user", env.Register).Methods(http.MethodPost)
 	srv := &http.Server{
 		Handler:      r,

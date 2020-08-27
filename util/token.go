@@ -44,7 +44,7 @@ func GenerateJWT(email string, role string) (response string, refreshToken strin
 		Role:  role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
-			Issuer:    "PersianBlack",
+			Issuer:    "Persian Black",
 		},
 	}
 	jwtKey := os.Getenv("JWT_SECRET_KEY")
@@ -56,9 +56,7 @@ func GenerateJWT(email string, role string) (response string, refreshToken strin
 		jwtSecretKey = []byte(jwtKey)
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	log.Println(jwtSecretKey)
 	tokenString, err := token.SignedString(jwtSecretKey)
-
 	if err == nil {
 		log.Println("Auth token successfully generated...")
 		hasher := md5.New()
@@ -78,13 +76,19 @@ func VerifyToken(tokenString string) (verifiedClaims models.VerifiedClaims, err 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecretKey, nil
 	})
+
 	verifiedClaim := models.VerifiedClaims{}
-	if token != nil {
+
+	if token != nil && token.Valid {
 		verifiedClaim.Email = claims.Email
 		verifiedClaim.Role = claims.Role
 		return verifiedClaim, nil
 	}
-
+	if token != nil && !token.Valid {
+		verifiedClaim.Email = claims.Email
+		verifiedClaim.Role = claims.Role
+		return verifiedClaim, err
+	}
 	return verifiedClaim, err
 
 }

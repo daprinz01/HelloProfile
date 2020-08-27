@@ -82,6 +82,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getApplicationStmt, err = db.PrepareContext(ctx, getApplication); err != nil {
 		return nil, fmt.Errorf("error preparing query GetApplication: %w", err)
 	}
+	if q.getApplicationRoleStmt, err = db.PrepareContext(ctx, getApplicationRole); err != nil {
+		return nil, fmt.Errorf("error preparing query GetApplicationRole: %w", err)
+	}
 	if q.getApplicationsStmt, err = db.PrepareContext(ctx, getApplications); err != nil {
 		return nil, fmt.Errorf("error preparing query GetApplications: %w", err)
 	}
@@ -123,6 +126,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
+	}
+	if q.getUserRolesStmt, err = db.PrepareContext(ctx, getUserRoles); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserRoles: %w", err)
 	}
 	if q.getUsersStmt, err = db.PrepareContext(ctx, getUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUsers: %w", err)
@@ -271,6 +277,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getApplicationStmt: %w", cerr)
 		}
 	}
+	if q.getApplicationRoleStmt != nil {
+		if cerr := q.getApplicationRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getApplicationRoleStmt: %w", cerr)
+		}
+	}
 	if q.getApplicationsStmt != nil {
 		if cerr := q.getApplicationsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getApplicationsStmt: %w", cerr)
@@ -339,6 +350,11 @@ func (q *Queries) Close() error {
 	if q.getUserStmt != nil {
 		if cerr := q.getUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
+		}
+	}
+	if q.getUserRolesStmt != nil {
+		if cerr := q.getUserRolesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserRolesStmt: %w", cerr)
 		}
 	}
 	if q.getUsersStmt != nil {
@@ -470,6 +486,7 @@ type Queries struct {
 	deleteTimezoneStmt         *sql.Stmt
 	deleteUserStmt             *sql.Stmt
 	getApplicationStmt         *sql.Stmt
+	getApplicationRoleStmt     *sql.Stmt
 	getApplicationsStmt        *sql.Stmt
 	getCountriesStmt           *sql.Stmt
 	getCountryStmt             *sql.Stmt
@@ -484,6 +501,7 @@ type Queries struct {
 	getTimezoneStmt            *sql.Stmt
 	getTimezonesStmt           *sql.Stmt
 	getUserStmt                *sql.Stmt
+	getUserRolesStmt           *sql.Stmt
 	getUsersStmt               *sql.Stmt
 	updateApplicationStmt      *sql.Stmt
 	updateApplicationRoleStmt  *sql.Stmt
@@ -524,6 +542,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteTimezoneStmt:         q.deleteTimezoneStmt,
 		deleteUserStmt:             q.deleteUserStmt,
 		getApplicationStmt:         q.getApplicationStmt,
+		getApplicationRoleStmt:     q.getApplicationRoleStmt,
 		getApplicationsStmt:        q.getApplicationsStmt,
 		getCountriesStmt:           q.getCountriesStmt,
 		getCountryStmt:             q.getCountryStmt,
@@ -538,6 +557,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getTimezoneStmt:            q.getTimezoneStmt,
 		getTimezonesStmt:           q.getTimezonesStmt,
 		getUserStmt:                q.getUserStmt,
+		getUserRolesStmt:           q.getUserRolesStmt,
 		getUsersStmt:               q.getUsersStmt,
 		updateApplicationStmt:      q.updateApplicationStmt,
 		updateApplicationRoleStmt:  q.updateApplicationRoleStmt,

@@ -4,6 +4,9 @@ select * from applications;
 -- name: GetApplication :one
 select * from applications where name = $1  limit 1;
 
+-- name: GetApplicationRole :one
+select * from applications_roles where roles_id = $1 and applications_id = $2 limit 1;
+
 -- name: CreateApplication :one
 insert into applications (
   name,
