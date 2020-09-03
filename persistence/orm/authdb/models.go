@@ -39,6 +39,16 @@ type Language struct {
 	Name string `json:"name"`
 }
 
+type Otp struct {
+	ID               int64          `json:"id"`
+	UserID           sql.NullInt64  `json:"user_id"`
+	OtpToken         sql.NullString `json:"otp_token"`
+	CreatedAt        time.Time      `json:"created_at"`
+	IsSmsPreferred   bool           `json:"is_sms_preferred"`
+	IsEmailPreferred bool           `json:"is_email_preferred"`
+	Purpose          sql.NullString `json:"purpose"`
+}
+
 type RefreshToken struct {
 	ID        int64     `json:"id"`
 	UserID    int64     `json:"user_id"`

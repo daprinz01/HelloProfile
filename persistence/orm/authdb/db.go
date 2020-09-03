@@ -43,6 +43,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createIdentityProviderStmt, err = db.PrepareContext(ctx, createIdentityProvider); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateIdentityProvider: %w", err)
 	}
+	if q.createOtpStmt, err = db.PrepareContext(ctx, createOtp); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateOtp: %w", err)
+	}
 	if q.createRefreshTokenStmt, err = db.PrepareContext(ctx, createRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateRefreshToken: %w", err)
 	}
@@ -70,6 +73,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteLanguageStmt, err = db.PrepareContext(ctx, deleteLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteLanguage: %w", err)
 	}
+	if q.deleteOtpStmt, err = db.PrepareContext(ctx, deleteOtp); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteOtp: %w", err)
+	}
 	if q.deleteRefreshTokenStmt, err = db.PrepareContext(ctx, deleteRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteRefreshToken: %w", err)
 	}
@@ -84,6 +90,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteUserLoginStmt, err = db.PrepareContext(ctx, deleteUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUserLogin: %w", err)
+	}
+	if q.getAllOtpStmt, err = db.PrepareContext(ctx, getAllOtp); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllOtp: %w", err)
 	}
 	if q.getApplicationStmt, err = db.PrepareContext(ctx, getApplication); err != nil {
 		return nil, fmt.Errorf("error preparing query GetApplication: %w", err)
@@ -111,6 +120,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getLanguagesStmt, err = db.PrepareContext(ctx, getLanguages); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLanguages: %w", err)
+	}
+	if q.getOtpStmt, err = db.PrepareContext(ctx, getOtp); err != nil {
+		return nil, fmt.Errorf("error preparing query GetOtp: %w", err)
 	}
 	if q.getRefreshTokenStmt, err = db.PrepareContext(ctx, getRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query GetRefreshToken: %w", err)
@@ -230,6 +242,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createIdentityProviderStmt: %w", cerr)
 		}
 	}
+	if q.createOtpStmt != nil {
+		if cerr := q.createOtpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createOtpStmt: %w", cerr)
+		}
+	}
 	if q.createRefreshTokenStmt != nil {
 		if cerr := q.createRefreshTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createRefreshTokenStmt: %w", cerr)
@@ -275,6 +292,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteLanguageStmt: %w", cerr)
 		}
 	}
+	if q.deleteOtpStmt != nil {
+		if cerr := q.deleteOtpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteOtpStmt: %w", cerr)
+		}
+	}
 	if q.deleteRefreshTokenStmt != nil {
 		if cerr := q.deleteRefreshTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteRefreshTokenStmt: %w", cerr)
@@ -298,6 +320,11 @@ func (q *Queries) Close() error {
 	if q.deleteUserLoginStmt != nil {
 		if cerr := q.deleteUserLoginStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUserLoginStmt: %w", cerr)
+		}
+	}
+	if q.getAllOtpStmt != nil {
+		if cerr := q.getAllOtpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllOtpStmt: %w", cerr)
 		}
 	}
 	if q.getApplicationStmt != nil {
@@ -343,6 +370,11 @@ func (q *Queries) Close() error {
 	if q.getLanguagesStmt != nil {
 		if cerr := q.getLanguagesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getLanguagesStmt: %w", cerr)
+		}
+	}
+	if q.getOtpStmt != nil {
+		if cerr := q.getOtpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getOtpStmt: %w", cerr)
 		}
 	}
 	if q.getRefreshTokenStmt != nil {
@@ -521,6 +553,7 @@ type Queries struct {
 	addUserTimezoneStmt        *sql.Stmt
 	createApplicationStmt      *sql.Stmt
 	createIdentityProviderStmt *sql.Stmt
+	createOtpStmt              *sql.Stmt
 	createRefreshTokenStmt     *sql.Stmt
 	createRoleStmt             *sql.Stmt
 	createTimezoneStmt         *sql.Stmt
@@ -530,11 +563,13 @@ type Queries struct {
 	deleteCountryStmt          *sql.Stmt
 	deleteIdentityProviderStmt *sql.Stmt
 	deleteLanguageStmt         *sql.Stmt
+	deleteOtpStmt              *sql.Stmt
 	deleteRefreshTokenStmt     *sql.Stmt
 	deleteRolesStmt            *sql.Stmt
 	deleteTimezoneStmt         *sql.Stmt
 	deleteUserStmt             *sql.Stmt
 	deleteUserLoginStmt        *sql.Stmt
+	getAllOtpStmt              *sql.Stmt
 	getApplicationStmt         *sql.Stmt
 	getApplicationRoleStmt     *sql.Stmt
 	getApplicationsStmt        *sql.Stmt
@@ -544,6 +579,7 @@ type Queries struct {
 	getIdentityProvidersStmt   *sql.Stmt
 	getLanguageStmt            *sql.Stmt
 	getLanguagesStmt           *sql.Stmt
+	getOtpStmt                 *sql.Stmt
 	getRefreshTokenStmt        *sql.Stmt
 	getRefreshTokensStmt       *sql.Stmt
 	getRoleStmt                *sql.Stmt
@@ -583,6 +619,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		addUserTimezoneStmt:        q.addUserTimezoneStmt,
 		createApplicationStmt:      q.createApplicationStmt,
 		createIdentityProviderStmt: q.createIdentityProviderStmt,
+		createOtpStmt:              q.createOtpStmt,
 		createRefreshTokenStmt:     q.createRefreshTokenStmt,
 		createRoleStmt:             q.createRoleStmt,
 		createTimezoneStmt:         q.createTimezoneStmt,
@@ -592,11 +629,13 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteCountryStmt:          q.deleteCountryStmt,
 		deleteIdentityProviderStmt: q.deleteIdentityProviderStmt,
 		deleteLanguageStmt:         q.deleteLanguageStmt,
+		deleteOtpStmt:              q.deleteOtpStmt,
 		deleteRefreshTokenStmt:     q.deleteRefreshTokenStmt,
 		deleteRolesStmt:            q.deleteRolesStmt,
 		deleteTimezoneStmt:         q.deleteTimezoneStmt,
 		deleteUserStmt:             q.deleteUserStmt,
 		deleteUserLoginStmt:        q.deleteUserLoginStmt,
+		getAllOtpStmt:              q.getAllOtpStmt,
 		getApplicationStmt:         q.getApplicationStmt,
 		getApplicationRoleStmt:     q.getApplicationRoleStmt,
 		getApplicationsStmt:        q.getApplicationsStmt,
@@ -606,6 +645,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getIdentityProvidersStmt:   q.getIdentityProvidersStmt,
 		getLanguageStmt:            q.getLanguageStmt,
 		getLanguagesStmt:           q.getLanguagesStmt,
+		getOtpStmt:                 q.getOtpStmt,
 		getRefreshTokenStmt:        q.getRefreshTokenStmt,
 		getRefreshTokensStmt:       q.getRefreshTokensStmt,
 		getRoleStmt:                q.getRoleStmt,

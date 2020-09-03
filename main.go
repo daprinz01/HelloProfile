@@ -85,12 +85,15 @@ func main() {
 	fmt.Println("Successfully connected to database!")
 	// Create Server and Route Handlers
 	r := mux.NewRouter()
-	api := r.PathPrefix("/api/v1").Subrouter()
-	// r.HandleFunc("/", handler)
-	// r.HandleFunc("/user", getUser)
-	api.HandleFunc("/{application}/login", env.Login).Methods(http.MethodPost)
-	api.HandleFunc("/{application}/refresh", env.RefreshToken).Methods(http.MethodGet)
-	api.HandleFunc("/{application}/user", env.Register).Methods(http.MethodPost)
+	apiNoAuth := r.PathPrefix("/api/v1").Subrouter()
+	auth := r.PathPrefix("/api/v1/auth").Subrouter()
+	auth.HandleFunc("/{application}/login", env.Login).Methods(http.MethodPost)
+	auth.HandleFunc("/{application}/user", env.Register).Methods(http.MethodPost)
+
+	apiNoAuth.Use(env.CheckApplication)
+	apiNoAuth.HandleFunc("/{application}/refresh", env.RefreshToken).Methods(http.MethodGet)
+	apiNoAuth.HandleFunc("/{applicaiton}/send/otp", env.SendOtp).Methods(http.MethodPost)
+
 	srv := &http.Server{
 		Handler:      r,
 		Addr:         ":8083",

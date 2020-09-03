@@ -4,10 +4,12 @@ import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
 	"authengine/util"
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -489,43 +491,10 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 
 // RefreshToken is used to register expired token
 func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	log.Println("Register Request received")
-	pathParams := mux.Vars(r)
-	w.Header().Set("Content-Type", "application/json")
-	var applicationName string
+	log.Println("Refresh token Request received")
+
 	var errorResponse models.Errormessage
 	var err error
-	if val, ok := pathParams["application"]; ok {
-		applicationName = val
-		log.Println(fmt.Sprintf("Application: %s", applicationName))
-		if err != nil {
-			errorResponse.Errorcode = "01"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.Println(err)
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
-	}
-	application, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(applicationName))
-	if err != nil {
-		errorResponse.Errorcode = "06"
-		errorResponse.ErrorMessage = "Application is invalid"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
-	}
-
-	log.Println(fmt.Sprintf("Applicaiton ID: %d", application.ID))
 	var authCode string
 	authArray := strings.Split(r.Header.Get("Authorization"), " ")
 	if len(authArray) != 2 {
@@ -668,6 +637,319 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	}
 	return
+
+}
+
+// SendOtp is used to send OTP request after validating user exist
+func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
+	log.Println("Send OTP Request received")
+	var errorResponse models.Errormessage
+	var err error
+	var request models.SendOtpRequest
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&request)
+	defer r.Body.Close()
+	if err != nil {
+		errorResponse.Errorcode = "02"
+		errorResponse.ErrorMessage = "Invalid request"
+		log.Println(fmt.Sprintf("Invalid request: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+
+	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: request.Email, Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "If you have an account with us, you should get an otp"
+		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("User %s exists... Generating OTP code for user", user.Username.String))
+	var otpLength int
+	otpLengthKey := os.Getenv("OTP_LENGTH")
+	if otpLengthKey != "" {
+		otpLength, err = strconv.Atoi(otpLengthKey)
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occure converting otp lenght. Setting a default of 6: %s", err))
+		}
+	}
+	otp, err := util.GenerateOTP(otpLength)
+	if err != nil {
+		errorResponse.Errorcode = "14"
+		errorResponse.ErrorMessage = "Error occured generating otp"
+		log.Println(fmt.Sprintf("Error occured generating otp: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	// Save otp to db in another thread
+	go func() {
+		err = env.AuthDb.CreateOtp(context.Background(), authdb.CreateOtpParams{
+			OtpToken:         sql.NullString{String: otp, Valid: true},
+			UserID:           sql.NullInt64{Int64: user.ID, Valid: true},
+			IsEmailPreferred: request.IsEmailPrefered,
+			IsSmsPreferred:   !request.IsEmailPrefered,
+			Purpose:          sql.NullString{String: request.Purpose, Valid: true},
+		})
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occured saving otp: %s", err))
+		}
+		log.Println("Successfully saved OTP...")
+		log.Println("Sending OTP through preferred channel...")
+		communicationEndpoint := os.Getenv("COMMUNICATION_SERVICE_ENDPOINT")
+		emailPath := os.Getenv("EMAIL_PATH")
+		emailRequest := models.SendEmailRequest{
+			From:    models.EmailAddress{Email: "it@persianblack.com", Name: "Persian Black"},
+			To:      []models.EmailAddress{models.EmailAddress{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
+			Subject: fmt.Sprintf("%s OTP", request.Purpose),
+			Message: fmt.Sprintf("<h5>Hey %s,</h5><p>Kindly use the otp below to complete your request:</p><h4>%s</h4><p>Your account security is paramount to us. Don't share your otp with anyone.</p><h5>Micheal from Persian Black.</h5>", user.Firstname.String, otp),
+		}
+		emailRequestBytes, _ := json.Marshal(emailRequest)
+		log.Println("Sending otp email...")
+		emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occured sending otp: %s", err))
+		}
+		if emailResponse.StatusCode == 200 {
+			log.Println("OTP send successfully")
+		} else {
+			log.Println("Error occured sending OTP")
+		}
+		emailBody, _ := ioutil.ReadAll(emailResponse.Body)
+		log.Println(fmt.Sprintf("Response body from email request: %s", emailBody))
+	}()
+	log.Println("Successfully generated otp")
+	resetResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+	}
+	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
+// VerifyOtp is used to verify and otp against a user. Authentication token is generated that is used in subsequent requests.
+func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
+	log.Println("Verify otp request received")
+	log.Println("Checking application")
+	pathParams := mux.Vars(r)
+	w.Header().Set("Content-Type", "application/json")
+	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
+
+	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
+	// file.WriteString()
+
+	var application string
+	var errorResponse models.Errormessage
+	var err error
+	if val, ok := pathParams["application"]; ok {
+		application = val
+		log.Println(fmt.Sprintf("Application: %s", application))
+		if err != nil {
+			errorResponse.Errorcode = "01"
+			errorResponse.ErrorMessage = "Application not specified"
+			log.Println("Application not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
+	if err != nil {
+		errorResponse.Errorcode = "06"
+		errorResponse.ErrorMessage = "Application is invalid"
+		log.Println(err)
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
+	// var errorResponse models.Errormessage
+	// var err error
+	var request models.VerifyOtpRequest
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&request)
+	defer r.Body.Close()
+	if err != nil {
+		errorResponse.Errorcode = "02"
+		errorResponse.ErrorMessage = "Invalid request"
+		log.Println(fmt.Sprintf("Invalid request: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	dbOtp, err := env.AuthDb.GetOtp(context.Background(), authdb.GetOtpParams{
+		OtpToken: sql.NullString{String: request.OTP, Valid: true},
+		Username: sql.NullString{String: request.Email, Valid: true},
+	})
+	if err != nil {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Incorrect OTP. Please try again..."
+		log.Println(fmt.Sprintf("Invalid request: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	var otpDuration int
+	otpDurationKey := os.Getenv("OTP_VALIDITY_PERIOD")
+	if otpDurationKey != "" {
+		otpDuration, err = strconv.Atoi(otpDurationKey)
+		if err != nil {
+			log.Println(fmt.Sprintf("OTP_VALIDITY_PERIOD is not a valid number: %s", err))
+			log.Println("Setting default of 5mins")
+			otpDuration = 5
+		}
+	}
+	if dbOtp.CreatedAt.Add(time.Duration(otpDuration) * time.Minute).Before(time.Now()) {
+		log.Println("Verifying that user is in the role access is being requested...")
+		role := r.Header.Get("Role")
+		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), dbOtp.UserID)
+		if err != nil {
+			log.Println(`Invalid role entered... Changing to default role of "Guest"`)
+			role = "Guest"
+		}
+		testRole := "Guest"
+		log.Println("Searching roles...")
+		// log.Println(userRoles)
+		for i := 0; i < len(userRoles); i++ {
+
+			if userRoles[i] == strings.ToLower(role) {
+				testRole = userRoles[i]
+				break
+			}
+			log.Println(fmt.Sprintf("role: %s doesn't match role: %s ", userRoles[i], role))
+		}
+		role = testRole
+
+		log.Println(fmt.Sprintf("Generating authentication token for user: %s role: %s...", request.Email, role))
+		authToken, refreshToken, err := util.GenerateJWT(request.Email, role)
+		if err != nil {
+			errorResponse.Errorcode = "05"
+			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+		log.Println("Storing refresh token in separate thread...")
+		// store refresh token add later
+		go func() {
+			dbRefreshToken, err := env.AuthDb.CreateRefreshToken(context.Background(), authdb.CreateRefreshTokenParams{
+				UserID: dbOtp.UserID.Int64,
+				Token:  refreshToken,
+			})
+			if err != nil {
+				log.Println(err)
+			}
+
+			log.Println(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
+		}()
+		go func() {
+			err = env.saveLogin(authdb.CreateUserLoginParams{
+				ApplicationID:       sql.NullInt64{Int64: applicationObject.ID, Valid: true},
+				UserID:              dbOtp.UserID,
+				ResponseCode:        sql.NullString{String: "00", Valid: true},
+				ResponseDescription: sql.NullString{String: "Success", Valid: true},
+				LoginStatus:         true,
+			})
+			if err != nil {
+				log.Println("Successful login...")
+			}
+			err := env.AuthDb.UpdateResolvedLogin(context.Background(), dbOtp.UserID)
+			if err != nil {
+				log.Println("Error occured clearing failed user logins after successful login...")
+			}
+		}()
+		loginResponse := &models.SuccessResponse{
+			ResponseCode:    "00",
+			ResponseMessage: "Success",
+		}
+		responsebytes, err := json.MarshalIndent(loginResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
+		w.Header().Set("Refresh-Token", refreshToken)
+		w.Header().Set("Role", role)
+		w.WriteHeader(http.StatusOK)
+		w.Write(responsebytes)
+	} else {
+		errorResponse.Errorcode = "16"
+		errorResponse.ErrorMessage = "Oops... something is wrong here... your one time token has expired. Kindly request another one..."
+		log.Println("Otp has expired...")
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+
+	}
+	return
+}
+
+// ResetPassword password is used to reset account password
+func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	log.Println("Password Reset Request received")
+	var errorResponse models.Errormessage
+	var err error
+	var request models.ResetPasswordRequest
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&request)
+	defer r.Body.Close()
+	if err != nil {
+		errorResponse.Errorcode = "02"
+		errorResponse.ErrorMessage = "Invalid request"
+		log.Println(fmt.Sprintf("Invalid request: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
 
 }
 

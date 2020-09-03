@@ -15,6 +15,7 @@ type Querier interface {
 	AddUserTimezone(ctx context.Context, arg AddUserTimezoneParams) (UserTimezone, error)
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
 	CreateIdentityProvider(ctx context.Context, arg CreateIdentityProviderParams) (IdentityProvider, error)
+	CreateOtp(ctx context.Context, arg CreateOtpParams) error
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error)
 	CreateTimezone(ctx context.Context, arg CreateTimezoneParams) (Timezone, error)
@@ -24,11 +25,13 @@ type Querier interface {
 	DeleteCountry(ctx context.Context, name string) error
 	DeleteIdentityProvider(ctx context.Context, name string) error
 	DeleteLanguage(ctx context.Context, name string) error
+	DeleteOtp(ctx context.Context, arg DeleteOtpParams) error
 	DeleteRefreshToken(ctx context.Context, token string) error
 	DeleteRoles(ctx context.Context, name string) error
 	DeleteTimezone(ctx context.Context, name string) error
 	DeleteUser(ctx context.Context) error
 	DeleteUserLogin(ctx context.Context, arg DeleteUserLoginParams) error
+	GetAllOtp(ctx context.Context) ([]Otp, error)
 	GetApplication(ctx context.Context, name string) (Application, error)
 	GetApplicationRole(ctx context.Context, arg GetApplicationRoleParams) (ApplicationsRole, error)
 	GetApplications(ctx context.Context) ([]Application, error)
@@ -38,6 +41,7 @@ type Querier interface {
 	GetIdentityProviders(ctx context.Context) ([]IdentityProvider, error)
 	GetLanguage(ctx context.Context, name string) (Language, error)
 	GetLanguages(ctx context.Context) ([]Language, error)
+	GetOtp(ctx context.Context, arg GetOtpParams) (Otp, error)
 	GetRefreshToken(ctx context.Context, token string) (RefreshToken, error)
 	GetRefreshTokens(ctx context.Context) ([]RefreshToken, error)
 	GetRole(ctx context.Context, name string) (Role, error)

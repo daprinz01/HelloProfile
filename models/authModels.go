@@ -58,3 +58,26 @@ type RefreshResponse struct {
 	ResponseCode    string `json:"responseCode"`
 	ResponseMessage string `json:"responseMessage"`
 }
+
+// SendOtpRequest is used to recieve otp requests
+type SendOtpRequest struct {
+	Email           string `json:"email"`
+	Phone           string `json:"phonenumber"`
+	IsEmailPrefered bool   `json:"is_email_preferred"`
+	Purpose         string `json:"purpose"`
+	Application     string `json:"application"`
+}
+
+// VerifyOtpRequest is used to verify an OTP against a user
+type VerifyOtpRequest struct {
+	Email string `json:"email"`
+	Phone string `json:"phonenumber"`
+	OTP   string `json:"otp"`
+}
+
+// ResetPasswordRequest is used to reset user password after
+type ResetPasswordRequest struct {
+	Username    string `json:"username"`
+	NewPassword string `json:"newPassword"`
+	OtpCode     string `json:"otpCode"`
+}
