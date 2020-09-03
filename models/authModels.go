@@ -32,6 +32,7 @@ type UserDetail struct {
 	Lastname                  string    `json:"lastname"`
 	Username                  string    `json:"username"`
 	Email                     string    `json:"email"`
+	Phone                     string    `json:"phone"`
 	IsEmailConfirmed          bool      `json:"is_email_confirmed"`
 	Password                  string    `json:"password"`
 	IsPasswordSystemGenerated bool      `json:"is_password_system_generated"`
@@ -77,7 +78,5 @@ type VerifyOtpRequest struct {
 
 // ResetPasswordRequest is used to reset user password after
 type ResetPasswordRequest struct {
-	Username    string `json:"username"`
 	NewPassword string `json:"newPassword"`
-	OtpCode     string `json:"otpCode"`
 }

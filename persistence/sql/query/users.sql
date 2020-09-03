@@ -10,6 +10,7 @@ insert into users ("firstname",
   "lastname",
   "username",
   "email",
+  "phone",
   "is_email_confirmed",
   "password",
   "is_password_system_generated",
@@ -21,7 +22,7 @@ insert into users ("firstname",
   "is_locked_out",
   "image_url",
   "is_active")
-  values ($1, $2, $3, $4, $5, $6, $7, $8,$9, $10, $11, $12, $13, $14, $15)
+  values ($1, $2, $3, $4, $5, $6, $7, $8,$9, $10, $11, $12, $13, $14,$15, $16)
   returning *;
 
 -- name: AddUserLanguage :one
@@ -87,7 +88,8 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
   "created_at" = $12,
   "is_locked_out" = $13,
   "image_url" = $14,
-  "is_active" = $15
+  "is_active" = $15,
+    "phone" = $17
   where "username" = $16 or "email" = $16
   returning *;
 

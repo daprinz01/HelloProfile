@@ -90,6 +90,7 @@ insert into users ("firstname",
   "lastname",
   "username",
   "email",
+  "phone",
   "is_email_confirmed",
   "password",
   "is_password_system_generated",
@@ -101,8 +102,8 @@ insert into users ("firstname",
   "is_locked_out",
   "image_url",
   "is_active")
-  values ($1, $2, $3, $4, $5, $6, $7, $8,$9, $10, $11, $12, $13, $14, $15)
-  returning id, firstname, lastname, username, email, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, image_url, is_active
+  values ($1, $2, $3, $4, $5, $6, $7, $8,$9, $10, $11, $12, $13, $14,$15, $16)
+  returning id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, image_url, is_active
 `
 
 type CreateUserParams struct {
@@ -110,6 +111,7 @@ type CreateUserParams struct {
 	Lastname                  sql.NullString `json:"lastname"`
 	Username                  sql.NullString `json:"username"`
 	Email                     string         `json:"email"`
+	Phone                     sql.NullString `json:"phone"`
 	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
 	Password                  sql.NullString `json:"password"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
@@ -129,6 +131,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Lastname,
 		arg.Username,
 		arg.Email,
+		arg.Phone,
 		arg.IsEmailConfirmed,
 		arg.Password,
 		arg.IsPasswordSystemGenerated,
@@ -148,6 +151,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Lastname,
 		&i.Username,
 		&i.Email,
+		&i.Phone,
 		&i.IsEmailConfirmed,
 		&i.Password,
 		&i.IsPasswordSystemGenerated,
@@ -173,7 +177,7 @@ func (q *Queries) DeleteUser(ctx context.Context) error {
 }
 
 const getUser = `-- name: GetUser :one
-select id, firstname, lastname, username, email, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, language_name, role_name, timezone_name, zone, provider_name, client_id, client_secret, provider_logo from user_details 
+select id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, language_name, role_name, timezone_name, zone, provider_name, client_id, client_secret, provider_logo from user_details 
 where username = $1 or email = $1 limit 1
 `
 
@@ -186,6 +190,7 @@ func (q *Queries) GetUser(ctx context.Context, username sql.NullString) (UserDet
 		&i.Lastname,
 		&i.Username,
 		&i.Email,
+		&i.Phone,
 		&i.IsEmailConfirmed,
 		&i.Password,
 		&i.IsPasswordSystemGenerated,
@@ -237,7 +242,7 @@ func (q *Queries) GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]str
 }
 
 const getUsers = `-- name: GetUsers :many
-select id, firstname, lastname, username, email, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, language_name, role_name, timezone_name, zone, provider_name, client_id, client_secret, provider_logo from user_details
+select id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, language_name, role_name, timezone_name, zone, provider_name, client_id, client_secret, provider_logo from user_details
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]UserDetail, error) {
@@ -255,6 +260,7 @@ func (q *Queries) GetUsers(ctx context.Context) ([]UserDetail, error) {
 			&i.Lastname,
 			&i.Username,
 			&i.Email,
+			&i.Phone,
 			&i.IsEmailConfirmed,
 			&i.Password,
 			&i.IsPasswordSystemGenerated,
@@ -303,9 +309,10 @@ const updateUser = `-- name: UpdateUser :one
   "created_at" = $12,
   "is_locked_out" = $13,
   "image_url" = $14,
-  "is_active" = $15
+  "is_active" = $15,
+    "phone" = $17
   where "username" = $16 or "email" = $16
-  returning id, firstname, lastname, username, email, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, image_url, is_active
+  returning id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, image_url, is_active
 `
 
 type UpdateUserParams struct {
@@ -325,6 +332,7 @@ type UpdateUserParams struct {
 	ImageUrl                  sql.NullString `json:"image_url"`
 	IsActive                  bool           `json:"is_active"`
 	Username_2                sql.NullString `json:"username_2"`
+	Phone                     sql.NullString `json:"phone"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
@@ -345,6 +353,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.ImageUrl,
 		arg.IsActive,
 		arg.Username_2,
+		arg.Phone,
 	)
 	var i User
 	err := row.Scan(
@@ -353,6 +362,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Lastname,
 		&i.Username,
 		&i.Email,
+		&i.Phone,
 		&i.IsEmailConfirmed,
 		&i.Password,
 		&i.IsPasswordSystemGenerated,

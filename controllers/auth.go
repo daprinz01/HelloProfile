@@ -189,6 +189,7 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 				Password:                  "",
 				State:                     user.State.String,
 				Username:                  user.Username.String,
+				Phone:                     user.Phone.String,
 			},
 		}
 		responsebytes, err := json.MarshalIndent(loginResponse, "", "")
@@ -253,6 +254,7 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 				Password:                  user.Password,
 				State:                     user.State,
 				Username:                  user.Username,
+				Phone:                     user.Phone,
 			})
 			if err != nil {
 				log.Println(fmt.Sprintf("Error occured while trying to lockout account: %s", err))
@@ -372,6 +374,7 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 		Password:                  sql.NullString{String: hashedPassword, Valid: hashedPassword != ""},
 		State:                     sql.NullString{String: request.State, Valid: request.State != ""},
 		Username:                  sql.NullString{String: strings.ToLower(request.Username), Valid: request.Username != ""},
+		Phone:                     sql.NullString{String: request.Phone, Valid: request.Phone != ""},
 	})
 
 	if err != nil {
@@ -417,6 +420,7 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 			Password:                  "",
 			State:                     user.State.String,
 			Username:                  user.Username.String,
+			Phone:                     user.Phone.String,
 		},
 	}
 	responseString, err := json.MarshalIndent(registerResponse, "", "")
@@ -934,6 +938,37 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	log.Println("Password Reset Request received")
 	var errorResponse models.Errormessage
 	var err error
+	var authCode string
+	authArray := strings.Split(r.Header.Get("Authorization"), " ")
+	if len(authArray) != 2 {
+		errorResponse.Errorcode = "11"
+		errorResponse.ErrorMessage = "Unsupported authentication scheme type"
+		log.Println("Unsupported authentication scheme type")
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	authCode = authArray[1]
+
+	verifiedClaims, err := util.VerifyToken(authCode)
+
+	if err != nil || verifiedClaims.Email == "" {
+		errorResponse.Errorcode = "09"
+		errorResponse.ErrorMessage = "Session expired. Kindly try generating one time password again"
+		log.Println("Token has expired...")
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+
 	var request models.ResetPasswordRequest
 	decoder := json.NewDecoder(r.Body)
 	err = decoder.Decode(&request)
@@ -951,6 +986,61 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Try to update password
+	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: verifiedClaims.Email, Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Oops... something is wrong here... your email is incorrect..."
+		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	go func() {
+		var hashedPassword string
+		if request.NewPassword != "" {
+			hashedPassword = util.GenerateHash(request.NewPassword)
+
+		}
+		_, err := env.AuthDb.UpdateUser(context.Background(), authdb.UpdateUserParams{
+			Username_2:                user.Username,
+			IsLockedOut:               true,
+			Address:                   user.Address,
+			City:                      user.City,
+			Country:                   user.Country,
+			CreatedAt:                 user.CreatedAt,
+			Email:                     user.Email,
+			Firstname:                 user.Firstname,
+			ImageUrl:                  user.ProfilePicture,
+			IsActive:                  user.IsActive,
+			IsEmailConfirmed:          user.IsEmailConfirmed,
+			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
+			Lastname:                  user.Lastname,
+			Password:                  sql.NullString{String: hashedPassword, Valid: true},
+			State:                     user.State,
+			Username:                  user.Username,
+			Phone:                     user.Phone,
+		})
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occured while trying to update account: %s", err))
+		}
+		log.Println("Successfully changed password...")
+	}()
+	resetResponse := &models.RefreshResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+	}
+	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
 }
 
 // commentID := -1

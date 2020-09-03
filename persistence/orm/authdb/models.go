@@ -80,6 +80,7 @@ type User struct {
 	Lastname                  sql.NullString `json:"lastname"`
 	Username                  sql.NullString `json:"username"`
 	Email                     string         `json:"email"`
+	Phone                     sql.NullString `json:"phone"`
 	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
 	Password                  sql.NullString `json:"password"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
@@ -99,6 +100,7 @@ type UserDetail struct {
 	Lastname                  sql.NullString `json:"lastname"`
 	Username                  sql.NullString `json:"username"`
 	Email                     string         `json:"email"`
+	Phone                     sql.NullString `json:"phone"`
 	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
 	Password                  sql.NullString `json:"password"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
