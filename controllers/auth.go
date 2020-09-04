@@ -560,6 +560,7 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
+		log.Println("Successfully deleted old refresh token...")
 	}()
 	var refreshTokenDuration int
 	refreshTokenLifespan := os.Getenv("SESSION_LIFESPAN")
@@ -589,7 +590,7 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Println("Fetching user...")
-		user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: verifiedClaims.Email, Valid: true})
+		user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
 		if err != nil {
 			errorResponse.Errorcode = "03"
 			errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
@@ -666,7 +667,7 @@ func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: request.Email, Valid: true})
+	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "If you have an account with us, you should get an otp"
@@ -724,8 +725,17 @@ func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
 			Message: fmt.Sprintf("<h5>Hey %s,</h5><p>Kindly use the otp below to complete your request:</p><h4>%s</h4><p>Your account security is paramount to us. Don't share your otp with anyone.</p><h5>Micheal from Persian Black.</h5>", user.Firstname.String, otp),
 		}
 		emailRequestBytes, _ := json.Marshal(emailRequest)
+		emailRequestReader := bytes.NewReader(emailRequestBytes)
 		log.Println("Sending otp email...")
-		emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, emailPath), emailRequestReader)
+		req.Header.Add("clientId", "persianblack")
+		req.Header.Add("Accept", "application/json")
+		req.Header.Add("Content-Type", "application/json")
+		emailResponse, err := client.Do(req)
+
+		// emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
 		if err != nil {
 			log.Println(fmt.Sprintf("Error occured sending otp: %s", err))
 		}
@@ -817,7 +827,7 @@ func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
 	}
 	dbOtp, err := env.AuthDb.GetOtp(context.Background(), authdb.GetOtpParams{
 		OtpToken: sql.NullString{String: request.OTP, Valid: true},
-		Username: sql.NullString{String: request.Email, Valid: true},
+		Username: sql.NullString{String: strings.ToLower(request.Email), Valid: true},
 	})
 	if err != nil {
 		errorResponse.Errorcode = "15"
@@ -841,7 +851,7 @@ func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
 			otpDuration = 5
 		}
 	}
-	if dbOtp.CreatedAt.Add(time.Duration(otpDuration) * time.Minute).Before(time.Now()) {
+	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration) * time.Minute).Before(time.Now()) {
 		log.Println("Verifying that user is in the role access is being requested...")
 		role := r.Header.Get("Role")
 		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), dbOtp.UserID)
@@ -928,8 +938,8 @@ func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(response)
-
 	}
+	log.Println("Finished processing Verify otp request...")
 	return
 }
 
@@ -987,7 +997,7 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Try to update password
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: verifiedClaims.Email, Valid: true})
+	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Oops... something is wrong here... your email is incorrect..."
@@ -1008,7 +1018,7 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		}
 		_, err := env.AuthDb.UpdateUser(context.Background(), authdb.UpdateUserParams{
 			Username_2:                user.Username,
-			IsLockedOut:               true,
+			IsLockedOut:               false,
 			Address:                   user.Address,
 			City:                      user.City,
 			Country:                   user.Country,
@@ -1029,6 +1039,15 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 			log.Println(fmt.Sprintf("Error occured while trying to update account: %s", err))
 		}
 		log.Println("Successfully changed password...")
+
+	}()
+	go func() {
+		err := env.AuthDb.UpdateResolvedLogin(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
+		if err != nil {
+			log.Println("Error occured clearing failed user logins after successful login...")
+		}
+		log.Println("Successsfully updated failed logins ")
+
 	}()
 	resetResponse := &models.RefreshResponse{
 		ResponseCode:    "00",

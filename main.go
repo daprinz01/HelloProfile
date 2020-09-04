@@ -87,14 +87,13 @@ func main() {
 	r := mux.NewRouter()
 	apiNoAuth := r.PathPrefix("/api/v1").Subrouter()
 	auth := r.PathPrefix("/api/v1/auth").Subrouter()
+	apiNoAuth.Use(env.CheckApplication)
+	apiNoAuth.HandleFunc("/{application}/refresh", env.RefreshToken).Methods(http.MethodGet)
+	apiNoAuth.HandleFunc("/{application}/otp/send", env.SendOtp).Methods(http.MethodPost)
+	apiNoAuth.HandleFunc("/{application}/password/reset", env.ResetPassword).Methods(http.MethodPost)
 	auth.HandleFunc("/{application}/login", env.Login).Methods(http.MethodPost)
 	auth.HandleFunc("/{application}/user", env.Register).Methods(http.MethodPost)
 	auth.HandleFunc("/{application}/otp/verify", env.VerifyOtp).Methods(http.MethodPost)
-
-	apiNoAuth.Use(env.CheckApplication)
-	apiNoAuth.HandleFunc("/{application}/refresh", env.RefreshToken).Methods(http.MethodGet)
-	apiNoAuth.HandleFunc("/{applicaiton}/otp/send", env.SendOtp).Methods(http.MethodPost)
-	apiNoAuth.HandleFunc("/{application}/password/reset", env.ResetPassword).Methods(http.MethodPost)
 
 	srv := &http.Server{
 		Handler:      r,

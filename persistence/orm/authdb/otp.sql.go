@@ -88,7 +88,7 @@ func (q *Queries) GetAllOtp(ctx context.Context) ([]Otp, error) {
 }
 
 const getOtp = `-- name: GetOtp :one
-select id, user_id, otp_token, created_at, is_sms_preferred, is_email_preferred, purpose from otp where user_id = (select a.Id from users where a.username = $1 or email = $1) and otp_token = $2
+select id, user_id, otp_token, created_at, is_sms_preferred, is_email_preferred, purpose from otp where user_id = (select a.Id from users a where a.username = $1 or email = $1) and otp_token = $2
 `
 
 type GetOtpParams struct {
