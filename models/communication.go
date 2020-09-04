@@ -23,3 +23,8 @@ type EmailAttachment struct {
 	Base64   string `json:"base64"`
 }
 
+// SendSmsRequest is used to receive sms request
+type SendSmsRequest struct {
+	Phone   string `json:"phonenumber"`
+	Message string `json:"message"`
+}

@@ -717,35 +717,68 @@ func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
 		log.Println("Successfully saved OTP...")
 		log.Println("Sending OTP through preferred channel...")
 		communicationEndpoint := os.Getenv("COMMUNICATION_SERVICE_ENDPOINT")
-		emailPath := os.Getenv("EMAIL_PATH")
-		emailRequest := models.SendEmailRequest{
-			From:    models.EmailAddress{Email: "it@persianblack.com", Name: "Persian Black"},
-			To:      []models.EmailAddress{models.EmailAddress{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
-			Subject: fmt.Sprintf("%s OTP", request.Purpose),
-			Message: fmt.Sprintf("<h5>Hey %s,</h5><p>Kindly use the otp below to complete your request:</p><h4>%s</h4><p>Your account security is paramount to us. Don't share your otp with anyone.</p><h5>Micheal from Persian Black.</h5>", user.Firstname.String, otp),
-		}
-		emailRequestBytes, _ := json.Marshal(emailRequest)
-		emailRequestReader := bytes.NewReader(emailRequestBytes)
-		log.Println("Sending otp email...")
+		if request.IsEmailPrefered {
+			emailPath := os.Getenv("EMAIL_PATH")
+			emailRequest := models.SendEmailRequest{
+				From:    models.EmailAddress{Email: "it@persianblack.com", Name: "Persian Black"},
+				To:      []models.EmailAddress{models.EmailAddress{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
+				Subject: fmt.Sprintf("%s OTP", request.Purpose),
+				Message: fmt.Sprintf("<h5>Hey %s,</h5><p>Kindly use the otp below to complete your request:</p><h4>%s</h4><p>Your account security is paramount to us. Don't share your otp with anyone.</p><h5>Micheal from Persian Black.</h5>", user.Firstname.String, otp),
+			}
+			emailRequestBytes, _ := json.Marshal(emailRequest)
+			emailRequestReader := bytes.NewReader(emailRequestBytes)
+			log.Println("Sending otp email...")
 
-		client := &http.Client{}
-		req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, emailPath), emailRequestReader)
-		req.Header.Add("clientId", "persianblack")
-		req.Header.Add("Accept", "application/json")
-		req.Header.Add("Content-Type", "application/json")
-		emailResponse, err := client.Do(req)
+			client := &http.Client{}
+			req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, emailPath), emailRequestReader)
+			req.Header.Add("clientId", "persianblack")
+			req.Header.Add("Accept", "application/json")
+			req.Header.Add("Content-Type", "application/json")
+			emailResponse, err := client.Do(req)
 
-		// emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
-		if err != nil {
-			log.Println(fmt.Sprintf("Error occured sending otp: %s", err))
-		}
-		if emailResponse.StatusCode == 200 {
-			log.Println("OTP send successfully")
+			// emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
+			if err != nil {
+				log.Println(fmt.Sprintf("Error occured sending otp: %s", err))
+			}
+			if emailResponse.StatusCode == 200 {
+				log.Println("OTP send successfully")
+			} else {
+				log.Println("Error occured sending OTP")
+			}
+			emailBody, _ := ioutil.ReadAll(emailResponse.Body)
+			log.Println(fmt.Sprintf("Response body from email request: %s", emailBody))
 		} else {
-			log.Println("Error occured sending OTP")
+			if user.Phone.String == "" {
+				log.Println("Phonenumber not available")
+			} else {
+				smsPath := os.Getenv("SMS_PATH")
+				smsRequest := models.SendSmsRequest{
+					Phone:   user.Phone.String,
+					Message: fmt.Sprintf("Your Persian Black %s code is:\n%s", request.Purpose, otp),
+				}
+				smsRequestBytes, _ := json.Marshal(smsRequest)
+				smsRequestReader := bytes.NewReader(smsRequestBytes)
+				log.Println("Sending otp sms...")
+
+				client := &http.Client{}
+				req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, smsPath), smsRequestReader)
+				req.Header.Add("clientId", "persianblack")
+				req.Header.Add("Accept", "application/json")
+				req.Header.Add("Content-Type", "application/json")
+				smsResponse, err := client.Do(req)
+
+				if err != nil {
+					log.Println(fmt.Sprintf("Error occured sending otp: %s", err))
+				}
+				if smsResponse.StatusCode == 200 {
+					log.Println("OTP sent successfully")
+				} else {
+					log.Println("Error occured sending OTP")
+				}
+				smsBody, _ := ioutil.ReadAll(smsResponse.Body)
+				log.Println(fmt.Sprintf("Response body from sms request: %s", smsBody))
+			}
 		}
-		emailBody, _ := ioutil.ReadAll(emailResponse.Body)
-		log.Println(fmt.Sprintf("Response body from email request: %s", emailBody))
 	}()
 	log.Println("Successfully generated otp")
 	resetResponse := &models.SuccessResponse{

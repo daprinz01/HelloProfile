@@ -32,7 +32,7 @@ DB_HOST=host.docker.internal DB_PORT=8669 DB_USER=postgres \
   SESSION_LIFESPAN=15 LOCK_OUT_COUNT=5 SMTP_HOST=smtp.persianblack.com \
   SMTP_PORT=25 SMTP_USER=it@persianblack.com SMTP_PASSWORD=Princess4Daprinz \
   OTP_LENGTH=6 COMMUNICATION_SERVICE_ENDPOINT=http://host.docker.internal:8084 \
-  EMAIL_PATH=/api/v1/send/email OTP_VALIDITY_PERIOD=5
+  EMAIL_PATH=/api/v1/send/email OTP_VALIDITY_PERIOD=5 SMS_PATH=/api/v1/send/sms
 
 
 CMD ["/usr/local/bin/app", "--help"]
