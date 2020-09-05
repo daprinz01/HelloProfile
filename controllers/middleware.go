@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"authengine/models"
+	"authengine/util"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -57,6 +58,47 @@ func (env *Env) CheckApplication(next http.Handler) http.Handler {
 			return
 		}
 		log.Println(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, r)
+	})
+}
+
+// Authorize is used to check if requests are authorized
+func Authorize(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Checking authorization...")
+		var errorResponse models.Errormessage
+		var err error
+		var authCode string
+		authArray := strings.Split(r.Header.Get("Authorization"), " ")
+		if len(authArray) != 2 {
+			errorResponse.Errorcode = "11"
+			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
+			log.Println("Unsupported authentication scheme type")
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+		authCode = authArray[1]
+
+		verifiedClaims, err := util.VerifyToken(authCode)
+
+		if err != nil || verifiedClaims.Email == "" {
+			errorResponse.Errorcode = "09"
+			errorResponse.ErrorMessage = "Session expired. Kindly try generating one time password again"
+			log.Println("Token has expired...")
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		next.ServeHTTP(w, r)
 	})

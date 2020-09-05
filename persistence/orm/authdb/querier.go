@@ -26,10 +26,12 @@ type Querier interface {
 	DeleteIdentityProvider(ctx context.Context, name string) error
 	DeleteLanguage(ctx context.Context, name string) error
 	DeleteOtp(ctx context.Context, arg DeleteOtpParams) error
+	DeleteProviders(ctx context.Context, arg DeleteProvidersParams) error
 	DeleteRefreshToken(ctx context.Context, token string) error
 	DeleteRoles(ctx context.Context, name string) error
 	DeleteTimezone(ctx context.Context, name string) error
-	DeleteUser(ctx context.Context) error
+	DeleteUser(ctx context.Context, email string) error
+	DeleteUserLanguage(ctx context.Context, arg DeleteUserLanguageParams) error
 	DeleteUserLogin(ctx context.Context, arg DeleteUserLoginParams) error
 	GetAllOtp(ctx context.Context) ([]Otp, error)
 	GetApplication(ctx context.Context, name string) (Application, error)
@@ -50,9 +52,12 @@ type Querier interface {
 	GetTimezones(ctx context.Context) ([]Timezone, error)
 	GetUnResoledLogins(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error)
 	GetUser(ctx context.Context, username sql.NullString) (UserDetail, error)
+	GetUserLanguages(ctx context.Context, username sql.NullString) ([]GetUserLanguagesRow, error)
 	GetUserLogin(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error)
 	GetUserLogins(ctx context.Context) ([]UserLogin, error)
+	GetUserProviders(ctx context.Context, username sql.NullString) ([]IdentityProvider, error)
 	GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]string, error)
+	GetUserTimezones(ctx context.Context, username sql.NullString) ([]Timezone, error)
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error)
 	UpdateApplicationRole(ctx context.Context, arg UpdateApplicationRoleParams) (ApplicationsRole, error)

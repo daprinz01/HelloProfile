@@ -11,20 +11,26 @@ import (
 
 const addUserLanguage = `-- name: AddUserLanguage :one
 insert into user_languages (
-    user_id, language_id
-) values ((select a.id from users a where a.username = $1 or a.email = $1 limit 1), (select b.id from languages b where  b.name = $2))
-returning id, user_id, language_id
+    user_id, language_id, proficiency
+) values ((select a.id from users a where a.username = $1 or a.email = $1 limit 1), (select b.id from languages b where  b.name = $2), $3)
+returning id, user_id, language_id, proficiency
 `
 
 type AddUserLanguageParams struct {
-	Username sql.NullString `json:"username"`
-	Name     string         `json:"name"`
+	Username    sql.NullString `json:"username"`
+	Name        string         `json:"name"`
+	Proficiency sql.NullString `json:"proficiency"`
 }
 
 func (q *Queries) AddUserLanguage(ctx context.Context, arg AddUserLanguageParams) (UserLanguage, error) {
-	row := q.queryRow(ctx, q.addUserLanguageStmt, addUserLanguage, arg.Username, arg.Name)
+	row := q.queryRow(ctx, q.addUserLanguageStmt, addUserLanguage, arg.Username, arg.Name, arg.Proficiency)
 	var i UserLanguage
-	err := row.Scan(&i.ID, &i.UserID, &i.LanguageID)
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.LanguageID,
+		&i.Proficiency,
+	)
 	return i, err
 }
 
@@ -167,17 +173,45 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const deleteUser = `-- name: DeleteUser :exec
- update users set is_active = false
+const deleteProviders = `-- name: DeleteProviders :exec
+delete from user_providers a where a.user_id = (select b.id from users b where b.username = $1 or b.email = $1) and a.identity_provider_id = (select c.id from identity_providers c where c.name = $2)
 `
 
-func (q *Queries) DeleteUser(ctx context.Context) error {
-	_, err := q.exec(ctx, q.deleteUserStmt, deleteUser)
+type DeleteProvidersParams struct {
+	Username sql.NullString `json:"username"`
+	Name     string         `json:"name"`
+}
+
+func (q *Queries) DeleteProviders(ctx context.Context, arg DeleteProvidersParams) error {
+	_, err := q.exec(ctx, q.deleteProvidersStmt, deleteProviders, arg.Username, arg.Name)
+	return err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+ update users set is_active = false where email = $1 or username = $1
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, email string) error {
+	_, err := q.exec(ctx, q.deleteUserStmt, deleteUser, email)
+	return err
+}
+
+const deleteUserLanguage = `-- name: DeleteUserLanguage :exec
+delete from user_languages a where a.user_id = (select b.id from users b where b.username = $1 or b.email = $1) and a.language_id = (select c.id from languages c where c.name = $2)
+`
+
+type DeleteUserLanguageParams struct {
+	Username sql.NullString `json:"username"`
+	Name     string         `json:"name"`
+}
+
+func (q *Queries) DeleteUserLanguage(ctx context.Context, arg DeleteUserLanguageParams) error {
+	_, err := q.exec(ctx, q.deleteUserLanguageStmt, deleteUserLanguage, arg.Username, arg.Name)
 	return err
 }
 
 const getUser = `-- name: GetUser :one
-select id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, language_name, role_name, timezone_name, zone, provider_name, client_id, client_secret, provider_logo from user_details 
+select id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, timezone_name, zone from user_details 
 where username = $1 or email = $1 limit 1
 `
 
@@ -202,16 +236,76 @@ func (q *Queries) GetUser(ctx context.Context, username sql.NullString) (UserDet
 		&i.IsLockedOut,
 		&i.ProfilePicture,
 		&i.IsActive,
-		&i.LanguageName,
-		&i.RoleName,
 		&i.TimezoneName,
 		&i.Zone,
-		&i.ProviderName,
-		&i.ClientID,
-		&i.ClientSecret,
-		&i.ProviderLogo,
 	)
 	return i, err
+}
+
+const getUserLanguages = `-- name: GetUserLanguages :many
+select a.id, a.name, (select b.proficiency from user_languages b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1)) as proficiency from languages a where a.id = (select d.language_id from user_languages d where d.user_id = (select e.id from users where e.username = $1 or e.email = $1))
+`
+
+type GetUserLanguagesRow struct {
+	ID          int64       `json:"id"`
+	Name        string      `json:"name"`
+	Proficiency interface{} `json:"proficiency"`
+}
+
+func (q *Queries) GetUserLanguages(ctx context.Context, username sql.NullString) ([]GetUserLanguagesRow, error) {
+	rows, err := q.query(ctx, q.getUserLanguagesStmt, getUserLanguages, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserLanguagesRow
+	for rows.Next() {
+		var i GetUserLanguagesRow
+		if err := rows.Scan(&i.ID, &i.Name, &i.Proficiency); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserProviders = `-- name: GetUserProviders :many
+select id, name, client_id, client_secret, image_url from identity_providers a where a.id = (select b.identity_provider_id from user_providers b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1))
+`
+
+func (q *Queries) GetUserProviders(ctx context.Context, username sql.NullString) ([]IdentityProvider, error) {
+	rows, err := q.query(ctx, q.getUserProvidersStmt, getUserProviders, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []IdentityProvider
+	for rows.Next() {
+		var i IdentityProvider
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ClientID,
+			&i.ClientSecret,
+			&i.ImageUrl,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUserRoles = `-- name: GetUserRoles :many
@@ -241,8 +335,35 @@ func (q *Queries) GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]str
 	return items, nil
 }
 
+const getUserTimezones = `-- name: GetUserTimezones :many
+select id, name, zone from timezones a where a.id = (select b.timezone_id from user_timezones b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1))
+`
+
+func (q *Queries) GetUserTimezones(ctx context.Context, username sql.NullString) ([]Timezone, error) {
+	rows, err := q.query(ctx, q.getUserTimezonesStmt, getUserTimezones, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Timezone
+	for rows.Next() {
+		var i Timezone
+		if err := rows.Scan(&i.ID, &i.Name, &i.Zone); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUsers = `-- name: GetUsers :many
-select id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, language_name, role_name, timezone_name, zone, provider_name, client_id, client_secret, provider_logo from user_details
+select id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, address, city, state, country, created_at, is_locked_out, profile_picture, is_active, timezone_name, zone from user_details
 `
 
 func (q *Queries) GetUsers(ctx context.Context) ([]UserDetail, error) {
@@ -272,14 +393,8 @@ func (q *Queries) GetUsers(ctx context.Context) ([]UserDetail, error) {
 			&i.IsLockedOut,
 			&i.ProfilePicture,
 			&i.IsActive,
-			&i.LanguageName,
-			&i.RoleName,
 			&i.TimezoneName,
 			&i.Zone,
-			&i.ProviderName,
-			&i.ClientID,
-			&i.ClientSecret,
-			&i.ProviderLogo,
 		); err != nil {
 			return nil, err
 		}
@@ -382,7 +497,7 @@ const updateUserLanguage = `-- name: UpdateUserLanguage :one
 update user_languages set user_id = (select a.id from users a where a.username = $1 or a.email = $1 limit 1) , 
 language_id = (select b.id from languages b where b.name = $2) 
 where user_id = (select c.id from users c where c.username = $3 or c.email = $3 limit 1)
-and language_id = (select d.id from languages d where  d.name = $4) returning id, user_id, language_id
+and language_id = (select d.id from languages d where  d.name = $4) returning id, user_id, language_id, proficiency
 `
 
 type UpdateUserLanguageParams struct {
@@ -400,7 +515,12 @@ func (q *Queries) UpdateUserLanguage(ctx context.Context, arg UpdateUserLanguage
 		arg.Name_2,
 	)
 	var i UserLanguage
-	err := row.Scan(&i.ID, &i.UserID, &i.LanguageID)
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.LanguageID,
+		&i.Proficiency,
+	)
 	return i, err
 }
 

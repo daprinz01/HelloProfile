@@ -27,15 +27,25 @@ insert into users ("firstname",
 
 -- name: AddUserLanguage :one
 insert into user_languages (
-    user_id, language_id
-) values ((select a.id from users a where a.username = $1 or a.email = $1 limit 1), (select b.id from languages b where  b.name = $2))
+    user_id, language_id, proficiency
+) values ((select a.id from users a where a.username = $1 or a.email = $1 limit 1), (select b.id from languages b where  b.name = $2), $3)
 returning *;
+
+-- name: GetUserLanguages :many
+select a.id, a.name, (select b.proficiency from user_languages b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1)) as proficiency from languages a where a.id = (select d.language_id from user_languages d where d.user_id = (select e.id from users where e.username = $1 or e.email = $1));
+
+-- name: DeleteUserLanguage :exec
+delete from user_languages a where a.user_id = (select b.id from users b where b.username = $1 or b.email = $1) and a.language_id = (select c.id from languages c where c.name = $2);
 
 -- name: UpdateUserLanguage :one
 update user_languages set user_id = (select a.id from users a where a.username = $1 or a.email = $1 limit 1) , 
 language_id = (select b.id from languages b where b.name = $2) 
 where user_id = (select c.id from users c where c.username = $3 or c.email = $3 limit 1)
 and language_id = (select d.id from languages d where  d.name = $4) returning *;
+
+-- name: GetUserTimezones :many
+select * from timezones a where a.id = (select b.timezone_id from user_timezones b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1));
+
 
 -- name: AddUserTimezone :one
 insert into user_timezones (
@@ -47,6 +57,10 @@ returning *;
 update user_timezones set user_id = (select a.id from users a where a.username = $1 or a.email = $1 limit 1) , 
 timezone_id = (select b.id from timezones b where b.name = $2) where user_id = (select c.id from users c where c.username = $3 or c.email = $3 limit 1) returning *;
 
+
+-- name: GetUserProviders :many
+select * from identity_providers a where a.id = (select b.identity_provider_id from user_providers b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1));
+
 -- name: AddUserProvider :one
 insert into user_providers (
     user_id, identity_provider_id
@@ -56,6 +70,10 @@ returning *;
 -- name: UpdateUserProvider :one
 update user_providers set user_id = (select id from users a where  a.username = $1 or a.email = $1 limit 1) , 
 identity_provider_id = (select b.id from identity_providers b where  b.name = $2) where user_id = (select c.id from users c where c.username = $1 or c.email = $1 limit 1) and identity_provider_id = (select d.id from identity_providers d where  d.name = $2)  returning *;
+
+-- name: DeleteProviders :exec
+delete from user_providers a where a.user_id = (select b.id from users b where b.username = $1 or b.email = $1) and a.identity_provider_id = (select c.id from identity_providers c where c.name = $2);
+
 
 -- name: GetUserRoles :many
 select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1);
@@ -94,7 +112,7 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
   returning *;
 
 -- name: DeleteUser :exec
- update users set is_active = false;
+ update users set is_active = false where email = $1 or username = $1;
 
  
 

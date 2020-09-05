@@ -112,20 +112,15 @@ type UserDetail struct {
 	IsLockedOut               bool           `json:"is_locked_out"`
 	ProfilePicture            sql.NullString `json:"profile_picture"`
 	IsActive                  bool           `json:"is_active"`
-	LanguageName              sql.NullString `json:"language_name"`
-	RoleName                  sql.NullString `json:"role_name"`
 	TimezoneName              sql.NullString `json:"timezone_name"`
 	Zone                      sql.NullString `json:"zone"`
-	ProviderName              sql.NullString `json:"provider_name"`
-	ClientID                  sql.NullString `json:"client_id"`
-	ClientSecret              sql.NullString `json:"client_secret"`
-	ProviderLogo              sql.NullString `json:"provider_logo"`
 }
 
 type UserLanguage struct {
-	ID         int64         `json:"id"`
-	UserID     sql.NullInt64 `json:"user_id"`
-	LanguageID sql.NullInt64 `json:"language_id"`
+	ID          int64          `json:"id"`
+	UserID      sql.NullInt64  `json:"user_id"`
+	LanguageID  sql.NullInt64  `json:"language_id"`
+	Proficiency sql.NullString `json:"proficiency"`
 }
 
 type UserLogin struct {

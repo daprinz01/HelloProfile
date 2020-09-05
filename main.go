@@ -87,13 +87,27 @@ func main() {
 	r := mux.NewRouter()
 	apiNoAuth := r.PathPrefix("/api/v1").Subrouter()
 	auth := r.PathPrefix("/api/v1/auth").Subrouter()
+	// Methods that don't require the application information is it's being verified in a middleware
 	apiNoAuth.Use(env.CheckApplication)
 	apiNoAuth.HandleFunc("/{application}/refresh", env.RefreshToken).Methods(http.MethodGet)
 	apiNoAuth.HandleFunc("/{application}/otp/send", env.SendOtp).Methods(http.MethodPost)
 	apiNoAuth.HandleFunc("/{application}/password/reset", env.ResetPassword).Methods(http.MethodPost)
+	apiNoAuth.HandleFunc("/{application}/user/{username}", env.CheckAvailability).Methods(http.MethodGet)
+
+	// Methods that check application themselves and use the applicaiton information
 	auth.HandleFunc("/{application}/login", env.Login).Methods(http.MethodPost)
 	auth.HandleFunc("/{application}/user", env.Register).Methods(http.MethodPost)
 	auth.HandleFunc("/{application}/otp/verify", env.VerifyOtp).Methods(http.MethodPost)
+
+	// Methods that require authentication but don't need the information from the applications or authorization to function
+	apiAuth := apiNoAuth.PathPrefix("/app").Subrouter()
+	apiAuth.Use(controllers.Authorize)
+	apiAuth.HandleFunc("/{application}/user/{username}", env.GetUser).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/user", env.UpdateUser).Methods(http.MethodPut)
+	apiAuth.HandleFunc("/{application}/user/{username}", env.DeleteUser).Methods(http.MethodDelete)
+	apiAuth.HandleFunc("/{application}/user/languages/{username}", env.GetUserLanguages).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/user/languages/{username}/{language}/{proficiency}", env.AddUserLanguage).Methods(http.MethodPost)
+	apiAuth.HandleFunc("/{application}/user/languages/{username}/{language}", env.AddUserLanguage).Methods(http.MethodDelete)
 
 	srv := &http.Server{
 		Handler:      r,

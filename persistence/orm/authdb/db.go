@@ -76,6 +76,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteOtpStmt, err = db.PrepareContext(ctx, deleteOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOtp: %w", err)
 	}
+	if q.deleteProvidersStmt, err = db.PrepareContext(ctx, deleteProviders); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteProviders: %w", err)
+	}
 	if q.deleteRefreshTokenStmt, err = db.PrepareContext(ctx, deleteRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteRefreshToken: %w", err)
 	}
@@ -87,6 +90,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
+	}
+	if q.deleteUserLanguageStmt, err = db.PrepareContext(ctx, deleteUserLanguage); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteUserLanguage: %w", err)
 	}
 	if q.deleteUserLoginStmt, err = db.PrepareContext(ctx, deleteUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUserLogin: %w", err)
@@ -148,14 +154,23 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
 	}
+	if q.getUserLanguagesStmt, err = db.PrepareContext(ctx, getUserLanguages); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserLanguages: %w", err)
+	}
 	if q.getUserLoginStmt, err = db.PrepareContext(ctx, getUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserLogin: %w", err)
 	}
 	if q.getUserLoginsStmt, err = db.PrepareContext(ctx, getUserLogins); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserLogins: %w", err)
 	}
+	if q.getUserProvidersStmt, err = db.PrepareContext(ctx, getUserProviders); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserProviders: %w", err)
+	}
 	if q.getUserRolesStmt, err = db.PrepareContext(ctx, getUserRoles); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserRoles: %w", err)
+	}
+	if q.getUserTimezonesStmt, err = db.PrepareContext(ctx, getUserTimezones); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserTimezones: %w", err)
 	}
 	if q.getUsersStmt, err = db.PrepareContext(ctx, getUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUsers: %w", err)
@@ -297,6 +312,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteOtpStmt: %w", cerr)
 		}
 	}
+	if q.deleteProvidersStmt != nil {
+		if cerr := q.deleteProvidersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteProvidersStmt: %w", cerr)
+		}
+	}
 	if q.deleteRefreshTokenStmt != nil {
 		if cerr := q.deleteRefreshTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteRefreshTokenStmt: %w", cerr)
@@ -315,6 +335,11 @@ func (q *Queries) Close() error {
 	if q.deleteUserStmt != nil {
 		if cerr := q.deleteUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUserStmt: %w", cerr)
+		}
+	}
+	if q.deleteUserLanguageStmt != nil {
+		if cerr := q.deleteUserLanguageStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteUserLanguageStmt: %w", cerr)
 		}
 	}
 	if q.deleteUserLoginStmt != nil {
@@ -417,6 +442,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
 		}
 	}
+	if q.getUserLanguagesStmt != nil {
+		if cerr := q.getUserLanguagesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserLanguagesStmt: %w", cerr)
+		}
+	}
 	if q.getUserLoginStmt != nil {
 		if cerr := q.getUserLoginStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserLoginStmt: %w", cerr)
@@ -427,9 +457,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUserLoginsStmt: %w", cerr)
 		}
 	}
+	if q.getUserProvidersStmt != nil {
+		if cerr := q.getUserProvidersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserProvidersStmt: %w", cerr)
+		}
+	}
 	if q.getUserRolesStmt != nil {
 		if cerr := q.getUserRolesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserRolesStmt: %w", cerr)
+		}
+	}
+	if q.getUserTimezonesStmt != nil {
+		if cerr := q.getUserTimezonesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserTimezonesStmt: %w", cerr)
 		}
 	}
 	if q.getUsersStmt != nil {
@@ -564,10 +604,12 @@ type Queries struct {
 	deleteIdentityProviderStmt *sql.Stmt
 	deleteLanguageStmt         *sql.Stmt
 	deleteOtpStmt              *sql.Stmt
+	deleteProvidersStmt        *sql.Stmt
 	deleteRefreshTokenStmt     *sql.Stmt
 	deleteRolesStmt            *sql.Stmt
 	deleteTimezoneStmt         *sql.Stmt
 	deleteUserStmt             *sql.Stmt
+	deleteUserLanguageStmt     *sql.Stmt
 	deleteUserLoginStmt        *sql.Stmt
 	getAllOtpStmt              *sql.Stmt
 	getApplicationStmt         *sql.Stmt
@@ -588,9 +630,12 @@ type Queries struct {
 	getTimezonesStmt           *sql.Stmt
 	getUnResoledLoginsStmt     *sql.Stmt
 	getUserStmt                *sql.Stmt
+	getUserLanguagesStmt       *sql.Stmt
 	getUserLoginStmt           *sql.Stmt
 	getUserLoginsStmt          *sql.Stmt
+	getUserProvidersStmt       *sql.Stmt
 	getUserRolesStmt           *sql.Stmt
+	getUserTimezonesStmt       *sql.Stmt
 	getUsersStmt               *sql.Stmt
 	updateApplicationStmt      *sql.Stmt
 	updateApplicationRoleStmt  *sql.Stmt
@@ -630,10 +675,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteIdentityProviderStmt: q.deleteIdentityProviderStmt,
 		deleteLanguageStmt:         q.deleteLanguageStmt,
 		deleteOtpStmt:              q.deleteOtpStmt,
+		deleteProvidersStmt:        q.deleteProvidersStmt,
 		deleteRefreshTokenStmt:     q.deleteRefreshTokenStmt,
 		deleteRolesStmt:            q.deleteRolesStmt,
 		deleteTimezoneStmt:         q.deleteTimezoneStmt,
 		deleteUserStmt:             q.deleteUserStmt,
+		deleteUserLanguageStmt:     q.deleteUserLanguageStmt,
 		deleteUserLoginStmt:        q.deleteUserLoginStmt,
 		getAllOtpStmt:              q.getAllOtpStmt,
 		getApplicationStmt:         q.getApplicationStmt,
@@ -654,9 +701,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getTimezonesStmt:           q.getTimezonesStmt,
 		getUnResoledLoginsStmt:     q.getUnResoledLoginsStmt,
 		getUserStmt:                q.getUserStmt,
+		getUserLanguagesStmt:       q.getUserLanguagesStmt,
 		getUserLoginStmt:           q.getUserLoginStmt,
 		getUserLoginsStmt:          q.getUserLoginsStmt,
+		getUserProvidersStmt:       q.getUserProvidersStmt,
 		getUserRolesStmt:           q.getUserRolesStmt,
+		getUserTimezonesStmt:       q.getUserTimezonesStmt,
 		getUsersStmt:               q.getUsersStmt,
 		updateApplicationStmt:      q.updateApplicationStmt,
 		updateApplicationRoleStmt:  q.updateApplicationRoleStmt,

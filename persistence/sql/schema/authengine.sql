@@ -40,6 +40,7 @@ create table "user_languages" (
     "id" bigserial primary key,
     "user_id" bigserial ,
     "language_id" bigserial,
+    "proficiency" varchar null,
     CONSTRAINT "uc_user_languages" UNIQUE ("id")
 );
 
@@ -134,14 +135,8 @@ create table  user_details(
   "is_locked_out" BOOLEAN not null default FALSE,
   "profile_picture" varchar  null,
   "is_active" BOOLEAN not null DEFAULT TRUE,
-  "language_name" VARCHAR null,
-  "role_name" varchar null,
   "timezone_name" varchar null,
-  "zone" varchar null,
-  "provider_name" varchar null,
-  "client_id" varchar null,
-  "client_secret" varchar null,
-  "provider_logo" varchar null
+  "zone" varchar null
 );
 
 create table refresh_token(

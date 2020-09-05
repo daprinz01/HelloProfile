@@ -5,7 +5,7 @@ migrationUp:
 migrationDown:
 	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose down
 migrationForce:
-	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose force 19
+	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose force 22
 migrationGoto:
 	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose goto 2
 installSqlc:
