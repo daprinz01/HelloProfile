@@ -152,6 +152,65 @@ func (env *Env) GetUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// GetUsers is used to fetch user details. This is an admin function. User must be an admin to access this function
+func (env *Env) GetUsers(w http.ResponseWriter, r *http.Request) {
+	log.Println("Get User Request received")
+
+	var errorResponse models.Errormessage
+	var err error
+
+	users, err := env.AuthDb.GetUsers(context.Background())
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "User does not exist"
+		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	var userResponse []models.UserDetail
+	for index, user := range users {
+		tempUser := models.UserDetail{
+			Address:                   user.Address.String,
+			City:                      user.City.String,
+			Country:                   user.Country.String,
+			CreatedAt:                 user.CreatedAt,
+			Email:                     user.Email,
+			Firstname:                 user.Firstname.String,
+			ProfilePicture:            user.ProfilePicture.String,
+			IsActive:                  user.IsActive,
+			IsEmailConfirmed:          user.IsEmailConfirmed,
+			IsLockedOut:               user.IsLockedOut,
+			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
+			Lastname:                  user.Lastname.String,
+			Password:                  "",
+			State:                     user.State.String,
+			Username:                  user.Username.String,
+			Phone:                     user.Phone.String,
+		}
+		userResponse[index] = tempUser
+	}
+	log.Println(fmt.Sprintf("Returning %d users...", len(users)))
+
+	resetResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+		ResponseDetails: &userResponse,
+	}
+	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
 // UpdateUser is used to update User information. It can be used to update user details and timezone details as required. Only pass the details to be updated. Email or username is mandatory.
 func (env *Env) UpdateUser(w http.ResponseWriter, r *http.Request) {
 

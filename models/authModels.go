@@ -45,13 +45,8 @@ type UserDetail struct {
 	ProfilePicture            string    `json:"profile_picture"`
 	IsActive                  bool      `json:"is_active"`
 	LanguageName              string    `json:"language_name"`
-	RoleName                  string    `json:"role_name"`
 	TimezoneName              string    `json:"timezone_name"`
 	Zone                      string    `json:"zone"`
-	ProviderName              string    `json:"provider_name"`
-	ClientID                  string    `json:"client_id"`
-	ClientSecret              string    `json:"client_secret"`
-	ProviderLogo              string    `json:"provider_logo"`
 }
 
 // RefreshResponse is used to send success message for a successful refresh of auth token

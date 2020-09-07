@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -43,7 +44,7 @@ func (env *Env) GetUserLanguages(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	languages, err := env.AuthDb.GetUserLanguages(context.Background(), sql.NullString{String: username, Valid: true})
+	languages, err := env.AuthDb.GetUserLanguages(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not have any language yet"
@@ -146,8 +147,8 @@ func (env *Env) AddUserLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 	go func() {
 		languages, err := env.AuthDb.AddUserLanguage(context.Background(), authdb.AddUserLanguageParams{
-			Username:    sql.NullString{String: username, Valid: true},
-			Name:        language,
+			Username:    sql.NullString{String: strings.ToLower(username), Valid: true},
+			Name:        strings.ToLower(language),
 			Proficiency: sql.NullString{String: proficiency, Valid: true},
 		})
 		if err != nil {
@@ -221,8 +222,8 @@ func (env *Env) DeleteUserLanguages(w http.ResponseWriter, r *http.Request) {
 	}
 	err = env.AuthDb.DeleteUserLanguage(context.Background(),
 		authdb.DeleteUserLanguageParams{
-			Username: sql.NullString{String: username, Valid: true},
-			Name:     language,
+			Username: sql.NullString{String: strings.ToLower(username), Valid: true},
+			Name:     strings.ToLower(language),
 		})
 	if err != nil {
 		errorResponse.Errorcode = "03"
@@ -238,6 +239,291 @@ func (env *Env) DeleteUserLanguages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(fmt.Sprintf("Successfully delete user languages"))
+
+	languageResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+	}
+	responsebytes, err := json.MarshalIndent(languageResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
+// GetLanguages is used get languages
+func (env *Env) GetLanguages(w http.ResponseWriter, r *http.Request) {
+	log.Println("Get languages request received...")
+	var errorResponse models.Errormessage
+	var err error
+	languages, err := env.AuthDb.GetLanguages(context.Background())
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Languages not found"
+		log.Println("languages not found")
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Successfully retrieved user languages: %v", languages))
+	var languagesResponse []string
+	for index, value := range languages {
+		languagesResponse[index] = value.Name
+	}
+	languageResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+		ResponseDetails: languagesResponse,
+	}
+	responsebytes, err := json.MarshalIndent(languageResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
+// GetLanguage is used get languages
+func (env *Env) GetLanguage(w http.ResponseWriter, r *http.Request) {
+	log.Println("Get languages request received...")
+	pathParams := mux.Vars(r)
+	var errorResponse models.Errormessage
+	var err error
+	var language string
+	if val2, ok := pathParams["language"]; ok {
+		language = val2
+		log.Println(fmt.Sprintf("Language: %s", language))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Language not specified"
+			log.Println("Language not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	languages, err := env.AuthDb.GetLanguage(context.Background(), strings.ToLower(language))
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Language not found"
+		log.Println("languages not found")
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Successfully retrieved user languages: %v", languages))
+	languagesResponse := languages.Name
+
+	languageResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+		ResponseDetails: languagesResponse,
+	}
+	responsebytes, err := json.MarshalIndent(languageResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
+// AddLanguage is used add languages
+func (env *Env) AddLanguage(w http.ResponseWriter, r *http.Request) {
+	log.Println("Add languages request received...")
+	pathParams := mux.Vars(r)
+	var errorResponse models.Errormessage
+	var err error
+	var language string
+	if val, ok := pathParams["language"]; ok {
+		language = val
+		log.Println(fmt.Sprintf("Language: %s", language))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Language not specified"
+			log.Println("Language not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	languages, err := env.AuthDb.CreateLanguage(context.Background(), strings.ToLower(language))
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Could not add language. Duplicate found"
+		log.Println(fmt.Sprintf("Error occured adding new language: %s", err))
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Successfully added language: %v", languages))
+
+	languageResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+	}
+	responsebytes, err := json.MarshalIndent(languageResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
+// UpdateLanguage is used add languages
+func (env *Env) UpdateLanguage(w http.ResponseWriter, r *http.Request) {
+	log.Println("Update languages request received...")
+	pathParams := mux.Vars(r)
+	var errorResponse models.Errormessage
+	var err error
+	var language string
+	if val, ok := pathParams["language"]; ok {
+		language = val
+		log.Println(fmt.Sprintf("Language: %s", language))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Language not specified"
+			log.Println("Language not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	var newLanguage string
+	if val, ok := pathParams["newLanguage"]; ok {
+		newLanguage = val
+		log.Println(fmt.Sprintf("New Language: %s", strings.ToLower(language)))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "New Language not specified"
+			log.Println("New Language not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	languages, err := env.AuthDb.UpdateLanguage(context.Background(), authdb.UpdateLanguageParams{
+		Name:   strings.ToLower(language),
+		Name_2: strings.ToLower(newLanguage),
+	})
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Could not update language. Duplicate found"
+		log.Println(fmt.Sprintf("Error occured updating new language: %s", err))
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Successfully updated language: %v", languages))
+	languagesResponse := languages.Name
+
+	languageResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+		ResponseDetails: languagesResponse,
+	}
+	responsebytes, err := json.MarshalIndent(languageResponse, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
+// DeleteLanguage is used add languages
+func (env *Env) DeleteLanguage(w http.ResponseWriter, r *http.Request) {
+	log.Println("Delete languages request received...")
+	pathParams := mux.Vars(r)
+	var errorResponse models.Errormessage
+	var err error
+	var language string
+	if val, ok := pathParams["language"]; ok {
+		language = val
+		log.Println(fmt.Sprintf("Language: %s", language))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Language not specified"
+			log.Println("Language not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	err = env.AuthDb.DeleteLanguage(context.Background(), strings.ToLower(language))
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Could not delete language. Language not found"
+		log.Println(fmt.Sprintf("Error occured deleting  language: %s", err))
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(response)
+		return
+	}
+	log.Println("Successfully deleted language")
 
 	languageResponse := &models.SuccessResponse{
 		ResponseCode:    "00",

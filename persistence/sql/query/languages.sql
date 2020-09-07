@@ -4,9 +4,8 @@ select * from languages;
 -- name: GetLanguage :one
 select * from languages where name = $1  limit 1;
 
---- name: CreateLanguage :one
-insert into languages (name)
-values ($1)
+-- name: CreateLanguage :one
+insert into languages (name) values ($1)
 returning *;
 
 -- name: UpdateLanguage :one

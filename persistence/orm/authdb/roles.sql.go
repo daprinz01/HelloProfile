@@ -73,6 +73,33 @@ func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
 	return items, nil
 }
 
+const getRolesByApplication = `-- name: GetRolesByApplication :many
+select id, name, description from roles c where c.id = (select b.roles_id from applications_roles b where b.applications_id = (select a.id from applications a where a.name = $1))
+`
+
+func (q *Queries) GetRolesByApplication(ctx context.Context, name string) ([]Role, error) {
+	rows, err := q.query(ctx, q.getRolesByApplicationStmt, getRolesByApplication, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Role
+	for rows.Next() {
+		var i Role
+		if err := rows.Scan(&i.ID, &i.Name, &i.Description); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateRole = `-- name: UpdateRole :one
 update roles set name = $1, "description" = $2 where name = $3
 returning id, name, description

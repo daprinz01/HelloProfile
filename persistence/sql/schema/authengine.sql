@@ -4,6 +4,7 @@ create table "applications" (
   "id" bigserial PRIMARY KEY,
   name varchar NOT NULL,
   "description" varchar NOT NULL,
+  "icon_url" varchar null,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
 
   CONSTRAINT "uc_applications" UNIQUE ("id", name)
@@ -98,7 +99,7 @@ create TABLE "countries" (
     "id" bigserial PRIMARY KEY,
     name VARCHAR not NULL,
     "flag_image_url" VARCHAR null,
-
+"country_code" varchar null,
     CONSTRAINT "uc_countries" UNIQUE ("id", name, "flag_image_url")
 );
 create TABLE "states" (

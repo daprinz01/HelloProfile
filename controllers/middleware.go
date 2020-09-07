@@ -103,3 +103,56 @@ func Authorize(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// AuthorizeAdmin is used to check if requests are authorized
+func AuthorizeAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("Checking admin authorization...")
+		var errorResponse models.Errormessage
+		var err error
+		var authCode string
+		authArray := strings.Split(r.Header.Get("Authorization"), " ")
+		if len(authArray) != 2 {
+			errorResponse.Errorcode = "11"
+			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
+			log.Println("Unsupported authentication scheme type")
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+		authCode = authArray[1]
+
+		verifiedClaims, err := util.VerifyToken(authCode)
+
+		if err != nil || verifiedClaims.Email == "" {
+			errorResponse.Errorcode = "09"
+			errorResponse.ErrorMessage = "Session expired. Kindly try generating one time password again"
+			log.Println("Token has expired...")
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+		if strings.ToLower(verifiedClaims.Role) != "admin" || strings.ToLower(verifiedClaims.Role) != "superadmin" {
+			errorResponse.Errorcode = "09"
+			errorResponse.ErrorMessage = "Sorry, you are not authorized to carry out this operation."
+			log.Println("Token has expired...")
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write(response)
+			return
+		}
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, r)
+	})
+}

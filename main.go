@@ -92,22 +92,76 @@ func main() {
 	apiNoAuth.HandleFunc("/{application}/refresh", env.RefreshToken).Methods(http.MethodGet)
 	apiNoAuth.HandleFunc("/{application}/otp/send", env.SendOtp).Methods(http.MethodPost)
 	apiNoAuth.HandleFunc("/{application}/password/reset", env.ResetPassword).Methods(http.MethodPost)
-	apiNoAuth.HandleFunc("/{application}/user/{username}", env.CheckAvailability).Methods(http.MethodGet)
 
 	// Methods that check application themselves and use the applicaiton information
 	auth.HandleFunc("/{application}/login", env.Login).Methods(http.MethodPost)
-	auth.HandleFunc("/{application}/user", env.Register).Methods(http.MethodPost)
 	auth.HandleFunc("/{application}/otp/verify", env.VerifyOtp).Methods(http.MethodPost)
 
 	// Methods that require authentication but don't need the information from the applications or authorization to function
 	apiAuth := apiNoAuth.PathPrefix("/app").Subrouter()
 	apiAuth.Use(controllers.Authorize)
+
+	// Admin operations authorization
+	apiAdminAuth := apiNoAuth.PathPrefix("/admin").Subrouter()
+	apiAdminAuth.Use(controllers.AuthorizeAdmin)
+
+	// User operations
+	apiAdminAuth.HandleFunc("/{application}/user", env.GetUsers).Methods(http.MethodGet)
+	apiNoAuth.HandleFunc("/{application}/user/{username}", env.CheckAvailability).Methods(http.MethodGet)
 	apiAuth.HandleFunc("/{application}/user/{username}", env.GetUser).Methods(http.MethodGet)
+	auth.HandleFunc("/{application}/user", env.Register).Methods(http.MethodPost)
 	apiAuth.HandleFunc("/{application}/user", env.UpdateUser).Methods(http.MethodPut)
 	apiAuth.HandleFunc("/{application}/user/{username}", env.DeleteUser).Methods(http.MethodDelete)
-	apiAuth.HandleFunc("/{application}/user/languages/{username}", env.GetUserLanguages).Methods(http.MethodGet)
-	apiAuth.HandleFunc("/{application}/user/languages/{username}/{language}/{proficiency}", env.AddUserLanguage).Methods(http.MethodPost)
-	apiAuth.HandleFunc("/{application}/user/languages/{username}/{language}", env.AddUserLanguage).Methods(http.MethodDelete)
+
+	// User Language operations
+	apiAuth.HandleFunc("/{application}/user/language/{username}", env.GetUserLanguages).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/user/language/{username}/{language}/{proficiency}", env.AddUserLanguage).Methods(http.MethodPost)
+	apiAuth.HandleFunc("/{application}/user/language/{username}/{language}", env.AddUserLanguage).Methods(http.MethodDelete)
+
+	// Language operations
+	apiAuth.HandleFunc("/{application}/language/{language}", env.GetLanguage).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/language", env.GetLanguages).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/language/{language}", env.AddLanguage).Methods(http.MethodPost)
+	apiAdminAuth.HandleFunc("/{application}/language/{language}/{newLanguage}", env.UpdateLanguage).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/language/{language}", env.DeleteLanguage).Methods(http.MethodDelete)
+
+	// Timezone Operations
+	apiAuth.HandleFunc("/{application}/timezone/{timezone}", env.GetTimezone).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/timezone", env.GetTimezones).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/timezone", env.AddTimezone).Methods(http.MethodPost)
+	apiAdminAuth.HandleFunc("/{application}/timezone/{timezone}", env.UpdateTimezone).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/timezone/{timezone}", env.DeleteTimezone).Methods(http.MethodDelete)
+
+	// Application Operations
+	apiAdminAuth.HandleFunc("/{application}/application/{application}", env.GetApplication).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/application", env.GetApplications).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/application", env.AddApplication).Methods(http.MethodPost)
+	apiAdminAuth.HandleFunc("/{application}/application/{application}", env.UpdateApplication).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/application/{application}", env.DeleteApplication).Methods(http.MethodDelete)
+
+	// Countries Operations
+	apiAuth.HandleFunc("/{application}/country/{country}", env.GetCountry).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/country", env.GetCountries).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/country", env.AddCountry).Methods(http.MethodPost)
+	apiAdminAuth.HandleFunc("/{application}/country/{country}", env.UpdateCountry).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/country/{country}", env.DeleteCountry).Methods(http.MethodDelete)
+
+	// States Operations
+	apiAuth.HandleFunc("/{application}/state/{state}", env.GetState).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/state", env.GetStates).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/state/{state}/{country}", env.AddState).Methods(http.MethodPost)
+	apiAdminAuth.HandleFunc("/{application}/state/{state}", env.UpdateState).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/state/{state}", env.DeleteState).Methods(http.MethodDelete)
+	apiAuth.HandleFunc("/{application}/state/country/{country}", env.GetStatesByCountry).Methods(http.MethodGet)
+
+	// Roles Operations
+	apiAdminAuth.HandleFunc("/{application}/role/{role}", env.GetRole).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/role", env.GetRoles).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/role", env.AddRole).Methods(http.MethodPost)
+	apiAdminAuth.HandleFunc("/{application}/role/{role}", env.UpdateRole).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/role/{role}", env.DeleteRole).Methods(http.MethodDelete)
+	apiAdminAuth.HandleFunc("/{application}/role/application/{application}", env.GetRolesByApplication).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/role/{role}/{application}", env.AddApplicationRole).Methods(http.MethodGet)
 
 	srv := &http.Server{
 		Handler:      r,

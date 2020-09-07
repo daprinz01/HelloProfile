@@ -33,24 +33,32 @@ const createApplication = `-- name: CreateApplication :one
 insert into applications (
   name,
   "description",
-  "created_at")
-  values($1, $2, $3)
-  returning id, name, description, created_at
+  "created_at",
+  "icon_url")
+  values($1, $2, $3, $4)
+  returning id, name, description, icon_url, created_at
 `
 
 type CreateApplicationParams struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	CreatedAt   time.Time      `json:"created_at"`
+	IconUrl     sql.NullString `json:"icon_url"`
 }
 
 func (q *Queries) CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error) {
-	row := q.queryRow(ctx, q.createApplicationStmt, createApplication, arg.Name, arg.Description, arg.CreatedAt)
+	row := q.queryRow(ctx, q.createApplicationStmt, createApplication,
+		arg.Name,
+		arg.Description,
+		arg.CreatedAt,
+		arg.IconUrl,
+	)
 	var i Application
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.IconUrl,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -66,7 +74,7 @@ func (q *Queries) DeleteApplication(ctx context.Context, name string) error {
 }
 
 const getApplication = `-- name: GetApplication :one
-select id, name, description, created_at from applications where name = $1  limit 1
+select id, name, description, icon_url, created_at from applications where name = $1  limit 1
 `
 
 func (q *Queries) GetApplication(ctx context.Context, name string) (Application, error) {
@@ -76,6 +84,7 @@ func (q *Queries) GetApplication(ctx context.Context, name string) (Application,
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.IconUrl,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -98,7 +107,7 @@ func (q *Queries) GetApplicationRole(ctx context.Context, arg GetApplicationRole
 }
 
 const getApplications = `-- name: GetApplications :many
-select id, name, description, created_at from applications
+select id, name, description, icon_url, created_at from applications
 `
 
 func (q *Queries) GetApplications(ctx context.Context) ([]Application, error) {
@@ -114,6 +123,7 @@ func (q *Queries) GetApplications(ctx context.Context) ([]Application, error) {
 			&i.ID,
 			&i.Name,
 			&i.Description,
+			&i.IconUrl,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -130,16 +140,17 @@ func (q *Queries) GetApplications(ctx context.Context) ([]Application, error) {
 }
 
 const updateApplication = `-- name: UpdateApplication :one
-update applications set name = $1, "description" = $2, created_at = $3 
-where name = $4
-returning id, name, description, created_at
+update applications set name = $1, "description" = $2, created_at = $3, icon_url = $4 
+where name = $5
+returning id, name, description, icon_url, created_at
 `
 
 type UpdateApplicationParams struct {
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	Name_2      string    `json:"name_2"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	CreatedAt   time.Time      `json:"created_at"`
+	IconUrl     sql.NullString `json:"icon_url"`
+	Name_2      string         `json:"name_2"`
 }
 
 func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error) {
@@ -147,6 +158,7 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 		arg.Name,
 		arg.Description,
 		arg.CreatedAt,
+		arg.IconUrl,
 		arg.Name_2,
 	)
 	var i Application
@@ -154,6 +166,7 @@ func (q *Queries) UpdateApplication(ctx context.Context, arg UpdateApplicationPa
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.IconUrl,
 		&i.CreatedAt,
 	)
 	return i, err

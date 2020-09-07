@@ -7,6 +7,18 @@ import (
 	"context"
 )
 
+const createLanguage = `-- name: CreateLanguage :one
+insert into languages (name) values ($1)
+returning id, name
+`
+
+func (q *Queries) CreateLanguage(ctx context.Context, name string) (Language, error) {
+	row := q.queryRow(ctx, q.createLanguageStmt, createLanguage, name)
+	var i Language
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const deleteLanguage = `-- name: DeleteLanguage :exec
 delete from languages where name = $1
 `

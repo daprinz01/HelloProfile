@@ -8,8 +8,32 @@ import (
 	"database/sql"
 )
 
+const createCountry = `-- name: CreateCountry :one
+insert into countries (name, "flag_image_url", country_code)
+values ($1, $2, $3)
+returning id, name, flag_image_url, country_code
+`
+
+type CreateCountryParams struct {
+	Name         string         `json:"name"`
+	FlagImageUrl sql.NullString `json:"flag_image_url"`
+	CountryCode  sql.NullString `json:"country_code"`
+}
+
+func (q *Queries) CreateCountry(ctx context.Context, arg CreateCountryParams) (Country, error) {
+	row := q.queryRow(ctx, q.createCountryStmt, createCountry, arg.Name, arg.FlagImageUrl, arg.CountryCode)
+	var i Country
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.FlagImageUrl,
+		&i.CountryCode,
+	)
+	return i, err
+}
+
 const deleteCountry = `-- name: DeleteCountry :exec
-delete from countries where name = $1  or flag_image_url = $1
+delete from countries where name = $1  or flag_image_url = $1 or country_code = $1
 `
 
 func (q *Queries) DeleteCountry(ctx context.Context, name string) error {
@@ -18,7 +42,7 @@ func (q *Queries) DeleteCountry(ctx context.Context, name string) error {
 }
 
 const getCountries = `-- name: GetCountries :many
-select id, name, flag_image_url from countries
+select id, name, flag_image_url, country_code from countries
 `
 
 func (q *Queries) GetCountries(ctx context.Context) ([]Country, error) {
@@ -30,7 +54,12 @@ func (q *Queries) GetCountries(ctx context.Context) ([]Country, error) {
 	var items []Country
 	for rows.Next() {
 		var i Country
-		if err := rows.Scan(&i.ID, &i.Name, &i.FlagImageUrl); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.FlagImageUrl,
+			&i.CountryCode,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -45,30 +74,46 @@ func (q *Queries) GetCountries(ctx context.Context) ([]Country, error) {
 }
 
 const getCountry = `-- name: GetCountry :one
-select id, name, flag_image_url from countries where name = $1  limit 1
+select id, name, flag_image_url, country_code from countries where name = $1  limit 1
 `
 
 func (q *Queries) GetCountry(ctx context.Context, name string) (Country, error) {
 	row := q.queryRow(ctx, q.getCountryStmt, getCountry, name)
 	var i Country
-	err := row.Scan(&i.ID, &i.Name, &i.FlagImageUrl)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.FlagImageUrl,
+		&i.CountryCode,
+	)
 	return i, err
 }
 
 const updateCountry = `-- name: UpdateCountry :one
-update countries set name = $1, flag_image_url = $2 where name = $3
-returning id, name, flag_image_url
+update countries set name = $1, flag_image_url = $2, country_code= $4  where name = $3
+returning id, name, flag_image_url, country_code
 `
 
 type UpdateCountryParams struct {
 	Name         string         `json:"name"`
 	FlagImageUrl sql.NullString `json:"flag_image_url"`
 	Name_2       string         `json:"name_2"`
+	CountryCode  sql.NullString `json:"country_code"`
 }
 
 func (q *Queries) UpdateCountry(ctx context.Context, arg UpdateCountryParams) (Country, error) {
-	row := q.queryRow(ctx, q.updateCountryStmt, updateCountry, arg.Name, arg.FlagImageUrl, arg.Name_2)
+	row := q.queryRow(ctx, q.updateCountryStmt, updateCountry,
+		arg.Name,
+		arg.FlagImageUrl,
+		arg.Name_2,
+		arg.CountryCode,
+	)
 	var i Country
-	err := row.Scan(&i.ID, &i.Name, &i.FlagImageUrl)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.FlagImageUrl,
+		&i.CountryCode,
+	)
 	return i, err
 }

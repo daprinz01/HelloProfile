@@ -8,10 +8,11 @@ import (
 )
 
 type Application struct {
-	ID          int64     `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int64          `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	IconUrl     sql.NullString `json:"icon_url"`
+	CreatedAt   time.Time      `json:"created_at"`
 }
 
 type ApplicationsRole struct {
@@ -24,6 +25,7 @@ type Country struct {
 	ID           int64          `json:"id"`
 	Name         string         `json:"name"`
 	FlagImageUrl sql.NullString `json:"flag_image_url"`
+	CountryCode  sql.NullString `json:"country_code"`
 }
 
 type IdentityProvider struct {

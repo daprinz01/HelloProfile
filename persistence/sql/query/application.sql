@@ -11,8 +11,9 @@ select * from applications_roles where roles_id = $1 and applications_id = $2 li
 insert into applications (
   name,
   "description",
-  "created_at")
-  values($1, $2, $3)
+  "created_at",
+  "icon_url")
+  values($1, $2, $3, $4)
   returning *;
 
 -- name: AddApplicationRole :one
@@ -31,8 +32,8 @@ returning *;
 
 
 -- name: UpdateApplication :one
-update applications set name = $1, "description" = $2, created_at = $3 
-where name = $4
+update applications set name = $1, "description" = $2, created_at = $3, icon_url = $4 
+where name = $5
 returning *;
 
 -- name: DeleteApplication :exec
