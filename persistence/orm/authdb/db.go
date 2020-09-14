@@ -49,6 +49,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createLanguageStmt, err = db.PrepareContext(ctx, createLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateLanguage: %w", err)
 	}
+	if q.createLanguageProficiencyStmt, err = db.PrepareContext(ctx, createLanguageProficiency); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateLanguageProficiency: %w", err)
+	}
 	if q.createOtpStmt, err = db.PrepareContext(ctx, createOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateOtp: %w", err)
 	}
@@ -81,6 +84,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteLanguageStmt, err = db.PrepareContext(ctx, deleteLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteLanguage: %w", err)
+	}
+	if q.deleteLanguageProficiencyStmt, err = db.PrepareContext(ctx, deleteLanguageProficiency); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteLanguageProficiency: %w", err)
 	}
 	if q.deleteOtpStmt, err = db.PrepareContext(ctx, deleteOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOtp: %w", err)
@@ -135,6 +141,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getLanguageStmt, err = db.PrepareContext(ctx, getLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLanguage: %w", err)
+	}
+	if q.getLanguageProficienciesStmt, err = db.PrepareContext(ctx, getLanguageProficiencies); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLanguageProficiencies: %w", err)
+	}
+	if q.getLanguageProficiencyStmt, err = db.PrepareContext(ctx, getLanguageProficiency); err != nil {
+		return nil, fmt.Errorf("error preparing query GetLanguageProficiency: %w", err)
 	}
 	if q.getLanguagesStmt, err = db.PrepareContext(ctx, getLanguages); err != nil {
 		return nil, fmt.Errorf("error preparing query GetLanguages: %w", err)
@@ -213,6 +225,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateLanguageStmt, err = db.PrepareContext(ctx, updateLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateLanguage: %w", err)
+	}
+	if q.updateLanguageProficiencyStmt, err = db.PrepareContext(ctx, updateLanguageProficiency); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateLanguageProficiency: %w", err)
 	}
 	if q.updateRefreshTokenStmt, err = db.PrepareContext(ctx, updateRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateRefreshToken: %w", err)
@@ -294,6 +309,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createLanguageStmt: %w", cerr)
 		}
 	}
+	if q.createLanguageProficiencyStmt != nil {
+		if cerr := q.createLanguageProficiencyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createLanguageProficiencyStmt: %w", cerr)
+		}
+	}
 	if q.createOtpStmt != nil {
 		if cerr := q.createOtpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createOtpStmt: %w", cerr)
@@ -347,6 +367,11 @@ func (q *Queries) Close() error {
 	if q.deleteLanguageStmt != nil {
 		if cerr := q.deleteLanguageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteLanguageStmt: %w", cerr)
+		}
+	}
+	if q.deleteLanguageProficiencyStmt != nil {
+		if cerr := q.deleteLanguageProficiencyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteLanguageProficiencyStmt: %w", cerr)
 		}
 	}
 	if q.deleteOtpStmt != nil {
@@ -437,6 +462,16 @@ func (q *Queries) Close() error {
 	if q.getLanguageStmt != nil {
 		if cerr := q.getLanguageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getLanguageStmt: %w", cerr)
+		}
+	}
+	if q.getLanguageProficienciesStmt != nil {
+		if cerr := q.getLanguageProficienciesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLanguageProficienciesStmt: %w", cerr)
+		}
+	}
+	if q.getLanguageProficiencyStmt != nil {
+		if cerr := q.getLanguageProficiencyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getLanguageProficiencyStmt: %w", cerr)
 		}
 	}
 	if q.getLanguagesStmt != nil {
@@ -569,6 +604,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateLanguageStmt: %w", cerr)
 		}
 	}
+	if q.updateLanguageProficiencyStmt != nil {
+		if cerr := q.updateLanguageProficiencyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateLanguageProficiencyStmt: %w", cerr)
+		}
+	}
 	if q.updateRefreshTokenStmt != nil {
 		if cerr := q.updateRefreshTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateRefreshTokenStmt: %w", cerr)
@@ -656,161 +696,171 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                         DBTX
-	tx                         *sql.Tx
-	addApplicationRoleStmt     *sql.Stmt
-	addUserLanguageStmt        *sql.Stmt
-	addUserProviderStmt        *sql.Stmt
-	addUserRoleStmt            *sql.Stmt
-	addUserTimezoneStmt        *sql.Stmt
-	createApplicationStmt      *sql.Stmt
-	createCountryStmt          *sql.Stmt
-	createIdentityProviderStmt *sql.Stmt
-	createLanguageStmt         *sql.Stmt
-	createOtpStmt              *sql.Stmt
-	createRefreshTokenStmt     *sql.Stmt
-	createRoleStmt             *sql.Stmt
-	createStateStmt            *sql.Stmt
-	createTimezoneStmt         *sql.Stmt
-	createUserStmt             *sql.Stmt
-	createUserLoginStmt        *sql.Stmt
-	deleteApplicationStmt      *sql.Stmt
-	deleteCountryStmt          *sql.Stmt
-	deleteIdentityProviderStmt *sql.Stmt
-	deleteLanguageStmt         *sql.Stmt
-	deleteOtpStmt              *sql.Stmt
-	deleteProvidersStmt        *sql.Stmt
-	deleteRefreshTokenStmt     *sql.Stmt
-	deleteRolesStmt            *sql.Stmt
-	deleteStateStmt            *sql.Stmt
-	deleteTimezoneStmt         *sql.Stmt
-	deleteUserStmt             *sql.Stmt
-	deleteUserLanguageStmt     *sql.Stmt
-	deleteUserLoginStmt        *sql.Stmt
-	getAllOtpStmt              *sql.Stmt
-	getApplicationStmt         *sql.Stmt
-	getApplicationRoleStmt     *sql.Stmt
-	getApplicationsStmt        *sql.Stmt
-	getCountriesStmt           *sql.Stmt
-	getCountryStmt             *sql.Stmt
-	getIdentityProviderStmt    *sql.Stmt
-	getIdentityProvidersStmt   *sql.Stmt
-	getLanguageStmt            *sql.Stmt
-	getLanguagesStmt           *sql.Stmt
-	getOtpStmt                 *sql.Stmt
-	getRefreshTokenStmt        *sql.Stmt
-	getRefreshTokensStmt       *sql.Stmt
-	getRoleStmt                *sql.Stmt
-	getRolesStmt               *sql.Stmt
-	getRolesByApplicationStmt  *sql.Stmt
-	getStateStmt               *sql.Stmt
-	getStatesStmt              *sql.Stmt
-	getStatesByCountryStmt     *sql.Stmt
-	getTimezoneStmt            *sql.Stmt
-	getTimezonesStmt           *sql.Stmt
-	getUnResoledLoginsStmt     *sql.Stmt
-	getUserStmt                *sql.Stmt
-	getUserLanguagesStmt       *sql.Stmt
-	getUserLoginStmt           *sql.Stmt
-	getUserLoginsStmt          *sql.Stmt
-	getUserProvidersStmt       *sql.Stmt
-	getUserRolesStmt           *sql.Stmt
-	getUserTimezonesStmt       *sql.Stmt
-	getUsersStmt               *sql.Stmt
-	updateApplicationStmt      *sql.Stmt
-	updateApplicationRoleStmt  *sql.Stmt
-	updateCountryStmt          *sql.Stmt
-	updateIdentityProviderStmt *sql.Stmt
-	updateLanguageStmt         *sql.Stmt
-	updateRefreshTokenStmt     *sql.Stmt
-	updateResolvedLoginStmt    *sql.Stmt
-	updateRoleStmt             *sql.Stmt
-	updateStateStmt            *sql.Stmt
-	updateTimezoneStmt         *sql.Stmt
-	updateUserStmt             *sql.Stmt
-	updateUserLanguageStmt     *sql.Stmt
-	updateUserProviderStmt     *sql.Stmt
-	updateUserRoleStmt         *sql.Stmt
-	updateUserTimezoneStmt     *sql.Stmt
+	db                            DBTX
+	tx                            *sql.Tx
+	addApplicationRoleStmt        *sql.Stmt
+	addUserLanguageStmt           *sql.Stmt
+	addUserProviderStmt           *sql.Stmt
+	addUserRoleStmt               *sql.Stmt
+	addUserTimezoneStmt           *sql.Stmt
+	createApplicationStmt         *sql.Stmt
+	createCountryStmt             *sql.Stmt
+	createIdentityProviderStmt    *sql.Stmt
+	createLanguageStmt            *sql.Stmt
+	createLanguageProficiencyStmt *sql.Stmt
+	createOtpStmt                 *sql.Stmt
+	createRefreshTokenStmt        *sql.Stmt
+	createRoleStmt                *sql.Stmt
+	createStateStmt               *sql.Stmt
+	createTimezoneStmt            *sql.Stmt
+	createUserStmt                *sql.Stmt
+	createUserLoginStmt           *sql.Stmt
+	deleteApplicationStmt         *sql.Stmt
+	deleteCountryStmt             *sql.Stmt
+	deleteIdentityProviderStmt    *sql.Stmt
+	deleteLanguageStmt            *sql.Stmt
+	deleteLanguageProficiencyStmt *sql.Stmt
+	deleteOtpStmt                 *sql.Stmt
+	deleteProvidersStmt           *sql.Stmt
+	deleteRefreshTokenStmt        *sql.Stmt
+	deleteRolesStmt               *sql.Stmt
+	deleteStateStmt               *sql.Stmt
+	deleteTimezoneStmt            *sql.Stmt
+	deleteUserStmt                *sql.Stmt
+	deleteUserLanguageStmt        *sql.Stmt
+	deleteUserLoginStmt           *sql.Stmt
+	getAllOtpStmt                 *sql.Stmt
+	getApplicationStmt            *sql.Stmt
+	getApplicationRoleStmt        *sql.Stmt
+	getApplicationsStmt           *sql.Stmt
+	getCountriesStmt              *sql.Stmt
+	getCountryStmt                *sql.Stmt
+	getIdentityProviderStmt       *sql.Stmt
+	getIdentityProvidersStmt      *sql.Stmt
+	getLanguageStmt               *sql.Stmt
+	getLanguageProficienciesStmt  *sql.Stmt
+	getLanguageProficiencyStmt    *sql.Stmt
+	getLanguagesStmt              *sql.Stmt
+	getOtpStmt                    *sql.Stmt
+	getRefreshTokenStmt           *sql.Stmt
+	getRefreshTokensStmt          *sql.Stmt
+	getRoleStmt                   *sql.Stmt
+	getRolesStmt                  *sql.Stmt
+	getRolesByApplicationStmt     *sql.Stmt
+	getStateStmt                  *sql.Stmt
+	getStatesStmt                 *sql.Stmt
+	getStatesByCountryStmt        *sql.Stmt
+	getTimezoneStmt               *sql.Stmt
+	getTimezonesStmt              *sql.Stmt
+	getUnResoledLoginsStmt        *sql.Stmt
+	getUserStmt                   *sql.Stmt
+	getUserLanguagesStmt          *sql.Stmt
+	getUserLoginStmt              *sql.Stmt
+	getUserLoginsStmt             *sql.Stmt
+	getUserProvidersStmt          *sql.Stmt
+	getUserRolesStmt              *sql.Stmt
+	getUserTimezonesStmt          *sql.Stmt
+	getUsersStmt                  *sql.Stmt
+	updateApplicationStmt         *sql.Stmt
+	updateApplicationRoleStmt     *sql.Stmt
+	updateCountryStmt             *sql.Stmt
+	updateIdentityProviderStmt    *sql.Stmt
+	updateLanguageStmt            *sql.Stmt
+	updateLanguageProficiencyStmt *sql.Stmt
+	updateRefreshTokenStmt        *sql.Stmt
+	updateResolvedLoginStmt       *sql.Stmt
+	updateRoleStmt                *sql.Stmt
+	updateStateStmt               *sql.Stmt
+	updateTimezoneStmt            *sql.Stmt
+	updateUserStmt                *sql.Stmt
+	updateUserLanguageStmt        *sql.Stmt
+	updateUserProviderStmt        *sql.Stmt
+	updateUserRoleStmt            *sql.Stmt
+	updateUserTimezoneStmt        *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                         tx,
-		tx:                         tx,
-		addApplicationRoleStmt:     q.addApplicationRoleStmt,
-		addUserLanguageStmt:        q.addUserLanguageStmt,
-		addUserProviderStmt:        q.addUserProviderStmt,
-		addUserRoleStmt:            q.addUserRoleStmt,
-		addUserTimezoneStmt:        q.addUserTimezoneStmt,
-		createApplicationStmt:      q.createApplicationStmt,
-		createCountryStmt:          q.createCountryStmt,
-		createIdentityProviderStmt: q.createIdentityProviderStmt,
-		createLanguageStmt:         q.createLanguageStmt,
-		createOtpStmt:              q.createOtpStmt,
-		createRefreshTokenStmt:     q.createRefreshTokenStmt,
-		createRoleStmt:             q.createRoleStmt,
-		createStateStmt:            q.createStateStmt,
-		createTimezoneStmt:         q.createTimezoneStmt,
-		createUserStmt:             q.createUserStmt,
-		createUserLoginStmt:        q.createUserLoginStmt,
-		deleteApplicationStmt:      q.deleteApplicationStmt,
-		deleteCountryStmt:          q.deleteCountryStmt,
-		deleteIdentityProviderStmt: q.deleteIdentityProviderStmt,
-		deleteLanguageStmt:         q.deleteLanguageStmt,
-		deleteOtpStmt:              q.deleteOtpStmt,
-		deleteProvidersStmt:        q.deleteProvidersStmt,
-		deleteRefreshTokenStmt:     q.deleteRefreshTokenStmt,
-		deleteRolesStmt:            q.deleteRolesStmt,
-		deleteStateStmt:            q.deleteStateStmt,
-		deleteTimezoneStmt:         q.deleteTimezoneStmt,
-		deleteUserStmt:             q.deleteUserStmt,
-		deleteUserLanguageStmt:     q.deleteUserLanguageStmt,
-		deleteUserLoginStmt:        q.deleteUserLoginStmt,
-		getAllOtpStmt:              q.getAllOtpStmt,
-		getApplicationStmt:         q.getApplicationStmt,
-		getApplicationRoleStmt:     q.getApplicationRoleStmt,
-		getApplicationsStmt:        q.getApplicationsStmt,
-		getCountriesStmt:           q.getCountriesStmt,
-		getCountryStmt:             q.getCountryStmt,
-		getIdentityProviderStmt:    q.getIdentityProviderStmt,
-		getIdentityProvidersStmt:   q.getIdentityProvidersStmt,
-		getLanguageStmt:            q.getLanguageStmt,
-		getLanguagesStmt:           q.getLanguagesStmt,
-		getOtpStmt:                 q.getOtpStmt,
-		getRefreshTokenStmt:        q.getRefreshTokenStmt,
-		getRefreshTokensStmt:       q.getRefreshTokensStmt,
-		getRoleStmt:                q.getRoleStmt,
-		getRolesStmt:               q.getRolesStmt,
-		getRolesByApplicationStmt:  q.getRolesByApplicationStmt,
-		getStateStmt:               q.getStateStmt,
-		getStatesStmt:              q.getStatesStmt,
-		getStatesByCountryStmt:     q.getStatesByCountryStmt,
-		getTimezoneStmt:            q.getTimezoneStmt,
-		getTimezonesStmt:           q.getTimezonesStmt,
-		getUnResoledLoginsStmt:     q.getUnResoledLoginsStmt,
-		getUserStmt:                q.getUserStmt,
-		getUserLanguagesStmt:       q.getUserLanguagesStmt,
-		getUserLoginStmt:           q.getUserLoginStmt,
-		getUserLoginsStmt:          q.getUserLoginsStmt,
-		getUserProvidersStmt:       q.getUserProvidersStmt,
-		getUserRolesStmt:           q.getUserRolesStmt,
-		getUserTimezonesStmt:       q.getUserTimezonesStmt,
-		getUsersStmt:               q.getUsersStmt,
-		updateApplicationStmt:      q.updateApplicationStmt,
-		updateApplicationRoleStmt:  q.updateApplicationRoleStmt,
-		updateCountryStmt:          q.updateCountryStmt,
-		updateIdentityProviderStmt: q.updateIdentityProviderStmt,
-		updateLanguageStmt:         q.updateLanguageStmt,
-		updateRefreshTokenStmt:     q.updateRefreshTokenStmt,
-		updateResolvedLoginStmt:    q.updateResolvedLoginStmt,
-		updateRoleStmt:             q.updateRoleStmt,
-		updateStateStmt:            q.updateStateStmt,
-		updateTimezoneStmt:         q.updateTimezoneStmt,
-		updateUserStmt:             q.updateUserStmt,
-		updateUserLanguageStmt:     q.updateUserLanguageStmt,
-		updateUserProviderStmt:     q.updateUserProviderStmt,
-		updateUserRoleStmt:         q.updateUserRoleStmt,
-		updateUserTimezoneStmt:     q.updateUserTimezoneStmt,
+		db:                            tx,
+		tx:                            tx,
+		addApplicationRoleStmt:        q.addApplicationRoleStmt,
+		addUserLanguageStmt:           q.addUserLanguageStmt,
+		addUserProviderStmt:           q.addUserProviderStmt,
+		addUserRoleStmt:               q.addUserRoleStmt,
+		addUserTimezoneStmt:           q.addUserTimezoneStmt,
+		createApplicationStmt:         q.createApplicationStmt,
+		createCountryStmt:             q.createCountryStmt,
+		createIdentityProviderStmt:    q.createIdentityProviderStmt,
+		createLanguageStmt:            q.createLanguageStmt,
+		createLanguageProficiencyStmt: q.createLanguageProficiencyStmt,
+		createOtpStmt:                 q.createOtpStmt,
+		createRefreshTokenStmt:        q.createRefreshTokenStmt,
+		createRoleStmt:                q.createRoleStmt,
+		createStateStmt:               q.createStateStmt,
+		createTimezoneStmt:            q.createTimezoneStmt,
+		createUserStmt:                q.createUserStmt,
+		createUserLoginStmt:           q.createUserLoginStmt,
+		deleteApplicationStmt:         q.deleteApplicationStmt,
+		deleteCountryStmt:             q.deleteCountryStmt,
+		deleteIdentityProviderStmt:    q.deleteIdentityProviderStmt,
+		deleteLanguageStmt:            q.deleteLanguageStmt,
+		deleteLanguageProficiencyStmt: q.deleteLanguageProficiencyStmt,
+		deleteOtpStmt:                 q.deleteOtpStmt,
+		deleteProvidersStmt:           q.deleteProvidersStmt,
+		deleteRefreshTokenStmt:        q.deleteRefreshTokenStmt,
+		deleteRolesStmt:               q.deleteRolesStmt,
+		deleteStateStmt:               q.deleteStateStmt,
+		deleteTimezoneStmt:            q.deleteTimezoneStmt,
+		deleteUserStmt:                q.deleteUserStmt,
+		deleteUserLanguageStmt:        q.deleteUserLanguageStmt,
+		deleteUserLoginStmt:           q.deleteUserLoginStmt,
+		getAllOtpStmt:                 q.getAllOtpStmt,
+		getApplicationStmt:            q.getApplicationStmt,
+		getApplicationRoleStmt:        q.getApplicationRoleStmt,
+		getApplicationsStmt:           q.getApplicationsStmt,
+		getCountriesStmt:              q.getCountriesStmt,
+		getCountryStmt:                q.getCountryStmt,
+		getIdentityProviderStmt:       q.getIdentityProviderStmt,
+		getIdentityProvidersStmt:      q.getIdentityProvidersStmt,
+		getLanguageStmt:               q.getLanguageStmt,
+		getLanguageProficienciesStmt:  q.getLanguageProficienciesStmt,
+		getLanguageProficiencyStmt:    q.getLanguageProficiencyStmt,
+		getLanguagesStmt:              q.getLanguagesStmt,
+		getOtpStmt:                    q.getOtpStmt,
+		getRefreshTokenStmt:           q.getRefreshTokenStmt,
+		getRefreshTokensStmt:          q.getRefreshTokensStmt,
+		getRoleStmt:                   q.getRoleStmt,
+		getRolesStmt:                  q.getRolesStmt,
+		getRolesByApplicationStmt:     q.getRolesByApplicationStmt,
+		getStateStmt:                  q.getStateStmt,
+		getStatesStmt:                 q.getStatesStmt,
+		getStatesByCountryStmt:        q.getStatesByCountryStmt,
+		getTimezoneStmt:               q.getTimezoneStmt,
+		getTimezonesStmt:              q.getTimezonesStmt,
+		getUnResoledLoginsStmt:        q.getUnResoledLoginsStmt,
+		getUserStmt:                   q.getUserStmt,
+		getUserLanguagesStmt:          q.getUserLanguagesStmt,
+		getUserLoginStmt:              q.getUserLoginStmt,
+		getUserLoginsStmt:             q.getUserLoginsStmt,
+		getUserProvidersStmt:          q.getUserProvidersStmt,
+		getUserRolesStmt:              q.getUserRolesStmt,
+		getUserTimezonesStmt:          q.getUserTimezonesStmt,
+		getUsersStmt:                  q.getUsersStmt,
+		updateApplicationStmt:         q.updateApplicationStmt,
+		updateApplicationRoleStmt:     q.updateApplicationRoleStmt,
+		updateCountryStmt:             q.updateCountryStmt,
+		updateIdentityProviderStmt:    q.updateIdentityProviderStmt,
+		updateLanguageStmt:            q.updateLanguageStmt,
+		updateLanguageProficiencyStmt: q.updateLanguageProficiencyStmt,
+		updateRefreshTokenStmt:        q.updateRefreshTokenStmt,
+		updateResolvedLoginStmt:       q.updateResolvedLoginStmt,
+		updateRoleStmt:                q.updateRoleStmt,
+		updateStateStmt:               q.updateStateStmt,
+		updateTimezoneStmt:            q.updateTimezoneStmt,
+		updateUserStmt:                q.updateUserStmt,
+		updateUserLanguageStmt:        q.updateUserLanguageStmt,
+		updateUserProviderStmt:        q.updateUserProviderStmt,
+		updateUserRoleStmt:            q.updateUserRoleStmt,
+		updateUserTimezoneStmt:        q.updateUserTimezoneStmt,
 	}
 }

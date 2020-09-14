@@ -32,7 +32,7 @@ insert into user_languages (
 returning *;
 
 -- name: GetUserLanguages :many
-select a.id, a.name, (select b.proficiency from user_languages b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1)) as proficiency from languages a where a.id = (select d.language_id from user_languages d where d.user_id = (select e.id from users where e.username = $1 or e.email = $1));
+select a.id, a.name, d.proficiency from languages a inner join user_languages d on a.id = d.language_id inner join users e on e.id = d.user_id inner join users f on f.username = $1 or f.email = $1;
 
 -- name: DeleteUserLanguage :exec
 delete from user_languages a where a.user_id = (select b.id from users b where b.username = $1 or b.email = $1) and a.language_id = (select c.id from languages c where c.name = $2);

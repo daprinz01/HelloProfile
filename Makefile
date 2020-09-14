@@ -5,7 +5,7 @@ migrationUp:
 migrationDown:
 	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose down
 migrationForce:
-	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose force 22
+	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose force 25
 migrationGoto:
 	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/persian_black?sslmode=disable" -verbose goto 2
 installSqlc:
@@ -13,5 +13,5 @@ installSqlc:
 initialiseGoModules:
 	go mod init authengine
 dockerRun:
-	 docker run --mount source=logs,destination=/usr/local/bin/log --add-host=localhost:127.0.0.1 authengine:latest
+	 docker run --mount source=persian-black-log,destination=/usr/local/bin/log/ -p 8083:8083 --name authengine authengine:latest
 .PHONY: migrationCreate migrationUp migrationDown migrationForce migrationGoto installSqlc initialiseGoModules dockerRun

@@ -10,7 +10,7 @@ select * from states a where a.country_id = (select b.id from countries b where 
 -- name: CreateState :exec
 insert into states (
     name,
-    b.country_id
+    country_id
 )
 values(
     $1,

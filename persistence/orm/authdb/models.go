@@ -41,6 +41,11 @@ type Language struct {
 	Name string `json:"name"`
 }
 
+type LanguageProficiency struct {
+	ID          int64          `json:"id"`
+	Proficiency sql.NullString `json:"proficiency"`
+}
+
 type Otp struct {
 	ID               int64          `json:"id"`
 	UserID           sql.NullInt64  `json:"user_id"`

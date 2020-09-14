@@ -172,3 +172,9 @@ create table otp(
     is_email_preferred boolean not null default TRUE,
     purpose varchar null
 );
+
+
+Create TABLE language_proficiency(
+    id bigserial PRIMARY KEY,
+    proficiency VARCHAR null UNIQUE
+);

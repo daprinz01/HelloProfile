@@ -243,13 +243,13 @@ func (q *Queries) GetUser(ctx context.Context, username sql.NullString) (UserDet
 }
 
 const getUserLanguages = `-- name: GetUserLanguages :many
-select a.id, a.name, (select b.proficiency from user_languages b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1)) as proficiency from languages a where a.id = (select d.language_id from user_languages d where d.user_id = (select e.id from users where e.username = $1 or e.email = $1))
+select a.id, a.name, d.proficiency from languages a inner join user_languages d on a.id = d.language_id inner join users e on e.id = d.user_id inner join users f on f.username = $1 or f.email = $1
 `
 
 type GetUserLanguagesRow struct {
-	ID          int64       `json:"id"`
-	Name        string      `json:"name"`
-	Proficiency interface{} `json:"proficiency"`
+	ID          int64          `json:"id"`
+	Name        string         `json:"name"`
+	Proficiency sql.NullString `json:"proficiency"`
 }
 
 func (q *Queries) GetUserLanguages(ctx context.Context, username sql.NullString) ([]GetUserLanguagesRow, error) {

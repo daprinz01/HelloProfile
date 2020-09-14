@@ -1,0 +1,1 @@
+alter table applications_roles add CONSTRAINT uc_applications_roles_applications_id_roles_id UNIQUE(applications_id, roles_id);

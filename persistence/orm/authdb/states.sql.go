@@ -10,7 +10,7 @@ import (
 const createState = `-- name: CreateState :exec
 insert into states (
     name,
-    b.country_id
+    country_id
 )
 values(
     $1,

@@ -48,7 +48,7 @@ func (env *Env) GetUserLanguages(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not have any language yet"
-		log.Println("User languages not found")
+		log.Println(fmt.Sprintf("User languages not found: %s", err))
 
 		response, err := json.MarshalIndent(errorResponse, "", "")
 		if err != nil {
@@ -59,10 +59,10 @@ func (env *Env) GetUserLanguages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(fmt.Sprintf("Successfully retrieved user languages: %v", languages))
-	var userLanguages []models.UserLanguage
+	userLanguages := make([]models.UserLanguage, len(languages))
 	for index, value := range languages {
 		userLanguages[index].Language = value.Name
-		userLanguages[index].Proficiency = value.Proficiency
+		userLanguages[index].Proficiency = value.Proficiency.String
 	}
 	languageResponse := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -145,19 +145,28 @@ func (env *Env) AddUserLanguage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	go func() {
-		languages, err := env.AuthDb.AddUserLanguage(context.Background(), authdb.AddUserLanguageParams{
-			Username:    sql.NullString{String: strings.ToLower(username), Valid: true},
-			Name:        strings.ToLower(language),
-			Proficiency: sql.NullString{String: proficiency, Valid: true},
-		})
+
+	languages, err := env.AuthDb.AddUserLanguage(context.Background(), authdb.AddUserLanguageParams{
+		Username:    sql.NullString{String: strings.ToLower(username), Valid: true},
+		Name:        strings.ToLower(language),
+		Proficiency: sql.NullString{String: strings.ToLower(proficiency), Valid: true},
+	})
+	if err != nil {
+
+		log.Println(fmt.Sprintf("Error occured while adding user langauge: %s", err))
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Language does not exist"
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
 		if err != nil {
-
-			log.Println(fmt.Sprintf("Error occured while adding user langauge: %s", err))
-
+			log.Println(err)
 		}
-		log.Println(fmt.Sprintf("Successfully added user languages: %v", languages))
-	}()
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Successfully added user languages: %v", languages))
+
 	languageResponse := &models.SuccessResponse{
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
@@ -274,7 +283,7 @@ func (env *Env) GetLanguages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(fmt.Sprintf("Successfully retrieved user languages: %v", languages))
-	var languagesResponse []string
+	languagesResponse := make([]string, len(languages))
 	for index, value := range languages {
 		languagesResponse[index] = value.Name
 	}
@@ -450,8 +459,8 @@ func (env *Env) UpdateLanguage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	languages, err := env.AuthDb.UpdateLanguage(context.Background(), authdb.UpdateLanguageParams{
-		Name:   strings.ToLower(language),
-		Name_2: strings.ToLower(newLanguage),
+		Name:   strings.ToLower(newLanguage),
+		Name_2: strings.ToLower(language),
 	})
 	if err != nil {
 		errorResponse.Errorcode = "03"

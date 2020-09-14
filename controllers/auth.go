@@ -379,7 +379,7 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		errorResponse.Errorcode = "04"
-		errorResponse.ErrorMessage = fmt.Sprintf("Error occured creating user: %s", err)
+		errorResponse.ErrorMessage = "User already exist"
 		log.Println(fmt.Sprintf("Error occured creating user: %s", err))
 		response, err := json.MarshalIndent(errorResponse, "", "")
 		if err != nil {
@@ -637,7 +637,7 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnauthorized)
 		w.Write(response)
 
 	}

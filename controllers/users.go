@@ -54,7 +54,7 @@ func (env *Env) CheckAvailability(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(response)
 		return
 	}
@@ -114,7 +114,7 @@ func (env *Env) GetUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(response)
 		return
 	}
@@ -162,17 +162,17 @@ func (env *Env) GetUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := env.AuthDb.GetUsers(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "User does not exist"
+		errorResponse.ErrorMessage = "Users does not exist"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
 		response, err := json.MarshalIndent(errorResponse, "", "")
 		if err != nil {
 			log.Println(err)
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(response)
 		return
 	}
-	var userResponse []models.UserDetail
+	userResponse := make([]models.UserDetail, len(users))
 	for index, user := range users {
 		tempUser := models.UserDetail{
 			Address:                   user.Address.String,
@@ -244,7 +244,7 @@ func (env *Env) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(response)
 		return
 	}
@@ -268,7 +268,7 @@ func (env *Env) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			Lastname:                  sql.NullString{String: getValue(request.Lastname, user.Lastname.String), Valid: true},
 			Password:                  user.Password,
 			State:                     sql.NullString{String: getValue(request.State, user.State.String), Valid: true},
-			Username:                  user.Username,
+			Username:                  sql.NullString{String: getValue(request.Username, user.Username.String), Valid: true},
 			Phone:                     sql.NullString{String: getValue(request.Phone, user.Phone.String), Valid: true},
 			Username_2:                sql.NullString{String: user.Email, Valid: true},
 		})
@@ -354,7 +354,7 @@ func (env *Env) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 		w.Write(response)
 		return
 	}

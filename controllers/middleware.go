@@ -89,13 +89,13 @@ func Authorize(next http.Handler) http.Handler {
 
 		if err != nil || verifiedClaims.Email == "" {
 			errorResponse.Errorcode = "09"
-			errorResponse.ErrorMessage = "Session expired. Kindly try generating one time password again"
+			errorResponse.ErrorMessage = "Session expired. Kindly login again"
 			log.Println("Token has expired...")
 			response, err := json.MarshalIndent(errorResponse, "", "")
 			if err != nil {
 				log.Println(err)
 			}
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			w.Write(response)
 			return
 		}
@@ -130,20 +130,20 @@ func AuthorizeAdmin(next http.Handler) http.Handler {
 
 		if err != nil || verifiedClaims.Email == "" {
 			errorResponse.Errorcode = "09"
-			errorResponse.ErrorMessage = "Session expired. Kindly try generating one time password again"
+			errorResponse.ErrorMessage = "Session expired. Kindly login again..."
 			log.Println("Token has expired...")
 			response, err := json.MarshalIndent(errorResponse, "", "")
 			if err != nil {
 				log.Println(err)
 			}
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusUnauthorized)
 			w.Write(response)
 			return
 		}
-		if strings.ToLower(verifiedClaims.Role) != "admin" || strings.ToLower(verifiedClaims.Role) != "superadmin" {
+		if !(strings.ToLower(verifiedClaims.Role) == "admin" || strings.ToLower(verifiedClaims.Role) == "superadmin") {
 			errorResponse.Errorcode = "09"
 			errorResponse.ErrorMessage = "Sorry, you are not authorized to carry out this operation."
-			log.Println("Token has expired...")
+			log.Println(fmt.Sprintf("User is not authorised to perform this operation with role %s...", verifiedClaims.Role))
 			response, err := json.MarshalIndent(errorResponse, "", "")
 			if err != nil {
 				log.Println(err)

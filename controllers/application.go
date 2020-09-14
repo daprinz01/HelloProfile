@@ -33,7 +33,7 @@ func (env *Env) GetApplications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfully retrieved application...")
-	var applicationResponse []models.Application
+	applicationResponse := make([]models.Application, len(applications))
 	for index, value := range applications {
 		application := models.Application{
 			Application: value.Name,

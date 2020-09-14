@@ -17,6 +17,7 @@ type Querier interface {
 	CreateCountry(ctx context.Context, arg CreateCountryParams) (Country, error)
 	CreateIdentityProvider(ctx context.Context, arg CreateIdentityProviderParams) (IdentityProvider, error)
 	CreateLanguage(ctx context.Context, name string) (Language, error)
+	CreateLanguageProficiency(ctx context.Context, proficiency sql.NullString) (LanguageProficiency, error)
 	CreateOtp(ctx context.Context, arg CreateOtpParams) error
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error)
@@ -28,6 +29,7 @@ type Querier interface {
 	DeleteCountry(ctx context.Context, name string) error
 	DeleteIdentityProvider(ctx context.Context, name string) error
 	DeleteLanguage(ctx context.Context, name string) error
+	DeleteLanguageProficiency(ctx context.Context, proficiency sql.NullString) error
 	DeleteOtp(ctx context.Context, arg DeleteOtpParams) error
 	DeleteProviders(ctx context.Context, arg DeleteProvidersParams) error
 	DeleteRefreshToken(ctx context.Context, token string) error
@@ -46,6 +48,8 @@ type Querier interface {
 	GetIdentityProvider(ctx context.Context, name string) (IdentityProvider, error)
 	GetIdentityProviders(ctx context.Context) ([]IdentityProvider, error)
 	GetLanguage(ctx context.Context, name string) (Language, error)
+	GetLanguageProficiencies(ctx context.Context) ([]LanguageProficiency, error)
+	GetLanguageProficiency(ctx context.Context, proficiency sql.NullString) (LanguageProficiency, error)
 	GetLanguages(ctx context.Context) ([]Language, error)
 	GetOtp(ctx context.Context, arg GetOtpParams) (Otp, error)
 	GetRefreshToken(ctx context.Context, token string) (RefreshToken, error)
@@ -72,6 +76,7 @@ type Querier interface {
 	UpdateCountry(ctx context.Context, arg UpdateCountryParams) (Country, error)
 	UpdateIdentityProvider(ctx context.Context, arg UpdateIdentityProviderParams) (IdentityProvider, error)
 	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (Language, error)
+	UpdateLanguageProficiency(ctx context.Context, arg UpdateLanguageProficiencyParams) (LanguageProficiency, error)
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (RefreshToken, error)
 	UpdateResolvedLogin(ctx context.Context, userID sql.NullInt64) error
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)

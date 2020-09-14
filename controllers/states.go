@@ -33,7 +33,7 @@ func (env *Env) GetStates(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfully retrieved states...")
-	var statesResponse []string
+	statesResponse := make([]string, len(states))
 	for index, value := range states {
 		statesResponse[index] = value.Name
 	}
@@ -76,7 +76,7 @@ func (env *Env) GetStatesByCountry(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	states, err := env.AuthDb.GetStatesByCountry(context.Background(), country)
+	states, err := env.AuthDb.GetStatesByCountry(context.Background(), strings.ToLower(country))
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "States not found"
@@ -91,7 +91,7 @@ func (env *Env) GetStatesByCountry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfully retrieved states...")
-	var statesResponse []string
+	statesResponse := make([]string, len(states))
 	for index, value := range states {
 		statesResponse[index] = value.Name
 	}
@@ -289,8 +289,8 @@ func (env *Env) UpdateState(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = env.AuthDb.UpdateState(context.Background(), authdb.UpdateStateParams{
-		Name:   strings.ToLower(state),
-		Name_2: strings.ToLower(newState),
+		Name:   strings.ToLower(newState),
+		Name_2: strings.ToLower(state),
 	})
 	if err != nil {
 		errorResponse.Errorcode = "03"

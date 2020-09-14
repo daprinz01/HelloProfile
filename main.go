@@ -116,7 +116,7 @@ func main() {
 	// User Language operations
 	apiAuth.HandleFunc("/{application}/user/language/{username}", env.GetUserLanguages).Methods(http.MethodGet)
 	apiAuth.HandleFunc("/{application}/user/language/{username}/{language}/{proficiency}", env.AddUserLanguage).Methods(http.MethodPost)
-	apiAuth.HandleFunc("/{application}/user/language/{username}/{language}", env.AddUserLanguage).Methods(http.MethodDelete)
+	apiAuth.HandleFunc("/{application}/user/language/{username}/{language}", env.DeleteUserLanguages).Methods(http.MethodDelete)
 
 	// Language operations
 	apiAuth.HandleFunc("/{application}/language/{language}", env.GetLanguage).Methods(http.MethodGet)
@@ -124,6 +124,13 @@ func main() {
 	apiAdminAuth.HandleFunc("/{application}/language/{language}", env.AddLanguage).Methods(http.MethodPost)
 	apiAdminAuth.HandleFunc("/{application}/language/{language}/{newLanguage}", env.UpdateLanguage).Methods(http.MethodPut)
 	apiAdminAuth.HandleFunc("/{application}/language/{language}", env.DeleteLanguage).Methods(http.MethodDelete)
+
+	// Language proficiency operations
+	apiAuth.HandleFunc("/{application}/proficiency/{proficiency}", env.GetLanguageProficiency).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/proficiency", env.GetLanguageProficiencies).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/proficiency/{proficiency}", env.AddLanguageProficiency).Methods(http.MethodPost)
+	apiAdminAuth.HandleFunc("/{application}/proficiency/{proficiency}/{newProficiency}", env.UpdateLanguageProficiency).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/proficiency/{proficiency}", env.DeleteLanguageProficiency).Methods(http.MethodDelete)
 
 	// Timezone Operations
 	apiAuth.HandleFunc("/{application}/timezone/{timezone}", env.GetTimezone).Methods(http.MethodGet)
@@ -150,7 +157,7 @@ func main() {
 	apiAuth.HandleFunc("/{application}/state/{state}", env.GetState).Methods(http.MethodGet)
 	apiAuth.HandleFunc("/{application}/state", env.GetStates).Methods(http.MethodGet)
 	apiAdminAuth.HandleFunc("/{application}/state/{state}/{country}", env.AddState).Methods(http.MethodPost)
-	apiAdminAuth.HandleFunc("/{application}/state/{state}", env.UpdateState).Methods(http.MethodPut)
+	apiAdminAuth.HandleFunc("/{application}/state/{state}/{newState}", env.UpdateState).Methods(http.MethodPut)
 	apiAdminAuth.HandleFunc("/{application}/state/{state}", env.DeleteState).Methods(http.MethodDelete)
 	apiAuth.HandleFunc("/{application}/state/country/{country}", env.GetStatesByCountry).Methods(http.MethodGet)
 
@@ -161,7 +168,7 @@ func main() {
 	apiAdminAuth.HandleFunc("/{application}/role/{role}", env.UpdateRole).Methods(http.MethodPut)
 	apiAdminAuth.HandleFunc("/{application}/role/{role}", env.DeleteRole).Methods(http.MethodDelete)
 	apiAdminAuth.HandleFunc("/{application}/role/application/{application}", env.GetRolesByApplication).Methods(http.MethodGet)
-	apiAdminAuth.HandleFunc("/{application}/role/{role}/{application}", env.AddApplicationRole).Methods(http.MethodGet)
+	apiAdminAuth.HandleFunc("/{application}/role/{role}/{application}", env.AddApplicationRole).Methods(http.MethodPost)
 
 	srv := &http.Server{
 		Handler:      r,

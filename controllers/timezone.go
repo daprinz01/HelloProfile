@@ -33,7 +33,7 @@ func (env *Env) GetTimezones(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfully retrieved timezones...")
-	var timezonesResponse []models.Timezone
+	timezonesResponse := make([]models.Timezone, len(timezones))
 	for index, value := range timezones {
 		timezone := models.Timezone{
 			Timezone: value.Name,

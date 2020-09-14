@@ -33,7 +33,7 @@ func (env *Env) GetRoles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfully retrieved role...")
-	var roleResponse []models.Role
+	roleResponse := make([]models.Role, len(roles))
 	for index, value := range roles {
 		role := models.Role{
 			Role:        value.Name,
@@ -95,7 +95,7 @@ func (env *Env) GetRolesByApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfully retrieved role...")
-	var roleResponse []models.Role
+	roleResponse := make([]models.Role, len(roles))
 	for index, value := range roles {
 		role := models.Role{
 			Role:        value.Name,

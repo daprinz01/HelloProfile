@@ -34,7 +34,7 @@ func (env *Env) GetCountries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println("Successfully retrieved countries...")
-	var countriesResponse []models.Country
+	countriesResponse := make([]models.Country, len(countries))
 	for index, value := range countries {
 		country := models.Country{
 			Country:     value.Name,
