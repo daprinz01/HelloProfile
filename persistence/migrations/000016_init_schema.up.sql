@@ -1,1 +1,1 @@
-ALTER table refresh_token drop CONSTRAINT refresh_token_user_id_key;
+-- ALTER table refresh_token drop CONSTRAINT refresh_token_user_id_key;

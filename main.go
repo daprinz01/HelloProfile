@@ -118,6 +118,10 @@ func main() {
 	apiAuth.HandleFunc("/{application}/user/language/{username}/{language}/{proficiency}", env.AddUserLanguage).Methods(http.MethodPost)
 	apiAuth.HandleFunc("/{application}/user/language/{username}/{language}", env.DeleteUserLanguages).Methods(http.MethodDelete)
 
+	// User Role operations
+	apiAuth.HandleFunc("/{application}/user/role/{newRole}/{oldRole}/{username}", env.UpdateUserRole).Methods(http.MethodPut)
+	apiAuth.HandleFunc("/{application}/user/role/{role}/{username}", env.AddUserToRole).Methods(http.MethodPost)
+
 	// Language operations
 	apiAuth.HandleFunc("/{application}/language/{language}", env.GetLanguage).Methods(http.MethodGet)
 	apiAuth.HandleFunc("/{application}/language", env.GetLanguages).Methods(http.MethodGet)

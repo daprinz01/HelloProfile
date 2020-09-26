@@ -314,6 +314,180 @@ func (env *Env) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// UpdateUserRole Add Role to applications
+func (env *Env) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+	log.Println("Update user's role request received...")
+	pathParams := mux.Vars(r)
+	var errorResponse models.Errormessage
+	var err error
+	var role string
+	if val, ok := pathParams["newRole"]; ok {
+		role = val
+		log.Println(fmt.Sprintf("New Role: %s", role))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "New Role not specified"
+			log.Println("Role not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	var oldRole string
+	if val, ok := pathParams["oldRole"]; ok {
+		role = val
+		log.Println(fmt.Sprintf("Old Role: %s", role))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Old Role not specified"
+			log.Println("Role not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+	var username string
+	if val, ok := pathParams["username"]; ok {
+		username = val
+		log.Println(fmt.Sprintf("Username: %s", username))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Username not specified"
+			log.Println("Username not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	dbRole, err := env.AuthDb.UpdateUserRole(context.Background(), authdb.UpdateUserRoleParams{
+		Username:   sql.NullString{String: strings.ToLower(username), Valid: true},
+		Username_2: sql.NullString{String: strings.ToLower(username), Valid: true},
+		Name:       strings.ToLower(role),
+		Name_2:     strings.ToLower(oldRole),
+	})
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Could not update user to role. Not found"
+		log.Println(fmt.Sprintf("Error occured updating  user role: %s", err))
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Successfully updated user role: %v", dbRole))
+
+	response := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+	}
+	responsebytes, err := json.MarshalIndent(response, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
+// AddUserToRole Add user to a role. This increases the roles the user is being added to including the previous roles. At login a role must be selected else the the default role guest is selected for the user
+func (env *Env) AddUserToRole(w http.ResponseWriter, r *http.Request) {
+	log.Println("Add user to role request received...")
+	pathParams := mux.Vars(r)
+	var errorResponse models.Errormessage
+	var err error
+	var role string
+	if val, ok := pathParams["role"]; ok {
+		role = val
+		log.Println(fmt.Sprintf("Role: %s", role))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Role not specified"
+			log.Println("Role not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	var username string
+	if val, ok := pathParams["username"]; ok {
+		username = val
+		log.Println(fmt.Sprintf("Username: %s", username))
+		if err != nil {
+			errorResponse.Errorcode = "15"
+			errorResponse.ErrorMessage = "Username not specified"
+			log.Println("Username not specified")
+
+			response, err := json.MarshalIndent(errorResponse, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write(response)
+			return
+		}
+	}
+
+	dbRole, err := env.AuthDb.AddUserRole(context.Background(), authdb.AddUserRoleParams{
+		Username: sql.NullString{String: strings.ToLower(username), Valid: true},
+		Name:     strings.ToLower(role),
+	})
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Could not add user to role. Not found"
+		log.Println(fmt.Sprintf("Error occured adding  user to role: %s", err))
+
+		response, err := json.MarshalIndent(errorResponse, "", "")
+		if err != nil {
+			log.Println(err)
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(response)
+		return
+	}
+	log.Println(fmt.Sprintf("Successfully added role to application: %v", dbRole))
+
+	response := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+	}
+	responsebytes, err := json.MarshalIndent(response, "", "")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(responsebytes)
+	return
+}
+
 // DeleteUser is used to disable a users account
 func (env *Env) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	log.Println("Delete user Request received")
