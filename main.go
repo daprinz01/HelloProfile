@@ -85,6 +85,7 @@ func main() {
 	fmt.Println("Successfully connected to database!")
 	// Create Server and Route Handlers
 	r := mux.NewRouter()
+	r.Use(controllers.TrackResponseTime)
 	apiNoAuth := r.PathPrefix("/api/v1").Subrouter()
 	auth := r.PathPrefix("/api/v1/auth").Subrouter()
 	// Methods that don't require the application information is it's being verified in a middleware
@@ -144,7 +145,7 @@ func main() {
 	apiAdminAuth.HandleFunc("/{application}/timezone/{timezone}", env.DeleteTimezone).Methods(http.MethodDelete)
 
 	// Application Operations
-	apiAdminAuth.HandleFunc("/{application}/application/{application}", env.GetApplication).Methods(http.MethodGet)
+	apiAuth.HandleFunc("/{application}/application/{application}", env.GetApplication).Methods(http.MethodGet)
 	apiAdminAuth.HandleFunc("/{application}/application", env.GetApplications).Methods(http.MethodGet)
 	apiAdminAuth.HandleFunc("/{application}/application", env.AddApplication).Methods(http.MethodPost)
 	apiAdminAuth.HandleFunc("/{application}/application/{application}", env.UpdateApplication).Methods(http.MethodPut)

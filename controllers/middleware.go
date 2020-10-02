@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -154,5 +155,21 @@ func AuthorizeAdmin(next http.Handler) http.Handler {
 		}
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		next.ServeHTTP(w, r)
+	})
+}
+
+// TrackResponseTime is used to track the response time of api calls
+func TrackResponseTime(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Measure response time
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		responseTime := time.Since(start)
+
+		// Write it to the log
+		log.Println(fmt.Sprintf("Request executed in %v", responseTime))
+
+		// Make sure to pass the error back!
+
 	})
 }
