@@ -17,65 +17,40 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 //Login is used to sign users in
-func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
+func (env *Env) Login(c echo.Context) (err error) {
 	log.Println("Login Request received")
-	pathParams := mux.Vars(r)
-	w.Header().Set("Content-Type", "application/json")
 
-	var application string
-	var errorResponse models.Errormessage
-	var err error
-	if val, ok := pathParams["application"]; ok {
-		application = val
-		log.Println(fmt.Sprintf("Application: %s", application))
-		if err != nil {
-			errorResponse.Errorcode = "01"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.Println("Application not specified")
+	errorResponse := new(models.Errormessage)
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.Println("Application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
 	if err != nil {
 		errorResponse.Errorcode = "06"
 		errorResponse.ErrorMessage = "Application is invalid"
 		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	log.Println(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
-	var request models.LoginRequest
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	request := new(models.LoginRequest)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(fmt.Sprintf("Invalid request: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	var username sql.NullString
@@ -86,29 +61,19 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	if user.IsLockedOut {
 		errorResponse.Errorcode = "13"
 		errorResponse.ErrorMessage = "Sorry you exceeded the maximum login attempts... Kindly reset your password to continue..."
 		log.Println("Account was locked out....")
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	if util.VerifyHash(user.Password.String, request.Password) {
 		log.Println("Verifying that user is in the role access is being requested...")
-		role := r.Header.Get("Role")
+		role := c.Request().Header.Get("Role")
 		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
 		if err != nil {
 			log.Println(`Invalid role entered... Changing to default role of "Guest"`)
@@ -133,13 +98,8 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 			errorResponse.Errorcode = "05"
 			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
 		}
 		log.Println("Storing refresh token in separate thread...")
 		// store refresh token add later
@@ -192,15 +152,11 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 				Phone:                     user.Phone.String,
 			},
 		}
-		responsebytes, err := json.MarshalIndent(loginResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
-		w.Header().Set("Refresh-Token", refreshToken)
-		w.Header().Set("Role", role)
-		w.WriteHeader(http.StatusOK)
-		w.Write(responsebytes)
+		c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
+		c.Response().Header().Set("Refresh-Token", refreshToken)
+		c.Response().Header().Set("Role", role)
+		c.JSON(http.StatusOK, loginResponse)
+		
 
 	} else {
 		errorResponse.Errorcode = "04"
@@ -219,6 +175,7 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 				log.Println(fmt.Sprintf("Password incorrect... %s", err))
 			}
 		}()
+
 		userLogins, err := env.AuthDb.GetUnResoledLogins(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
 		if err != nil {
 			log.Println(fmt.Sprintf("Error ocurred fetching user logins: %s", err))
@@ -260,26 +217,18 @@ func (env *Env) Login(w http.ResponseWriter, r *http.Request) {
 				log.Println(fmt.Sprintf("Error occured while trying to lockout account: %s", err))
 			}
 			log.Println(fmt.Sprintf("Account with username: %s has been locked out", lockoutUpdate.Username.String))
+
 			errorResponse.Errorcode = "12"
 			errorResponse.ErrorMessage = fmt.Sprintf("Account locked out, kindly reset your password to continue...")
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
 		}
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
+		c.JSON(http.StatusBadRequest, errorResponse)
 
 	}
-	return
+
+	return err
 
 }
 
@@ -296,62 +245,40 @@ func (env *Env) saveLogin(createParams authdb.CreateUserLoginParams) error {
 }
 
 // Register is used to register new users
-func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
+func (env *Env) Register(c echo.Context) (err error) {
 	log.Println("Register Request received")
-	pathParams := mux.Vars(r)
-	w.Header().Set("Content-Type", "application/json")
-	var applicationName string
-	var errorResponse models.Errormessage
-	var err error
-	if val, ok := pathParams["application"]; ok {
-		applicationName = val
-		log.Println(fmt.Sprintf("Application: %s", applicationName))
-		if err != nil {
-			errorResponse.Errorcode = "01"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.Println(err)
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+
+	errorResponse := new(models.Errormessage)
+
+	applicationName := c.Param("application")
+	if applicationName == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.Println("Application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
 	}
 	application, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(applicationName))
 	if err != nil {
 		errorResponse.Errorcode = "06"
 		errorResponse.ErrorMessage = "Application is invalid"
 		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	log.Println(fmt.Sprintf("Applicaiton ID: %d", application.ID))
 
-	var request models.UserDetail
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	var hashedPassword string
-	if err != nil {
+	request := new(models.UserDetail)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	var hashedPassword string
+
 	if request.Password != "" {
 		hashedPassword = util.GenerateHash(request.Password)
 
@@ -381,13 +308,8 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "04"
 		errorResponse.ErrorMessage = "User already exist"
 		log.Println(fmt.Sprintf("Error occured creating user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	go func() {
 		err = env.saveLogin(authdb.CreateUserLoginParams{
@@ -423,13 +345,10 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 			Phone:                     user.Phone.String,
 		},
 	}
-	responseString, err := json.MarshalIndent(registerResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
+
 	// log.Println(fmt.Sprintf("Got to response string: %s", responseString))
 	log.Println("Generating authentication token...")
-	role := r.Header.Get("Role")
+	role := c.Request().Header.Get("Role")
 	dbRole, err := env.AuthDb.GetRole(context.Background(), strings.ToLower(role))
 	if err != nil {
 		log.Println(`Invalid role entered... Changing to default role of "Guest"`)
@@ -462,13 +381,9 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errorResponse.Errorcode = "05"
 		errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		log.Println(fmt.Sprintf("Error occured generating auth token: %s", err))
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println("Storing refresh token in separate thread...")
 	// store refresh token add later
@@ -483,63 +398,48 @@ func (env *Env) Register(w http.ResponseWriter, r *http.Request) {
 
 		log.Println(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
 	}()
-	w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
-	w.Header().Set("Refresh-Token", refreshToken)
-	w.Header().Set("Role", role)
+	c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
+	c.Response().Header().Set("Refresh-Token", refreshToken)
+	c.Response().Header().Set("Role", role)
 	// log.Println(fmt.Sprintf("Auth token: %s, Refresh token: %s, Return object: %v", authToken, refreshToken, registerResponse))
-	w.WriteHeader(http.StatusOK)
-	w.Write(responseString)
+	c.JSON(http.StatusOK, registerResponse)
+
 	log.Println("Successfully processed registration request")
 	return
 }
 
 // RefreshToken is used to register expired token
-func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
+func (env *Env) RefreshToken(c echo.Context) (err error) {
 	log.Println("Refresh token Request received")
 
-	var errorResponse models.Errormessage
-	var err error
+	errorResponse := new(models.Errormessage)
+
 	var authCode string
-	authArray := strings.Split(r.Header.Get("Authorization"), " ")
+	authArray := strings.Split( c.Request().Header.Get("Authorization"), " ")
 	if len(authArray) != 2 {
 		errorResponse.Errorcode = "11"
 		errorResponse.ErrorMessage = "Unsupported authentication scheme type"
 		log.Println("Unsupported authentication scheme type")
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusUnauthorized, errorResponse)
+		return err
 	}
 	authCode = authArray[1]
-	refreshToken := r.Header.Get("Refresh-Token")
+	refreshToken := c.Request().Header.Get("Refresh-Token")
 
 	verifiedClaims, err := util.VerifyToken(authCode)
 	if err == nil {
 		errorResponse.Errorcode = "10"
 		errorResponse.ErrorMessage = "Session is still valid..."
 		log.Println(fmt.Sprintf("Token is still valid..."))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusTooEarly)
-		w.Write(response)
-		return
+		c.JSON(http.StatusTooEarly, errorResponse)
+		return err
 	}
 	if err != nil && verifiedClaims.Email == "" {
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
 		log.Println(fmt.Sprintf("Invalid request: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbRefreshToken, err := env.AuthDb.GetRefreshToken(context.Background(), refreshToken)
@@ -547,13 +447,8 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "08"
 		errorResponse.ErrorMessage = "Cannot refresh session. Kindly login again"
 		log.Println(fmt.Sprintf("Error occured refreshing token: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	defer func() {
 		err = env.AuthDb.DeleteRefreshToken(context.Background(), refreshToken)
@@ -581,13 +476,8 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			errorResponse.Errorcode = "05"
 			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
 		}
 		log.Println("Fetching user...")
 		user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
@@ -595,13 +485,8 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 			errorResponse.Errorcode = "03"
 			errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
 			log.Println(fmt.Sprintf("Error fetching user: %s", err))
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
 		}
 		log.Println("Storing refresh token in separate thread...")
 		// store refresh token add later
@@ -620,51 +505,36 @@ func (env *Env) RefreshToken(w http.ResponseWriter, r *http.Request) {
 			ResponseCode:    "00",
 			ResponseMessage: "Success",
 		}
-		responsebytes, err := json.MarshalIndent(resetResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
-		w.Header().Set("Refresh-Token", refreshToken)
-		w.Header().Set("Role", verifiedClaims.Role)
-		w.WriteHeader(http.StatusOK)
-		w.Write(responsebytes)
+
+		c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
+		c.Response().Header().Set("Refresh-Token", refreshToken)
+		c.Response().Header().Set("Role", verifiedClaims.Role)
+		c.JSON(http.StatusOK, resetResponse)
+
 	} else {
 		errorResponse.Errorcode = "09"
 		errorResponse.ErrorMessage = "Session expired. Kindly login again to continue"
 		log.Println("Token has expired...")
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusUnauthorized)
-		w.Write(response)
+		c.JSON(http.StatusUnauthorized, errorResponse)
+		return err
 
 	}
-	return
+	return err
 
 }
 
 // SendOtp is used to send OTP request after validating user exist
-func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
+func (env *Env) SendOtp(c echo.Context) (err error) {
 	log.Println("Send OTP Request received")
-	var errorResponse models.Errormessage
-	var err error
-	var request models.SendOtpRequest
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	errorResponse := new(models.Errormessage)
+
+	request := new(models.SendOtpRequest)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(fmt.Sprintf("Invalid request: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
@@ -672,13 +542,8 @@ func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "If you have an account with us, you should get an otp"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("User %s exists... Generating OTP code for user", user.Username.String))
 	var otpLength int
@@ -694,13 +559,8 @@ func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "14"
 		errorResponse.ErrorMessage = "Error occured generating otp"
 		log.Println(fmt.Sprintf("Error occured generating otp: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	// Save otp to db in another thread
 	go func() {
@@ -785,78 +645,48 @@ func (env *Env) SendOtp(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, resetResponse)
+	return err
 }
 
 // VerifyOtp is used to verify and otp against a user. Authentication token is generated that is used in subsequent requests.
-func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
+func (env *Env) VerifyOtp(c echo.Context) (err error) {
 	log.Println("Verify otp request received")
 	log.Println("Checking application")
-	pathParams := mux.Vars(r)
-	w.Header().Set("Content-Type", "application/json")
+
 	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
 
 	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
 	// file.WriteString()
 
-	var application string
-	var errorResponse models.Errormessage
-	var err error
-	if val, ok := pathParams["application"]; ok {
-		application = val
-		log.Println(fmt.Sprintf("Application: %s", application))
-		if err != nil {
-			errorResponse.Errorcode = "01"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.Println("Application not specified")
+	errorResponse := new(models.Errormessage)
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.Println("Application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
 	}
 	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
 	if err != nil {
 		errorResponse.Errorcode = "06"
 		errorResponse.ErrorMessage = "Application is invalid"
 		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
-	// var errorResponse models.Errormessage
-	// var err error
-	var request models.VerifyOtpRequest
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	// errorResponse := new(models.Errormessage)
+	//
+	request := new(models.VerifyOtpRequest)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(fmt.Sprintf("Invalid request: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	dbOtp, err := env.AuthDb.GetOtp(context.Background(), authdb.GetOtpParams{
 		OtpToken: sql.NullString{String: request.OTP, Valid: true},
@@ -866,13 +696,8 @@ func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Incorrect OTP. Please try again..."
 		log.Println(fmt.Sprintf("Invalid request: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	var otpDuration int
 	otpDurationKey := os.Getenv("OTP_VALIDITY_PERIOD")
@@ -886,7 +711,7 @@ func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
 	}
 	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration) * time.Minute).Before(time.Now()) {
 		log.Println("Verifying that user is in the role access is being requested...")
-		role := r.Header.Get("Role")
+		role :=  c.Request().Header.Get("Role")
 		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), dbOtp.UserID)
 		if err != nil {
 			log.Println(`Invalid role entered... Changing to default role of "Guest"`)
@@ -911,13 +736,8 @@ func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
 			errorResponse.Errorcode = "05"
 			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
 		}
 		log.Println("Storing refresh token in separate thread...")
 		// store refresh token add later
@@ -952,48 +772,36 @@ func (env *Env) VerifyOtp(w http.ResponseWriter, r *http.Request) {
 			ResponseCode:    "00",
 			ResponseMessage: "Success",
 		}
-		responsebytes, err := json.MarshalIndent(loginResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
-		w.Header().Set("Refresh-Token", refreshToken)
-		w.Header().Set("Role", role)
-		w.WriteHeader(http.StatusOK)
-		w.Write(responsebytes)
+
+		c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
+		c.Response().Header().Set("Refresh-Token", refreshToken)
+		c.Response().Header().Set("Role", role)
+		c.JSON(http.StatusOK, loginResponse)
+
 	} else {
 		errorResponse.Errorcode = "16"
 		errorResponse.ErrorMessage = "Oops... something is wrong here... your one time token has expired. Kindly request another one..."
 		log.Println("Otp has expired...")
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
+		c.JSON(http.StatusBadRequest, errorResponse)
+
 	}
 	log.Println("Finished processing Verify otp request...")
-	return
+	return err
 }
 
 // ResetPassword password is used to reset account password
-func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
+func (env *Env) ResetPassword(c echo.Context) (err error) {
 	log.Println("Password Reset Request received")
-	var errorResponse models.Errormessage
-	var err error
+	errorResponse := new(models.Errormessage)
+
 	var authCode string
-	authArray := strings.Split(r.Header.Get("Authorization"), " ")
+	authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
 	if len(authArray) != 2 {
 		errorResponse.Errorcode = "11"
 		errorResponse.ErrorMessage = "Unsupported authentication scheme type"
 		log.Println("Unsupported authentication scheme type")
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	authCode = authArray[1]
 
@@ -1003,30 +811,17 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "09"
 		errorResponse.ErrorMessage = "Session expired. Kindly try generating one time password again"
 		log.Println("Token has expired...")
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
-	var request models.ResetPasswordRequest
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	 request := new(models.ResetPasswordRequest)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(fmt.Sprintf("Invalid request: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	// Try to update password
@@ -1035,13 +830,8 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Oops... something is wrong here... your email is incorrect..."
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	go func() {
 		var hashedPassword string
@@ -1086,13 +876,8 @@ func (env *Env) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
+	c.JSON(http.StatusOK, resetResponse)
+	return err
 }
 
 // commentID := -1

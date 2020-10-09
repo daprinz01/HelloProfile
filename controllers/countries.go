@@ -5,33 +5,27 @@ import (
 	"authengine/persistence/orm/authdb"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 // GetCountries is used get countries
-func (env *Env) GetCountries(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetCountries(c echo.Context) (err error) {
 	log.Println("Get countries request received...")
-	var errorResponse models.Errormessage
-	var err error
+	errorResponse := new(models.Errormessage)
+
 	countries, err := env.AuthDb.GetCountries(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Countries not found"
 		log.Println(fmt.Sprintf("Countries not found: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println("Successfully retrieved countries...")
 	countriesResponse := make([]models.Country, len(countries))
@@ -48,40 +42,27 @@ func (env *Env) GetCountries(w http.ResponseWriter, r *http.Request) {
 		ResponseMessage: "Success",
 		ResponseDetails: countriesResponse,
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // GetCountry is used get country
-func (env *Env) GetCountry(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetCountry(c echo.Context) (err error) {
 	log.Println("Get country request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var country string
-	if val2, ok := pathParams["country"]; ok {
-		country = val2
-		log.Println(fmt.Sprintf("Country: %s", country))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Country not specified"
-			log.Println("Country not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	country := c.Param("country")
+
+	if country == "" {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Country not specified"
+		log.Println("Country not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	log.Println(fmt.Sprintf("Country: %s", country))
 
 	dbCountry, err := env.AuthDb.GetCountry(context.Background(), strings.ToLower(country))
 	if err != nil {
@@ -89,13 +70,8 @@ func (env *Env) GetCountry(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Country not found"
 		log.Println(fmt.Sprintf("Country not found"))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully retrieved country: %v", dbCountry))
 	countryResponse := models.Country{
@@ -109,37 +85,23 @@ func (env *Env) GetCountry(w http.ResponseWriter, r *http.Request) {
 		ResponseMessage: "Success",
 		ResponseDetails: countryResponse,
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // AddCountry is used add country
-func (env *Env) AddCountry(w http.ResponseWriter, r *http.Request) {
+func (env *Env) AddCountry(c echo.Context) (err error) {
 	log.Println("Add country request received...")
 
-	var errorResponse models.Errormessage
-	var err error
-	var request models.Country
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	errorResponse := new(models.Errormessage)
+
+	request := new(models.Country)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbCountry, err := env.AuthDb.CreateCountry(context.Background(), authdb.CreateCountryParams{
@@ -152,13 +114,8 @@ func (env *Env) AddCountry(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not add country. Duplicate found"
 		log.Println(fmt.Sprintf("Error occured adding new country: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully added country: %v", dbCountry))
 
@@ -166,56 +123,34 @@ func (env *Env) AddCountry(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // UpdateCountry is used add country
-func (env *Env) UpdateCountry(w http.ResponseWriter, r *http.Request) {
+func (env *Env) UpdateCountry(c echo.Context) (err error) {
 	log.Println("Update country request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var country string
-	if val, ok := pathParams["country"]; ok {
-		country = val
-		log.Println(fmt.Sprintf("Country: %s", country))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Country not specified"
-			log.Println("Country not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	country := c.Param("country")
+
+	if country == "" {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Country not specified"
+		log.Println("Country not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	log.Println(fmt.Sprintf("Country: %s", country))
 
-	var request models.Country
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	request := new(models.Country)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbCountry, err := env.AuthDb.UpdateCountry(context.Background(), authdb.UpdateCountryParams{
@@ -226,16 +161,11 @@ func (env *Env) UpdateCountry(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not update country. Not found"
+		errorResponse.ErrorMessage = "Could not update country. Country not found"
 		log.Println(fmt.Sprintf("Error occured updating new country: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully updated country: %v", dbCountry))
 
@@ -243,40 +173,26 @@ func (env *Env) UpdateCountry(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // DeleteCountry is used add country
-func (env *Env) DeleteCountry(w http.ResponseWriter, r *http.Request) {
+func (env *Env) DeleteCountry(c echo.Context) (err error) {
 	log.Println("Delete country request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var country string
-	if val, ok := pathParams["country"]; ok {
-		country = val
-		log.Println(fmt.Sprintf("Country: %s", country))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Country not specified"
-			log.Println(fmt.Sprintf("Country not specified %s", err))
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	country := c.Param("country")
+
+	if country == "" {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Country not specified"
+		log.Println(fmt.Sprintf("Country not specified %s", err))
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	log.Println(fmt.Sprintf("Country: %s", country))
 
 	err = env.AuthDb.DeleteCountry(context.Background(), strings.ToLower(country))
 	if err != nil {
@@ -284,13 +200,8 @@ func (env *Env) DeleteCountry(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not delete country. Country not found"
 		log.Println(fmt.Sprintf("Error occured deleting  country: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println("Successfully deleted country")
 
@@ -298,12 +209,6 @@ func (env *Env) DeleteCountry(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }

@@ -4,33 +4,27 @@ import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 // GetTimezones is used get languages
-func (env *Env) GetTimezones(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetTimezones(c echo.Context) (err error) {
 	log.Println("Get timezones request received...")
-	var errorResponse models.Errormessage
-	var err error
+	errorResponse := new(models.Errormessage)
+
 	timezones, err := env.AuthDb.GetTimezones(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Timezones not found"
 		log.Println(fmt.Sprintf("timezones not found %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println("Successfully retrieved timezones...")
 	timezonesResponse := make([]models.Timezone, len(timezones))
@@ -46,39 +40,26 @@ func (env *Env) GetTimezones(w http.ResponseWriter, r *http.Request) {
 		ResponseMessage: "Success",
 		ResponseDetails: timezonesResponse,
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // GetTimezone is used get timezone
-func (env *Env) GetTimezone(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetTimezone(c echo.Context) (err error) {
 	log.Println("Get timezone request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var timezone string
-	if val2, ok := pathParams["timezone"]; ok {
-		timezone = val2
-		log.Println(fmt.Sprintf("Timezone: %s", timezone))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Timezone not specified"
-			log.Println("Timezone not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	timezone := c.Param("timezone")
+
+	log.Println(fmt.Sprintf("Timezone: %s", timezone))
+	if err != nil {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Timezone not specified"
+		log.Println("Timezone not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbTimezone, err := env.AuthDb.GetTimezone(context.Background(), strings.ToLower(timezone))
@@ -87,13 +68,8 @@ func (env *Env) GetTimezone(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Timezone not found"
 		log.Println(fmt.Sprintf("Timezone not found"))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully retrieved user languages: %v", dbTimezone))
 	timezoneResponse := models.Timezone{
@@ -106,37 +82,23 @@ func (env *Env) GetTimezone(w http.ResponseWriter, r *http.Request) {
 		ResponseMessage: "Success",
 		ResponseDetails: timezoneResponse,
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // AddTimezone is used add timezones
-func (env *Env) AddTimezone(w http.ResponseWriter, r *http.Request) {
+func (env *Env) AddTimezone(c echo.Context) (err error) {
 	log.Println("Add timezone request received...")
 
-	var errorResponse models.Errormessage
-	var err error
-	var request models.Timezone
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	errorResponse := new(models.Errormessage)
+
+	request := new(models.Timezone)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbTimezone, err := env.AuthDb.CreateTimezone(context.Background(), authdb.CreateTimezoneParams{
@@ -148,13 +110,8 @@ func (env *Env) AddTimezone(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not add timezone. Duplicate found"
 		log.Println(fmt.Sprintf("Error occured adding new timezone: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully added timezone: %v", dbTimezone))
 
@@ -162,56 +119,35 @@ func (env *Env) AddTimezone(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // UpdateTimezone is used add timezone
-func (env *Env) UpdateTimezone(w http.ResponseWriter, r *http.Request) {
+func (env *Env) UpdateTimezone(c echo.Context) (err error) {
 	log.Println("Update timezone request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var timezone string
-	if val, ok := pathParams["timezone"]; ok {
-		timezone = val
-		log.Println(fmt.Sprintf("Timezone: %s", timezone))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Timezone not specified"
-			log.Println("Timezone not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	timezone := c.Param("timezone")
+
+	log.Println(fmt.Sprintf("Timezone: %s", timezone))
+	if err != nil {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Timezone not specified"
+		log.Println("Timezone not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
-	var request models.Timezone
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	request := new(models.Timezone)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbTimezone, err := env.AuthDb.UpdateTimezone(context.Background(), authdb.UpdateTimezoneParams{
@@ -224,13 +160,8 @@ func (env *Env) UpdateTimezone(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not update timezone. Not found"
 		log.Println(fmt.Sprintf("Error occured updating new timezone: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully updated timezone: %v", dbTimezone))
 
@@ -238,39 +169,26 @@ func (env *Env) UpdateTimezone(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // DeleteTimezone is used add languages
-func (env *Env) DeleteTimezone(w http.ResponseWriter, r *http.Request) {
+func (env *Env) DeleteTimezone(c echo.Context) (err error) {
 	log.Println("Delete timezone request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var timezone string
-	if val, ok := pathParams["timezone"]; ok {
-		timezone = val
-		log.Println(fmt.Sprintf("Timezone: %s", timezone))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Timezone not specified"
-			log.Println("Timezone not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	timezone := c.Param("timezone")
+
+	log.Println(fmt.Sprintf("Timezone: %s", timezone))
+	if err != nil {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Timezone not specified"
+		log.Println("Timezone not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	err = env.AuthDb.DeleteTimezone(context.Background(), strings.ToLower(timezone))
@@ -278,14 +196,8 @@ func (env *Env) DeleteTimezone(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not delete timezone. Timezone not found"
 		log.Println(fmt.Sprintf("Error occured deleting  timezone: %s", err))
-
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println("Successfully deleted timezone")
 
@@ -293,12 +205,6 @@ func (env *Env) DeleteTimezone(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }

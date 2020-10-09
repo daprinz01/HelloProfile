@@ -4,33 +4,27 @@ import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 // GetApplications is used get countries
-func (env *Env) GetApplications(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetApplications(c echo.Context) (err error) {
 	log.Println("Get applications request received...")
-	var errorResponse models.Errormessage
-	var err error
+	errorResponse := new(models.Errormessage)
+
 	applications, err := env.AuthDb.GetApplications(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Applications not found"
-		log.Println(fmt.Sprintf("Applications not found: %s", err))
+		log.Println(fmt.Sprintf("Application not found: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println("Successfully retrieved application...")
 	applicationResponse := make([]models.Application, len(applications))
@@ -46,39 +40,23 @@ func (env *Env) GetApplications(w http.ResponseWriter, r *http.Request) {
 		ResponseMessage: "Success",
 		ResponseDetails: applicationResponse,
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // GetApplication is used get application
-func (env *Env) GetApplication(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetApplication(c echo.Context) (err error) {
 	log.Println("Get application request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var application string
-	if val2, ok := pathParams["application"]; ok {
-		application = val2
-		log.Println(fmt.Sprintf("Application: %s", application))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.Println("Application not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.Println("Application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
 	}
 
 	dbApplication, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
@@ -87,13 +65,8 @@ func (env *Env) GetApplication(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Application not found"
 		log.Println(fmt.Sprintf("Application not found: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully retrieved application: %v", dbApplication))
 	applicationResponse := models.Application{
@@ -106,37 +79,23 @@ func (env *Env) GetApplication(w http.ResponseWriter, r *http.Request) {
 		ResponseMessage: "Success",
 		ResponseDetails: applicationResponse,
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // AddApplication is used add application
-func (env *Env) AddApplication(w http.ResponseWriter, r *http.Request) {
+func (env *Env) AddApplication(c echo.Context) (err error) {
 	log.Println("Add application request received...")
 
-	var errorResponse models.Errormessage
-	var err error
-	var request models.Application
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	errorResponse := new(models.Errormessage)
+
+	request := new(models.Application)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbApplication, err := env.AuthDb.CreateApplication(context.Background(), authdb.CreateApplicationParams{
@@ -148,13 +107,8 @@ func (env *Env) AddApplication(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not add application. Duplicate found"
 		log.Println(fmt.Sprintf("Error occured adding new application: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully added application: %v", dbApplication))
 
@@ -162,56 +116,32 @@ func (env *Env) AddApplication(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // UpdateApplication is used add application
-func (env *Env) UpdateApplication(w http.ResponseWriter, r *http.Request) {
+func (env *Env) UpdateApplication(c echo.Context) (err error) {
 	log.Println("Update application request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var application string
-	if val, ok := pathParams["application"]; ok {
-		application = val
-		log.Println(fmt.Sprintf("Application: %s", application))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.Println("Application not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.Println("Application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
 	}
 
-	var request models.Application
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	request := new(models.Application)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	dbApplication, err := env.AuthDb.UpdateApplication(context.Background(), authdb.UpdateApplicationParams{
@@ -224,13 +154,8 @@ func (env *Env) UpdateApplication(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not update application. Not found"
 		log.Println(fmt.Sprintf("Error occured updating new application: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully updated application: %v", dbApplication))
 
@@ -238,39 +163,23 @@ func (env *Env) UpdateApplication(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // DeleteApplication is used add application
-func (env *Env) DeleteApplication(w http.ResponseWriter, r *http.Request) {
+func (env *Env) DeleteApplication(c echo.Context) (err error) {
 	log.Println("Delete application request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var application string
-	if val, ok := pathParams["application"]; ok {
-		application = val
-		log.Println(fmt.Sprintf("Application: %s", application))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.Println(fmt.Sprintf("Application not specified %s", err))
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.Println("Application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	err = env.AuthDb.DeleteApplication(context.Background(), strings.ToLower(application))
@@ -279,13 +188,8 @@ func (env *Env) DeleteApplication(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not delete application. Application not found"
 		log.Println(fmt.Sprintf("Error occured deleting  application: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println("Successfully deleted application")
 
@@ -293,12 +197,6 @@ func (env *Env) DeleteApplication(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }

@@ -5,122 +5,82 @@ import (
 	"authengine/persistence/orm/authdb"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
+	"github.com/labstack/echo/v4"
 )
 
 // CheckAvailability is used to check user availablity
-func (env *Env) CheckAvailability(w http.ResponseWriter, r *http.Request) {
+func (env *Env) CheckAvailability(c echo.Context) (err error) {
 	log.Println("Check availability Request received")
 
-	pathParams := mux.Vars(r)
-	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
+	errorResponse := new(models.Errormessage)
 
-	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
-	// file.WriteString()
+	username := c.Param("username")
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Username not specified"
+		log.Println("Username not specified")
 
-	var username string
-	var errorResponse models.Errormessage
-	var err error
-	if val, ok := pathParams["username"]; ok {
-		username = val
-		log.Println(fmt.Sprintf("Username: %s", username))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Username not specified"
-			log.Println("Username not specified")
-
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	log.Println(fmt.Sprintf("Username: %s", username))
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
 
-	resetResponse := &models.SuccessResponse{
+	response := &models.SuccessResponse{
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // GetUser is used to fetch user details
-func (env *Env) GetUser(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetUser(c echo.Context) (err error) {
 	log.Println("Get User Request received")
 
-	pathParams := mux.Vars(r)
 	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
 
 	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
 	// file.WriteString()
 
-	var username string
-	var errorResponse models.Errormessage
-	var err error
-	if val, ok := pathParams["username"]; ok {
-		username = val
-		log.Println(fmt.Sprintf("Username: %s", username))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Username not specified"
-			log.Println("Username not specified")
+	username := c.Param("username")
+	errorResponse := new(models.Errormessage)
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	if err != nil {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Username not specified"
+		log.Println("Username not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	log.Println(fmt.Sprintf("Username: %s", username))
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
 
-	resetResponse := &models.SuccessResponse{
+	response := &models.SuccessResponse{
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 		ResponseDetails: &models.UserDetail{
@@ -142,35 +102,23 @@ func (env *Env) GetUser(w http.ResponseWriter, r *http.Request) {
 			Phone:                     user.Phone.String,
 		},
 	}
-	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // GetUsers is used to fetch user details. This is an admin function. User must be an admin to access this function
-func (env *Env) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (env *Env) GetUsers(c echo.Context) (err error) {
 	log.Println("Get User Request received")
 
-	var errorResponse models.Errormessage
-	var err error
+	errorResponse := new(models.Errormessage)
 
 	users, err := env.AuthDb.GetUsers(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Users does not exist"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	userResponse := make([]models.UserDetail, len(users))
 	for index, user := range users {
@@ -201,37 +149,23 @@ func (env *Env) GetUsers(w http.ResponseWriter, r *http.Request) {
 		ResponseMessage: "Success",
 		ResponseDetails: &userResponse,
 	}
-	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, resetResponse)
+	return err
 }
 
 // UpdateUser is used to update User information. It can be used to update user details and timezone details as required. Only pass the details to be updated. Email or username is mandatory.
-func (env *Env) UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (env *Env) UpdateUser(c echo.Context) (err error) {
 
 	log.Println("Update user request received...")
-	var errorResponse models.Errormessage
-	var err error
-	var request models.UserDetail
-	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&request)
-	defer r.Body.Close()
-	if err != nil {
+	errorResponse := new(models.Errormessage)
+
+	request := new(models.UserDetail)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
-		log.Println(err)
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(response)
-		return
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
 	log.Println("Checking if user exist...")
@@ -240,13 +174,8 @@ func (env *Env) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
 	go func() {
@@ -300,81 +229,54 @@ func (env *Env) UpdateUser(w http.ResponseWriter, r *http.Request) {
 			log.Println("Successfully updated user details")
 		}
 	}()
-	resetResponse := &models.SuccessResponse{
+	response := &models.SuccessResponse{
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(resetResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // UpdateUserRole Add Role to applications
-func (env *Env) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
+func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 	log.Println("Update user's role request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var role string
-	if val, ok := pathParams["newRole"]; ok {
-		role = val
-		log.Println(fmt.Sprintf("New Role: %s", role))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "New Role not specified"
-			log.Println("Role not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	role := c.Param("newRole")
+
+	log.Println(fmt.Sprintf("New Role: %s", role))
+	if role == "" {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "New Role not specified"
+		log.Println("Role not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
-	var oldRole string
-	if val, ok := pathParams["oldRole"]; ok {
-		role = val
-		log.Println(fmt.Sprintf("Old Role: %s", role))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Old Role not specified"
-			log.Println("Role not specified")
+	oldRole := c.Param("oldRole")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
-	}
-	var username string
-	if val, ok := pathParams["username"]; ok {
-		username = val
-		log.Println(fmt.Sprintf("Username: %s", username))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Username not specified"
-			log.Println("Username not specified")
+	log.Println(fmt.Sprintf("Old Role: %s", role))
+	if oldRole == "" {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Old Role not specified"
+		log.Println("Role not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+
+	username := c.Param("username")
+	if username == "" {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Username not specified"
+		log.Println("Username not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.Println(fmt.Sprintf("Username: %s", username))
 
 	dbRole, err := env.AuthDb.UpdateUserRole(context.Background(), authdb.UpdateUserRoleParams{
 		Username:   sql.NullString{String: strings.ToLower(username), Valid: true},
@@ -387,13 +289,8 @@ func (env *Env) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not update user to role. Not found"
 		log.Println(fmt.Sprintf("Error occured updating  user role: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully updated user role: %v", dbRole))
 
@@ -401,59 +298,38 @@ func (env *Env) UpdateUserRole(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // AddUserToRole Add user to a role. This increases the roles the user is being added to including the previous roles. At login a role must be selected else the the default role guest is selected for the user
-func (env *Env) AddUserToRole(w http.ResponseWriter, r *http.Request) {
+func (env *Env) AddUserToRole(c echo.Context) (err error) {
 	log.Println("Add user to role request received...")
-	pathParams := mux.Vars(r)
-	var errorResponse models.Errormessage
-	var err error
-	var role string
-	if val, ok := pathParams["role"]; ok {
-		role = val
-		log.Println(fmt.Sprintf("Role: %s", role))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Role not specified"
-			log.Println("Role not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	errorResponse := new(models.Errormessage)
+
+	role := c.Param("role")
+
+	log.Println(fmt.Sprintf("Role: %s", role))
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Role not specified"
+		log.Println("Role not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 
-	var username string
-	if val, ok := pathParams["username"]; ok {
-		username = val
-		log.Println(fmt.Sprintf("Username: %s", username))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Username not specified"
-			log.Println("Username not specified")
+	username := c.Param("username")
+	if err != nil {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Username not specified"
+		log.Println("Username not specified")
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	log.Println(fmt.Sprintf("Username: %s", username))
 
 	dbRole, err := env.AuthDb.AddUserRole(context.Background(), authdb.AddUserRoleParams{
 		Username: sql.NullString{String: strings.ToLower(username), Valid: true},
@@ -464,13 +340,8 @@ func (env *Env) AddUserToRole(w http.ResponseWriter, r *http.Request) {
 		errorResponse.ErrorMessage = "Could not add user to role. Not found"
 		log.Println(fmt.Sprintf("Error occured adding  user to role: %s", err))
 
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("Successfully added role to application: %v", dbRole))
 
@@ -478,59 +349,39 @@ func (env *Env) AddUserToRole(w http.ResponseWriter, r *http.Request) {
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(response, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // DeleteUser is used to disable a users account
-func (env *Env) DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (env *Env) DeleteUser(c echo.Context) (err error) {
 	log.Println("Delete user Request received")
 
-	pathParams := mux.Vars(r)
 	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
 
 	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
 	// file.WriteString()
 
-	var username string
-	var errorResponse models.Errormessage
-	var err error
-	if val, ok := pathParams["username"]; ok {
-		username = val
-		log.Println(fmt.Sprintf("Username: %s", username))
-		if err != nil {
-			errorResponse.Errorcode = "15"
-			errorResponse.ErrorMessage = "Username not specified"
-			log.Println("Username not specified")
+	username := c.Param("username")
+	errorResponse := new(models.Errormessage)
 
-			response, err := json.MarshalIndent(errorResponse, "", "")
-			if err != nil {
-				log.Println(err)
-			}
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write(response)
-			return
-		}
+	if err != nil {
+		errorResponse.Errorcode = "03"
+		errorResponse.ErrorMessage = "Username not specified"
+		log.Println("Username not specified")
+
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
+	log.Println(fmt.Sprintf("Username: %s", username))
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		response, err := json.MarshalIndent(errorResponse, "", "")
-		if err != nil {
-			log.Println(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
-		w.Write(response)
-		return
+		c.JSON(http.StatusNotFound, errorResponse)
+		return err
 	}
 	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
 	go func() {
@@ -540,18 +391,12 @@ func (env *Env) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Successfully deactivated user")
 	}()
-	deleteResponse := &models.SuccessResponse{
+	response := &models.SuccessResponse{
 		ResponseCode:    "00",
 		ResponseMessage: "Success",
 	}
-	responsebytes, err := json.MarshalIndent(deleteResponse, "", "")
-	if err != nil {
-		log.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(responsebytes)
-	return
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 func getValue(request, user string) string {
