@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"authengine/models"
+	"authengine/util"
 	"context"
 	"fmt"
 	"log"
@@ -62,96 +63,79 @@ func TrackResponseTime(next echo.HandlerFunc) echo.HandlerFunc {
 
 }
 
-// // Authorize is used to check if requests are authorized
-// func Authorize(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		log.Println("Checking authorization...")
-// 		errorResponse := new(models.Errormessage)
-//
-// 		var authCode string
-// 		authArray := strings.Split(r.Header.Get("Authorization"), " ")
-// 		if len(authArray) != 2 {
-// 			errorResponse.Errorcode = "11"
-// 			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
-// 			log.Println("Unsupported authentication scheme type")
-// 			response, err := json.MarshalIndent(errorResponse, "", "")
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			w.Write(response)
-// 			return
-// 		}
-// 		authCode = authArray[1]
+// Authorize is used to check if requests are authorized
+func Authorize(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		log.Println("Checking authorization...")
+		errorResponse := new(models.Errormessage)
 
-// 		verifiedClaims, err := util.VerifyToken(authCode)
+		var authCode string
+		authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
+		if len(authArray) != 2 {
+			errorResponse.Errorcode = "11"
+			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
+			log.Println("Unsupported authentication scheme type")
+			c.JSON(http.StatusUnauthorized, errorResponse)
+			return nil
+		}
+		authCode = authArray[1]
 
-// 		if err != nil || verifiedClaims.Email == "" {
-// 			errorResponse.Errorcode = "09"
-// 			errorResponse.ErrorMessage = "Session expired. Kindly login again"
-// 			log.Println("Token has expired...")
-// 			response, err := json.MarshalIndent(errorResponse, "", "")
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			w.WriteHeader(http.StatusUnauthorized)
-// 			w.Write(response)
-// 			return
-// 		}
-// 		// Call the next handler, which can be another middleware in the chain, or the final handler.
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
+		verifiedClaims, err := util.VerifyToken(authCode)
 
-// // AuthorizeAdmin is used to check if requests are authorized
-// func AuthorizeAdmin(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		log.Println("Checking admin authorization...")
-// 		errorResponse := new(models.Errormessage)
-//
-// 		var authCode string
-// 		authArray := strings.Split(r.Header.Get("Authorization"), " ")
-// 		if len(authArray) != 2 {
-// 			errorResponse.Errorcode = "11"
-// 			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
-// 			log.Println("Unsupported authentication scheme type")
-// 			response, err := json.MarshalIndent(errorResponse, "", "")
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			w.WriteHeader(http.StatusBadRequest)
-// 			w.Write(response)
-// 			return
-// 		}
-// 		authCode = authArray[1]
+		if err != nil || verifiedClaims.Email == "" {
+			errorResponse.Errorcode = "09"
+			errorResponse.ErrorMessage = "Session expired. Kindly login again"
+			log.Println("Token has expired...")
+			c.JSON(http.StatusUnauthorized, errorResponse)
+			return nil
+		}
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+		return nil
+	}
+}
 
-// 		verifiedClaims, err := util.VerifyToken(authCode)
+// AuthorizeAdmin is used to check if requests are authorized
+func AuthorizeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		log.Println("Checking admin authorization...")
+		errorResponse := new(models.Errormessage)
 
-// 		if err != nil || verifiedClaims.Email == "" {
-// 			errorResponse.Errorcode = "09"
-// 			errorResponse.ErrorMessage = "Session expired. Kindly login again..."
-// 			log.Println("Token has expired...")
-// 			response, err := json.MarshalIndent(errorResponse, "", "")
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			w.WriteHeader(http.StatusUnauthorized)
-// 			w.Write(response)
-// 			return
-// 		}
-// 		if !(strings.ToLower(verifiedClaims.Role) == "admin" || strings.ToLower(verifiedClaims.Role) == "superadmin") {
-// 			errorResponse.Errorcode = "09"
-// 			errorResponse.ErrorMessage = "Sorry, you are not authorized to carry out this operation."
-// 			log.Println(fmt.Sprintf("User is not authorised to perform this operation with role %s...", verifiedClaims.Role))
-// 			response, err := json.MarshalIndent(errorResponse, "", "")
-// 			if err != nil {
-// 				log.Println(err)
-// 			}
-// 			w.WriteHeader(http.StatusUnauthorized)
-// 			w.Write(response)
-// 			return
-// 		}
-// 		// Call the next handler, which can be another middleware in the chain, or the final handler.
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
+		var authCode string
+		authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
+		if len(authArray) != 2 {
+			errorResponse.Errorcode = "11"
+			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
+			log.Println("Unsupported authentication scheme type")
+
+			c.JSON(http.StatusUnauthorized, errorResponse)
+			return nil
+		}
+		authCode = authArray[1]
+
+		verifiedClaims, err := util.VerifyToken(authCode)
+
+		if err != nil || verifiedClaims.Email == "" {
+			errorResponse.Errorcode = "09"
+			errorResponse.ErrorMessage = "Session expired. Kindly login again..."
+			log.Println("Token has expired...")
+
+			c.JSON(http.StatusUnauthorized, errorResponse)
+			return err
+		}
+		if !(strings.ToLower(verifiedClaims.Role) == "admin" || strings.ToLower(verifiedClaims.Role) == "superadmin") {
+			errorResponse.Errorcode = "09"
+			errorResponse.ErrorMessage = "Sorry, you are not authorized to carry out this operation."
+			log.Println(fmt.Sprintf("User is not authorised to perform this operation with role %s...", verifiedClaims.Role))
+			c.JSON(http.StatusUnauthorized, errorResponse)
+			return nil
+		}
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+		return nil
+	}
+}

@@ -2,7 +2,6 @@ package main
 
 import (
 	"authengine/controllers"
-	"authengine/models"
 	"authengine/persistence/orm/authdb"
 	"context"
 	"database/sql"
@@ -127,15 +126,22 @@ func main() {
 	// Methods that require authentication but don't need the information from the applications or authorization to function
 	apiAuth := apiNoAuth.Group("/app")
 	// Configure middleware with the custom claims type
-	config := middleware.JWTConfig{
-		Claims:     &models.Claims{},
-		SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
-	}
-	apiAuth.Use(middleware.JWTWithConfig(config))
+	// config := middleware.JWTConfig{
+	// 	Claims:     &models.Claims{},
+	// 	SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
+	// }
+	apiAuth.Use(controllers.Authorize)
 
 	// Admin operations authorization
 	apiAdminAuth := apiNoAuth.Group("/admin")
-	apiAdminAuth.Use(middleware.JWTWithConfig(config))
+
+	// adminConfig := middleware.JWTConfig{
+	// 	Claims: &models.Claims{
+	// 		Role: "admin",
+	// 	},
+	// 	SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
+	// }
+	apiAdminAuth.Use(controllers.AuthorizeAdmin)
 
 	// Methods that don't require the application information is it's being verified in a middleware
 	apiNoAuth.GET("/:application/refresh", env.RefreshToken)
