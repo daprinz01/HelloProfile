@@ -156,7 +156,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 		c.Response().Header().Set("Refresh-Token", refreshToken)
 		c.Response().Header().Set("Role", role)
 		c.JSON(http.StatusOK, loginResponse)
-		
 
 	} else {
 		errorResponse.Errorcode = "04"
@@ -415,7 +414,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 
 	var authCode string
-	authArray := strings.Split( c.Request().Header.Get("Authorization"), " ")
+	authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
 	if len(authArray) != 2 {
 		errorResponse.Errorcode = "11"
 		errorResponse.ErrorMessage = "Unsupported authentication scheme type"
@@ -438,7 +437,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
 		log.Println(fmt.Sprintf("Invalid request: %s", err))
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 
@@ -447,7 +446,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		errorResponse.Errorcode = "08"
 		errorResponse.ErrorMessage = "Cannot refresh session. Kindly login again"
 		log.Println(fmt.Sprintf("Error occured refreshing token: %s", err))
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 	defer func() {
@@ -485,7 +484,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 			errorResponse.Errorcode = "03"
 			errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
 			log.Println(fmt.Sprintf("Error fetching user: %s", err))
-			c.JSON(http.StatusBadRequest, errorResponse)
+			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
 		}
 		log.Println("Storing refresh token in separate thread...")
@@ -711,7 +710,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 	}
 	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration) * time.Minute).Before(time.Now()) {
 		log.Println("Verifying that user is in the role access is being requested...")
-		role :=  c.Request().Header.Get("Role")
+		role := c.Request().Header.Get("Role")
 		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), dbOtp.UserID)
 		if err != nil {
 			log.Println(`Invalid role entered... Changing to default role of "Guest"`)
@@ -815,7 +814,7 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 		return err
 	}
 
-	 request := new(models.ResetPasswordRequest)
+	request := new(models.ResetPasswordRequest)
 	if err = c.Bind(request); err != nil {
 		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
