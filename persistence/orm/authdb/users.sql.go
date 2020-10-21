@@ -54,6 +54,8 @@ func (q *Queries) AddUserProvider(ctx context.Context, arg AddUserProviderParams
 }
 
 const addUserRole = `-- name: AddUserRole :one
+
+
 insert into user_roles (
     user_id, role_id
 ) values ((select d.id from users d where d.username = $1 or d.email = $1), (select a.id from roles a where  a.name = $2))
@@ -65,6 +67,7 @@ type AddUserRoleParams struct {
 	Name     string         `json:"name"`
 }
 
+// select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1);
 func (q *Queries) AddUserRole(ctx context.Context, arg AddUserRoleParams) (UserRole, error) {
 	row := q.queryRow(ctx, q.addUserRoleStmt, addUserRole, arg.Username, arg.Name)
 	var i UserRole
@@ -309,7 +312,7 @@ func (q *Queries) GetUserProviders(ctx context.Context, username sql.NullString)
 }
 
 const getUserRoles = `-- name: GetUserRoles :many
-select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1)
+select b.name from roles b inner join user_roles a on b.Id = a.role_id and a.user_id = $1
 `
 
 func (q *Queries) GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]string, error) {

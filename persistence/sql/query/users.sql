@@ -76,7 +76,9 @@ delete from user_providers a where a.user_id = (select b.id from users b where b
 
 
 -- name: GetUserRoles :many
-select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1);
+select b.name from roles b inner join user_roles a on b.Id = a.role_id and a.user_id = $1;
+
+-- select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1);
 
 
 -- name: AddUserRole :one
