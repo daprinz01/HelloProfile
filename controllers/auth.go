@@ -456,25 +456,26 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		}
 		log.Println("Successfully deleted old refresh token...")
 	}()
-	var refreshTokenDuration int
+	var refreshTokenDuration time.Duration
 	refreshTokenLifespan := os.Getenv("SESSION_LIFESPAN")
 	if refreshTokenLifespan == "" {
 		log.Println("Session lifespan cannot be empty")
 		log.Println("SESSION_LIFESPAN cannot be empty, setting duration to default of 15 mins ...")
-		refreshTokenDuration = 15
+		refreshTokenDuration, err = time.ParseDuration("15m")
 	} else {
 		log.Println(fmt.Sprintf("Setting Refresh token lifespan..."))
-		refreshTokenDuration, err = strconv.Atoi(refreshTokenLifespan)
+		refreshTokenDuration, err = time.ParseDuration(refreshTokenLifespan)
 		if err != nil {
 			log.Println(fmt.Sprintf("Error converting refresh token duration to number: %s", err))
 		}
 	}
-	if !dbRefreshToken.CreatedAt.Add(time.Duration(refreshTokenDuration) * time.Minute).Before(time.Now()) {
+	if !dbRefreshToken.CreatedAt.Add(refreshTokenDuration).Before(time.Now()) {
 		log.Println("Generating authentication token...")
 		authToken, refreshToken, err := util.GenerateJWT(verifiedClaims.Email, verifiedClaims.Role)
 		if err != nil {
 			errorResponse.Errorcode = "05"
 			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
+			log.Println(fmt.Sprintf("Error occured generating auth token: %s", err))
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}

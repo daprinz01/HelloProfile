@@ -39,7 +39,8 @@ var jwtSecretKey = []byte("AnyString")
 
 // GenerateJWT func will used to create the JWT while signing in and signing out
 func GenerateJWT(email string, role string) (response string, refreshToken string, err error) {
-	expirationTime := time.Now().Add(5 * time.Minute)
+	authExpirationTime, _ := time.ParseDuration(os.Getenv("TOKEN_LIFESPAN"))
+	expirationTime := time.Now().Add(authExpirationTime * time.Minute)
 	claims := &models.Claims{
 		Email: email,
 		Role:  role,
