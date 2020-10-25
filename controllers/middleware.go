@@ -86,6 +86,7 @@ func Authorize(next echo.HandlerFunc) echo.HandlerFunc {
 			errorResponse.Errorcode = "09"
 			errorResponse.ErrorMessage = "Session expired. Kindly login again"
 			log.Println("Token has expired...")
+			log.Println(err)
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return nil
 		}
@@ -121,7 +122,7 @@ func AuthorizeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 			errorResponse.Errorcode = "09"
 			errorResponse.ErrorMessage = "Session expired. Kindly login again..."
 			log.Println("Token has expired...")
-
+			log.Println(err)
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
 		}

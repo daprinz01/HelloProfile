@@ -74,7 +74,14 @@ func GenerateJWT(email string, role string) (response string, refreshToken strin
 // VerifyToken func will used to Verify the JWT Token while using APIS
 func VerifyToken(tokenString string) (verifiedClaims models.VerifiedClaims, err error) {
 	claims := &models.Claims{}
-
+	jwtKey := os.Getenv("JWT_SECRET_KEY")
+	if jwtKey == "" {
+		log.Println("JWT secret key cannot be empty")
+		log.Println("JWT_SECRET_KEY cannot be empty, application intialization failed...")
+	} else {
+		log.Println(fmt.Sprintf("Setting JWT secret key..."))
+		jwtSecretKey = []byte(jwtKey)
+	}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecretKey, nil
 	})
