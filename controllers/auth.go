@@ -61,14 +61,14 @@ func (env *Env) Login(c echo.Context) (err error) {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 	if user.IsLockedOut {
 		errorResponse.Errorcode = "13"
 		errorResponse.ErrorMessage = "Sorry you exceeded the maximum login attempts... Kindly reset your password to continue..."
 		log.Println("Account was locked out....")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 	if util.VerifyHash(user.Password.String, request.Password) {
@@ -98,7 +98,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			errorResponse.Errorcode = "05"
 			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
 
-			c.JSON(http.StatusBadRequest, errorResponse)
+			c.JSON(http.StatusConflict, errorResponse)
 			return err
 		}
 		log.Println("Storing refresh token in separate thread...")
@@ -219,7 +219,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 
 			errorResponse.Errorcode = "12"
 			errorResponse.ErrorMessage = fmt.Sprintf("Account locked out, kindly reset your password to continue...")
-			c.JSON(http.StatusBadRequest, errorResponse)
+			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
 		}
 
