@@ -113,6 +113,10 @@ func main() {
 			Compress:   true, // disabled by default
 		},
 	}))
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		// AllowOrigins: []string{"https://labstack.com", "https://labstack.net"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Role", echo.HeaderAuthorization, "Refresh-Token", echo.HeaderXRealIP},
+	}))
 	e.Use(controllers.TrackResponseTime)
 	// e.Use(middleware.CSRF())
 	e.Use(middleware.Recover())
