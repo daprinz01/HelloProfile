@@ -68,7 +68,7 @@ type Querier interface {
 	GetUserLogin(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error)
 	GetUserLogins(ctx context.Context) ([]UserLogin, error)
 	GetUserProviders(ctx context.Context, username sql.NullString) ([]IdentityProvider, error)
-	GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]string, error)
+	GetUserRoles(ctx context.Context, username sql.NullString) ([]string, error)
 	GetUserTimezones(ctx context.Context, username sql.NullString) ([]Timezone, error)
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	UpdateApplication(ctx context.Context, arg UpdateApplicationParams) (Application, error)

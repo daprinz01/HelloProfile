@@ -4,6 +4,7 @@ import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,31 +17,59 @@ import (
 func (env *Env) GetRoles(c echo.Context) (err error) {
 	log.Println("Get roles request received...")
 	errorResponse := new(models.Errormessage)
+	if c.QueryParam("email") != "" {
+		log.Println(fmt.Sprintf("Getting roles for user %s", c.QueryParam("email")))
+		roles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullString{String: strings.ToLower(c.QueryParam("email")), Valid: true})
+		if err != nil {
+			errorResponse.Errorcode = "03"
+			errorResponse.ErrorMessage = "Roles not found for user"
+			log.Println(fmt.Sprintf("Roles not found for user: %s", err))
 
-	roles, err := env.AuthDb.GetRoles(context.Background())
-	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Roles not found"
-		log.Println(fmt.Sprintf("Roles not found: %s", err))
+			c.JSON(http.StatusNotFound, errorResponse)
+			return err
+		}
+		log.Println("Successfully retrieved role...")
+		roleResponse := make([]models.Role, len(roles))
+		for index, value := range roles {
+			role := models.Role{
+				Role: value,
+			}
+			roleResponse[index] = role
+		}
+		response := &models.SuccessResponse{
+			ResponseCode:    "00",
+			ResponseMessage: "Success",
+			ResponseDetails: roleResponse,
+		}
+		c.JSON(http.StatusOK, response)
 
-		c.JSON(http.StatusNotFound, errorResponse)
+	} else {
+		roles, err := env.AuthDb.GetRoles(context.Background())
+		if err != nil {
+			errorResponse.Errorcode = "03"
+			errorResponse.ErrorMessage = "Roles not found"
+			log.Println(fmt.Sprintf("Roles not found: %s", err))
+
+			c.JSON(http.StatusNotFound, errorResponse)
+			return err
+		}
+		log.Println("Successfully retrieved role...")
+		roleResponse := make([]models.Role, len(roles))
+		for index, value := range roles {
+			role := models.Role{
+				Role:        value.Name,
+				Description: value.Description,
+			}
+			roleResponse[index] = role
+		}
+		response := &models.SuccessResponse{
+			ResponseCode:    "00",
+			ResponseMessage: "Success",
+			ResponseDetails: roleResponse,
+		}
+		c.JSON(http.StatusOK, response)
 		return err
 	}
-	log.Println("Successfully retrieved role...")
-	roleResponse := make([]models.Role, len(roles))
-	for index, value := range roles {
-		role := models.Role{
-			Role:        value.Name,
-			Description: value.Description,
-		}
-		roleResponse[index] = role
-	}
-	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
-		ResponseDetails: roleResponse,
-	}
-	c.JSON(http.StatusOK, response)
 	return err
 }
 

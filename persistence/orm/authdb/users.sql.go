@@ -312,11 +312,11 @@ func (q *Queries) GetUserProviders(ctx context.Context, username sql.NullString)
 }
 
 const getUserRoles = `-- name: GetUserRoles :many
-select b.name from roles b inner join user_roles a on b.Id = a.role_id and a.user_id = $1
+select b.name from roles b inner join user_roles a on b.Id = a.role_id and a.user_id = (select c.id from users c where c.username = $1 or c.email=$1 limit 1)
 `
 
-func (q *Queries) GetUserRoles(ctx context.Context, userID sql.NullInt64) ([]string, error) {
-	rows, err := q.query(ctx, q.getUserRolesStmt, getUserRoles, userID)
+func (q *Queries) GetUserRoles(ctx context.Context, username sql.NullString) ([]string, error) {
+	rows, err := q.query(ctx, q.getUserRolesStmt, getUserRoles, username)
 	if err != nil {
 		return nil, err
 	}

@@ -74,7 +74,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 	if util.VerifyHash(user.Password.String, request.Password) {
 		log.Println("Verifying that user is in the role access is being requested...")
 		role := c.Request().Header.Get("Role")
-		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
+		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullString{String: user.Email, Valid: true})
 		if err != nil {
 			log.Println(`Invalid role entered... Changing to default role of "Guest"`)
 			role = "Guest"
@@ -712,7 +712,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration) * time.Minute).Before(time.Now()) {
 		log.Println("Verifying that user is in the role access is being requested...")
 		role := c.Request().Header.Get("Role")
-		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), dbOtp.UserID)
+		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullString{String: request.Email, Valid: true})
 		if err != nil {
 			log.Println(`Invalid role entered... Changing to default role of "Guest"`)
 			role = "Guest"
