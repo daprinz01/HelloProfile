@@ -159,8 +159,8 @@ func main() {
 
 	// User operations
 	apiAdminAuth.GET("/:application/user", env.GetUsers)
-	apiNoAuth.GET("/:application/user/:username", env.CheckAvailability)
-	apiAuth.GET("/:application/user/:username", env.GetUser)
+	apiNoAuth.GET("/:application/user/:username/check", env.CheckAvailability)
+	apiNoAuth.GET("/:application/user/:username", env.GetUser)
 	auth.POST("/:application/user", env.Register)
 	apiAuth.PUT("/:application/user", env.UpdateUser)
 	apiAuth.DELETE("/:application/user/:username", env.DeleteUser)
