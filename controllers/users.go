@@ -35,7 +35,7 @@ func (env *Env) CheckAvailability(c echo.Context) (err error) {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
 		log.Println(fmt.Sprintf("Error fetching user: %s", err))
-		c.JSON(http.StatusNotFound, errorResponse)
+		c.JSON(http.StatusOK, errorResponse)
 		return err
 	}
 	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
