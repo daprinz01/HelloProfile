@@ -5,7 +5,7 @@ migrationUp:
 migrationDown:
 	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose down
 migrationForce:
-	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose force 1
+	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose force 3
 migrationGoto:
 	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose goto 2
 installSqlc:
