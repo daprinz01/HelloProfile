@@ -62,6 +62,7 @@ type SendOtpRequest struct {
 	IsEmailPrefered bool   `json:"isEmailPreferred"`
 	Purpose         string `json:"purpose,omitempty"`
 	Application     string `json:"application,omitempty"`
+	VerifyPath      string `json:"verifyPath,omitempty"`
 }
 
 // VerifyOtpRequest is used to verify an OTP against a user

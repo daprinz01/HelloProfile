@@ -15,6 +15,7 @@ type Querier interface {
 	AddUserTimezone(ctx context.Context, arg AddUserTimezoneParams) (UserTimezone, error)
 	CreateApplication(ctx context.Context, arg CreateApplicationParams) (Application, error)
 	CreateCountry(ctx context.Context, arg CreateCountryParams) (Country, error)
+	CreateEmailVerification(ctx context.Context, arg CreateEmailVerificationParams) error
 	CreateIdentityProvider(ctx context.Context, arg CreateIdentityProviderParams) (IdentityProvider, error)
 	CreateLanguage(ctx context.Context, name string) (Language, error)
 	CreateLanguageProficiency(ctx context.Context, proficiency sql.NullString) (LanguageProficiency, error)
@@ -27,6 +28,7 @@ type Querier interface {
 	CreateUserLogin(ctx context.Context, arg CreateUserLoginParams) (UserLogin, error)
 	DeleteApplication(ctx context.Context, name string) error
 	DeleteCountry(ctx context.Context, name string) error
+	DeleteEmailVerification(ctx context.Context, otp string) error
 	DeleteIdentityProvider(ctx context.Context, name string) error
 	DeleteLanguage(ctx context.Context, name string) error
 	DeleteLanguageProficiency(ctx context.Context, proficiency sql.NullString) error
@@ -45,6 +47,8 @@ type Querier interface {
 	GetApplications(ctx context.Context) ([]Application, error)
 	GetCountries(ctx context.Context) ([]Country, error)
 	GetCountry(ctx context.Context, name string) (Country, error)
+	GetEmailVerification(ctx context.Context, otp string) (EmailVerification, error)
+	GetEmailVerifications(ctx context.Context) ([]EmailVerification, error)
 	GetIdentityProvider(ctx context.Context, name string) (IdentityProvider, error)
 	GetIdentityProviders(ctx context.Context) ([]IdentityProvider, error)
 	GetLanguage(ctx context.Context, name string) (Language, error)

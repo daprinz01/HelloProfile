@@ -152,6 +152,8 @@ func main() {
 	apiNoAuth.GET("/:application/refresh", env.RefreshToken)
 	apiNoAuth.POST("/:application/otp/send", env.SendOtp)
 	apiNoAuth.POST("/:application/password/reset", env.ResetPassword)
+	apiNoAuth.POST("/:application/confirm/email", env.DoEmailVerification)
+	apiNoAuth.POST("/:application/verify/email", env.VerifyEmailToken)
 
 	// Methods that check application themselves and use the applicaiton information
 	auth.POST("/:application/login", env.Login)

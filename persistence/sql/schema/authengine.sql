@@ -178,3 +178,10 @@ Create TABLE language_proficiency(
     id bigserial PRIMARY KEY,
     proficiency VARCHAR null UNIQUE
 );
+
+create table email_verification(
+    "id" bigserial PRIMARY KEY,
+    "email" varchar,
+    "otp" varchar NOT NULL,
+    "created_at" timestamptz NOT NULL DEFAULT (now())
+);

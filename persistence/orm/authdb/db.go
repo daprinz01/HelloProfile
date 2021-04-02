@@ -43,6 +43,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createCountryStmt, err = db.PrepareContext(ctx, createCountry); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateCountry: %w", err)
 	}
+	if q.createEmailVerificationStmt, err = db.PrepareContext(ctx, createEmailVerification); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateEmailVerification: %w", err)
+	}
 	if q.createIdentityProviderStmt, err = db.PrepareContext(ctx, createIdentityProvider); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateIdentityProvider: %w", err)
 	}
@@ -78,6 +81,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteCountryStmt, err = db.PrepareContext(ctx, deleteCountry); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteCountry: %w", err)
+	}
+	if q.deleteEmailVerificationStmt, err = db.PrepareContext(ctx, deleteEmailVerification); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteEmailVerification: %w", err)
 	}
 	if q.deleteIdentityProviderStmt, err = db.PrepareContext(ctx, deleteIdentityProvider); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteIdentityProvider: %w", err)
@@ -132,6 +138,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getCountryStmt, err = db.PrepareContext(ctx, getCountry); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCountry: %w", err)
+	}
+	if q.getEmailVerificationStmt, err = db.PrepareContext(ctx, getEmailVerification); err != nil {
+		return nil, fmt.Errorf("error preparing query GetEmailVerification: %w", err)
+	}
+	if q.getEmailVerificationsStmt, err = db.PrepareContext(ctx, getEmailVerifications); err != nil {
+		return nil, fmt.Errorf("error preparing query GetEmailVerifications: %w", err)
 	}
 	if q.getIdentityProviderStmt, err = db.PrepareContext(ctx, getIdentityProvider); err != nil {
 		return nil, fmt.Errorf("error preparing query GetIdentityProvider: %w", err)
@@ -299,6 +311,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createCountryStmt: %w", cerr)
 		}
 	}
+	if q.createEmailVerificationStmt != nil {
+		if cerr := q.createEmailVerificationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createEmailVerificationStmt: %w", cerr)
+		}
+	}
 	if q.createIdentityProviderStmt != nil {
 		if cerr := q.createIdentityProviderStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createIdentityProviderStmt: %w", cerr)
@@ -357,6 +374,11 @@ func (q *Queries) Close() error {
 	if q.deleteCountryStmt != nil {
 		if cerr := q.deleteCountryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteCountryStmt: %w", cerr)
+		}
+	}
+	if q.deleteEmailVerificationStmt != nil {
+		if cerr := q.deleteEmailVerificationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteEmailVerificationStmt: %w", cerr)
 		}
 	}
 	if q.deleteIdentityProviderStmt != nil {
@@ -447,6 +469,16 @@ func (q *Queries) Close() error {
 	if q.getCountryStmt != nil {
 		if cerr := q.getCountryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getCountryStmt: %w", cerr)
+		}
+	}
+	if q.getEmailVerificationStmt != nil {
+		if cerr := q.getEmailVerificationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getEmailVerificationStmt: %w", cerr)
+		}
+	}
+	if q.getEmailVerificationsStmt != nil {
+		if cerr := q.getEmailVerificationsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getEmailVerificationsStmt: %w", cerr)
 		}
 	}
 	if q.getIdentityProviderStmt != nil {
@@ -705,6 +737,7 @@ type Queries struct {
 	addUserTimezoneStmt           *sql.Stmt
 	createApplicationStmt         *sql.Stmt
 	createCountryStmt             *sql.Stmt
+	createEmailVerificationStmt   *sql.Stmt
 	createIdentityProviderStmt    *sql.Stmt
 	createLanguageStmt            *sql.Stmt
 	createLanguageProficiencyStmt *sql.Stmt
@@ -717,6 +750,7 @@ type Queries struct {
 	createUserLoginStmt           *sql.Stmt
 	deleteApplicationStmt         *sql.Stmt
 	deleteCountryStmt             *sql.Stmt
+	deleteEmailVerificationStmt   *sql.Stmt
 	deleteIdentityProviderStmt    *sql.Stmt
 	deleteLanguageStmt            *sql.Stmt
 	deleteLanguageProficiencyStmt *sql.Stmt
@@ -735,6 +769,8 @@ type Queries struct {
 	getApplicationsStmt           *sql.Stmt
 	getCountriesStmt              *sql.Stmt
 	getCountryStmt                *sql.Stmt
+	getEmailVerificationStmt      *sql.Stmt
+	getEmailVerificationsStmt     *sql.Stmt
 	getIdentityProviderStmt       *sql.Stmt
 	getIdentityProvidersStmt      *sql.Stmt
 	getLanguageStmt               *sql.Stmt
@@ -790,6 +826,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		addUserTimezoneStmt:           q.addUserTimezoneStmt,
 		createApplicationStmt:         q.createApplicationStmt,
 		createCountryStmt:             q.createCountryStmt,
+		createEmailVerificationStmt:   q.createEmailVerificationStmt,
 		createIdentityProviderStmt:    q.createIdentityProviderStmt,
 		createLanguageStmt:            q.createLanguageStmt,
 		createLanguageProficiencyStmt: q.createLanguageProficiencyStmt,
@@ -802,6 +839,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createUserLoginStmt:           q.createUserLoginStmt,
 		deleteApplicationStmt:         q.deleteApplicationStmt,
 		deleteCountryStmt:             q.deleteCountryStmt,
+		deleteEmailVerificationStmt:   q.deleteEmailVerificationStmt,
 		deleteIdentityProviderStmt:    q.deleteIdentityProviderStmt,
 		deleteLanguageStmt:            q.deleteLanguageStmt,
 		deleteLanguageProficiencyStmt: q.deleteLanguageProficiencyStmt,
@@ -820,6 +858,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getApplicationsStmt:           q.getApplicationsStmt,
 		getCountriesStmt:              q.getCountriesStmt,
 		getCountryStmt:                q.getCountryStmt,
+		getEmailVerificationStmt:      q.getEmailVerificationStmt,
+		getEmailVerificationsStmt:     q.getEmailVerificationsStmt,
 		getIdentityProviderStmt:       q.getIdentityProviderStmt,
 		getIdentityProvidersStmt:      q.getIdentityProvidersStmt,
 		getLanguageStmt:               q.getLanguageStmt,

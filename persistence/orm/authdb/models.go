@@ -28,6 +28,13 @@ type Country struct {
 	CountryCode  sql.NullString `json:"country_code"`
 }
 
+type EmailVerification struct {
+	ID        int64          `json:"id"`
+	Email     sql.NullString `json:"email"`
+	Otp       string         `json:"otp"`
+	CreatedAt time.Time      `json:"created_at"`
+}
+
 type IdentityProvider struct {
 	ID           int64  `json:"id"`
 	Name         string `json:"name"`

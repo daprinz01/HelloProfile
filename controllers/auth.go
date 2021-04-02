@@ -577,10 +577,10 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 		log.Println("Successfully saved OTP...")
 		log.Println("Sending OTP through preferred channel...")
 		communicationEndpoint := os.Getenv("COMMUNICATION_SERVICE_ENDPOINT")
-		if request.IsEmailPrefered {
+		if request.IsEmailPrefered == true {
 			emailPath := os.Getenv("EMAIL_PATH")
 			emailRequest := models.SendEmailRequest{
-				From:    models.EmailAddress{Email: "it@persianblack.com", Name: "Persian Black"},
+				From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
 				To:      []models.EmailAddress{models.EmailAddress{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
 				Subject: fmt.Sprintf("%s OTP", request.Purpose),
 				Message: fmt.Sprintf("<h5>Hey %s,</h5><p>Kindly use the otp below to complete your request:</p><h4>%s</h4><p>Your account security is paramount to us. Don't share your otp with anyone.</p><h5>Micheal from Persian Black.</h5>", user.Firstname.String, otp),
@@ -646,6 +646,164 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 		ResponseMessage: "Success",
 	}
 	c.JSON(http.StatusOK, resetResponse)
+	return err
+}
+
+// SendOtp is used to send OTP request after validating user exist
+func (env *Env) DoEmailVerification(c echo.Context) (err error) {
+	log.Println("Generate OTP Request received")
+	errorResponse := new(models.Errormessage)
+
+	request := new(models.SendOtpRequest)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
+		errorResponse.Errorcode = "02"
+		errorResponse.ErrorMessage = "Invalid request"
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	var otpLength int
+	otpLengthKey := os.Getenv("OTP_LENGTH")
+	if otpLengthKey != "" {
+		otpLength, err = strconv.Atoi(otpLengthKey)
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occure converting otp lenght. Setting a default of 6: %s", err))
+		}
+	}
+	otp, err := util.GenerateOTP(otpLength)
+	if err != nil {
+		errorResponse.Errorcode = "14"
+		errorResponse.ErrorMessage = "Error occured generating otp"
+		log.Println(fmt.Sprintf("Error occured generating otp: %s", err))
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	log.Println("Successfully generated otp")
+	//Save otp to db in another thread
+	go func() {
+		err = env.AuthDb.CreateEmailVerification(context.Background(), authdb.CreateEmailVerificationParams{
+			Otp:   otp,
+			Email: sql.NullString{String: request.Email, Valid: true},
+		})
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occured saving otp: %s", err))
+		}
+		log.Println("Successfully saved OTP...")
+		log.Println("Sending OTP through preferred channel...")
+		communicationEndpoint := os.Getenv("COMMUNICATION_SERVICE_ENDPOINT")
+
+		emailPath := os.Getenv("EMAIL_PATH")
+		emailRequest := models.SendEmailRequest{
+			From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
+			To:      []models.EmailAddress{models.EmailAddress{Email: request.Email}},
+			Subject: fmt.Sprintf("%s Email Verification", strings.ToTitle(request.Application)),
+			Message: fmt.Sprintf("<h5>Hey,</h5><p>Kindly click the link below to confirm your email address</p><a href=\"%s/%s/%s\">click here</a><h5>Micheal from Persian Black.</h5>", request.VerifyPath, request.Email, otp),
+		}
+		emailRequestBytes, _ := json.Marshal(emailRequest)
+		emailRequestReader := bytes.NewReader(emailRequestBytes)
+		log.Println("Sending email verification email...")
+
+		client := &http.Client{}
+		req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, emailPath), emailRequestReader)
+		req.Header.Add("clientId", "persianblack")
+		req.Header.Add("Accept", "application/json")
+		req.Header.Add("Content-Type", "application/json")
+		emailResponse, err := client.Do(req)
+
+		// emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
+		if err != nil {
+			log.Println(fmt.Sprintf("Error occured sending otp: %s", err))
+		}
+		if emailResponse.StatusCode == 200 {
+			log.Println("OTP send successfully")
+		} else {
+			log.Println("Error occured sending OTP")
+		}
+		emailBody, _ := ioutil.ReadAll(emailResponse.Body)
+		log.Println(fmt.Sprintf("Response body from email request: %s", emailBody))
+	}()
+	resetResponse := &models.SuccessResponse{
+		ResponseCode:    "00",
+		ResponseMessage: "Success",
+		ResponseDetails: otp,
+	}
+	c.JSON(http.StatusOK, resetResponse)
+	return err
+}
+
+func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
+	log.Println("Verify Email token request received")
+	log.Println("Checking application")
+
+	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
+
+	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
+	// file.WriteString()
+
+	errorResponse := new(models.Errormessage)
+
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.Println("Application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
+	if err != nil {
+		errorResponse.Errorcode = "06"
+		errorResponse.ErrorMessage = "Application is invalid"
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.Println(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
+	// errorResponse := new(models.Errormessage)
+	//
+	request := new(models.VerifyOtpRequest)
+	if err = c.Bind(request); err != nil {
+		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
+		errorResponse.Errorcode = "02"
+		errorResponse.ErrorMessage = "Invalid request"
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	dbOtp, err := env.AuthDb.GetEmailVerification(context.Background(), request.OTP)
+	if err != nil {
+		errorResponse.Errorcode = "15"
+		errorResponse.ErrorMessage = "Sorry we could not verify your request. Please try registering again..."
+		log.Println(fmt.Sprintf("Invalid request: %s", err))
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	var otpDuration int
+	otpDurationKey := os.Getenv("OTP_VALIDITY_PERIOD")
+	if otpDurationKey != "" {
+		otpDuration, err = strconv.Atoi(otpDurationKey)
+		if err != nil {
+			log.Println(fmt.Sprintf("OTP_VALIDITY_PERIOD is not a valid number: %s", err))
+			log.Println("Setting default of 30mins")
+			otpDuration = 30
+		}
+	}
+	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration)*time.Minute).Before(time.Now()) && strings.ToLower(request.Email) == strings.ToLower(dbOtp.Email.String) {
+		fmt.Println("Email token verification successful")
+		verifyResponse := &models.SuccessResponse{
+			ResponseCode:    "00",
+			ResponseMessage: "Success",
+		}
+		c.JSON(http.StatusOK, verifyResponse)
+	} else {
+		errorResponse.Errorcode = "16"
+		errorResponse.ErrorMessage = "Oops... something is wrong here... your one time token has expired. Kindly register again"
+		log.Println("Otp has expired...")
+		c.JSON(http.StatusForbidden, errorResponse)
+
+	}
+	log.Println("Finished processing Verify otp request...")
 	return err
 }
 

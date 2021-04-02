@@ -1,1 +1,0 @@
-drop table applications, applications_roles, countries, identity_providers, languages, roles, states, timezones, user_languages, user_providers, user_roles, user_timezones, users cascade;
