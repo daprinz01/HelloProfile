@@ -715,14 +715,15 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 		// emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
 		if err != nil {
 			log.Println(fmt.Sprintf("Error occured sending otp: %s", err))
-		}
-		if emailResponse.StatusCode == 200 {
-			log.Println("OTP send successfully")
 		} else {
-			log.Println("Error occured sending OTP")
+			if emailResponse.StatusCode == 200 {
+				log.Println("OTP send successfully")
+			} else {
+				log.Println("Error occured sending OTP")
+			}
+			emailBody, _ := ioutil.ReadAll(emailResponse.Body)
+			log.Println(fmt.Sprintf("Response body from email request: %s", emailBody))
 		}
-		emailBody, _ := ioutil.ReadAll(emailResponse.Body)
-		log.Println(fmt.Sprintf("Response body from email request: %s", emailBody))
 	}()
 	resetResponse := &models.SuccessResponse{
 		ResponseCode:    "00",
