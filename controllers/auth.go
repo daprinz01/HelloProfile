@@ -685,7 +685,7 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 	go func() {
 		err = env.AuthDb.CreateEmailVerification(context.Background(), authdb.CreateEmailVerificationParams{
 			Otp:   otp,
-			Email: sql.NullString{String: request.Email, Valid: true},
+			Email: sql.NullString{String: strings.ToLower(request.Email), Valid: true},
 		})
 		if err != nil {
 			log.Println(fmt.Sprintf("Error occured saving otp: %s", err))
@@ -797,8 +797,8 @@ func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
 		c.JSON(http.StatusOK, verifyResponse)
 	} else {
 		errorResponse.Errorcode = "16"
-		errorResponse.ErrorMessage = "Oops... something is wrong here... your one time token has expired. Kindly register again"
-		log.Println("Otp has expired...")
+		errorResponse.ErrorMessage = "Oops... something is wrong here... your email verification link has expired.. Kindly register again"
+		log.Println("Email otp has expired or is invalid...")
 		c.JSON(http.StatusForbidden, errorResponse)
 
 	}
