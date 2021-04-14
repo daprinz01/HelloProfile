@@ -26,7 +26,7 @@ COPY --from=builder /opt/app/app /usr/local/bin/app
  
 
 ENV LOG_FILE_LOCATION=/usr/local/bin/log/authengine.log \
-DB_HOST=host.docker.internal DB_PORT=8669 DB_USER=postgres \
+DB_HOST=host.docker.internal DB_PORT=5432 DB_USER=postgres \
  DB_PASSWORD=Sarah4Daprinz DB_NAME=authengine DB_SSL_MODE=disable \
   JWT_SECRET_KEY=QWh1aWFzdWRoaXloa1VZYmpoamFzaGQ4OTA4ODc5OHVpaEhH \
   TOKEN_LIFESPAN=5m SESSION_LIFESPAN=15m LOCK_OUT_COUNT=5 SMTP_HOST=smtp.persianblack.com \

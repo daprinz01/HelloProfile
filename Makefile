@@ -1,13 +1,13 @@
 migrationCreate:
 	migrate create -ext sql -dir persistence/migrations -seq init_schema
 migrationUp:
-	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose up
+	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:5432/authengine?sslmode=disable" -verbose up
 migrationDown:
-	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose down 
+	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:5432/authengine?sslmode=disable" -verbose down 
 migrationForce:
-	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose force 1
+	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:5432/authengine?sslmode=disable" -verbose force 1
 migrationGoto:
-	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:8669/authengine?sslmode=disable" -verbose goto 2
+	migrate -path persistence/migrations -database "postgresql://postgres:Sarah4Daprinz@localhost:5432/authengine?sslmode=disable" -verbose goto 2
 installSqlc:
 	go get github.com/kyleconroy/sqlc/cmd/sqlc
 initialiseGoModules:
