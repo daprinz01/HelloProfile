@@ -13,5 +13,5 @@ installSqlc:
 initialiseGoModules:
 	go mod init authengine
 dockerRun:
-	 docker run --mount source=persian-black-log,destination=/usr/local/bin/log/ -p 8083:8083 --name authengine authengine:latest
+	 docker run --mount source=persian-black-log,destination=/usr/local/bin/log/ -p 8083:8083 --name authengine --env TOKEN_LIFESPAN=96h --env SESSION_LIFESPAN=120h --env DB_HOST=172.17.0.1 --env DB_PORT=5432 --env COMMUNICATION_SERVICE_ENDPOINT=http://172.17.0.1:8084 registry.gitlab.com/persianblack/authengine:feature-user
 .PHONY: migrationCreate migrationUp migrationDown migrationForce migrationGoto installSqlc initialiseGoModules dockerRun
