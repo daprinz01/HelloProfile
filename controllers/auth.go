@@ -185,7 +185,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			log.Println("LOCK_OUT_COUNT cannot be empty")
 			log.Println("LOCK_OUT_COUNT cannot be empty, setting default of 5...")
 		} else {
-			log.Println(fmt.Sprintf("Setting lock out count..."))
+			log.Println("Setting lock out count...")
 			lockoutCount, err = strconv.Atoi(lockOutCountKey)
 			if err != nil {
 				log.Println(fmt.Sprintf("Error occured while converting lock out count: %s", err))
@@ -218,7 +218,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			log.Println(fmt.Sprintf("Account with username: %s has been locked out", lockoutUpdate.Username.String))
 
 			errorResponse.Errorcode = "12"
-			errorResponse.ErrorMessage = fmt.Sprintf("Account locked out, kindly reset your password to continue...")
+			errorResponse.ErrorMessage = "Account locked out, kindly reset your password to continue..."
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
 		}
@@ -429,7 +429,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 	if err == nil {
 		errorResponse.Errorcode = "10"
 		errorResponse.ErrorMessage = "Session is still valid..."
-		log.Println(fmt.Sprintf("Token is still valid..."))
+		log.Println("Token is still valid...")
 		c.JSON(http.StatusTooEarly, errorResponse)
 		return err
 	}
@@ -463,7 +463,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		log.Println("SESSION_LIFESPAN cannot be empty, setting duration to default of 15 mins ...")
 		refreshTokenDuration, err = time.ParseDuration("15m")
 	} else {
-		log.Println(fmt.Sprintf("Setting Refresh token lifespan..."))
+		log.Println("Setting Refresh token lifespan...")
 		refreshTokenDuration, err = time.ParseDuration(refreshTokenLifespan)
 		if err != nil {
 			log.Println(fmt.Sprintf("Error converting refresh token duration to number: %s", err))
@@ -577,11 +577,11 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 		log.Println("Successfully saved OTP...")
 		log.Println("Sending OTP through preferred channel...")
 		communicationEndpoint := os.Getenv("COMMUNICATION_SERVICE_ENDPOINT")
-		if request.IsEmailPrefered == true {
+		if request.IsEmailPrefered {
 			emailPath := os.Getenv("EMAIL_PATH")
 			emailRequest := models.SendEmailRequest{
 				From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
-				To:      []models.EmailAddress{models.EmailAddress{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
+				To:      []models.EmailAddress{{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
 				Subject: fmt.Sprintf("%s OTP", request.Purpose),
 				Message: fmt.Sprintf("<h5>Hey %s,</h5><p>Kindly use the otp below to complete your request:</p><h4>%s</h4><p>Your account security is paramount to us. Don't share your otp with anyone.</p><h5>Micheal from Persian Black.</h5>", user.Firstname.String, otp),
 			}
@@ -697,7 +697,7 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 		emailPath := os.Getenv("EMAIL_PATH")
 		emailRequest := models.SendEmailRequest{
 			From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
-			To:      []models.EmailAddress{models.EmailAddress{Email: request.Email}},
+			To:      []models.EmailAddress{{Email: request.Email}},
 			Subject: fmt.Sprintf("%s Email Verification", strings.ToTitle(request.Application)),
 			Message: fmt.Sprintf("<h5>Hey,</h5><p>Kindly click the link below to confirm your email address</p><a href=\"%s/%s/%s\">click here</a><h5>Micheal from Persian Black.</h5>", request.VerifyPath, request.Email, otp),
 		}
@@ -789,7 +789,7 @@ func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
 			otpDuration = 30
 		}
 	}
-	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration)*time.Minute).Before(time.Now()) && strings.ToLower(request.Email) == strings.ToLower(dbOtp.Email.String) {
+	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration)*time.Minute).Before(time.Now()) && strings.EqualFold(strings.ToLower(request.Email), strings.ToLower(dbOtp.Email.String)) {
 		fmt.Println("Email token verification successful")
 		verifyResponse := &models.SuccessResponse{
 			ResponseCode:    "00",

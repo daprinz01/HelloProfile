@@ -385,7 +385,7 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 	go func() {
 		err = env.AuthDb.DeleteUser(context.Background(), user.Email)
 		if err != nil {
-			log.Println(fmt.Sprintf("Error occured while deleting user"))
+			log.Println("Error occured while deleting user")
 		}
 		log.Println("Successfully deactivated user")
 	}()

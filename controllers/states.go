@@ -101,7 +101,7 @@ func (env *Env) GetState(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "State not found"
-		log.Println(fmt.Sprintf("State not found"))
+		log.Println("State not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err

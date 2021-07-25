@@ -68,7 +68,7 @@ func (env *Env) GetCountry(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Country not found"
-		log.Println(fmt.Sprintf("Country not found"))
+		log.Println("Country not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err

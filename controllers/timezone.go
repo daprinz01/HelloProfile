@@ -66,7 +66,7 @@ func (env *Env) GetTimezone(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Timezone not found"
-		log.Println(fmt.Sprintf("Timezone not found"))
+		log.Println("Timezone not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err

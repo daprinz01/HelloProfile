@@ -176,7 +176,7 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully delete user languages"))
+	log.Println("Successfully delete user languages")
 
 	languageResponse := &models.SuccessResponse{
 		ResponseCode:    "00",
