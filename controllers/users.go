@@ -6,16 +6,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/labstack/echo/v4"
 )
 
 // CheckAvailability is used to check user availablity
 func (env *Env) CheckAvailability(c echo.Context) (err error) {
-	log.Println("Check availability Request received")
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	log.WithFields(fields).Info("Check availability Request received")
 
 	errorResponse := new(models.Errormessage)
 
@@ -23,22 +25,22 @@ func (env *Env) CheckAvailability(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Username not specified"
-		log.Println("Username not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Username: %s", username))
+	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
-		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user: %s")
 		c.JSON(http.StatusOK, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
+	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -50,7 +52,8 @@ func (env *Env) CheckAvailability(c echo.Context) (err error) {
 
 // GetUser is used to fetch user details
 func (env *Env) GetUser(c echo.Context) (err error) {
-	log.Println("Get User Request received")
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	log.WithFields(fields).Info("Get User Request received")
 
 	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
 
@@ -63,22 +66,22 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Username not specified"
-		log.Println("Username not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Username: %s", username))
+	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
-		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
+	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -107,7 +110,8 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 
 // GetUsers is used to fetch user details. This is an admin function. User must be an admin to access this function
 func (env *Env) GetUsers(c echo.Context) (err error) {
-	log.Println("Get User Request received")
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	log.WithFields(fields).Info("Get User Request received")
 
 	errorResponse := new(models.Errormessage)
 
@@ -115,7 +119,7 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Users does not exist"
-		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
@@ -140,7 +144,7 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 		}
 		userResponse[index] = tempUser
 	}
-	log.Println(fmt.Sprintf("Returning %d users...", len(users)))
+	log.WithFields(fields).Info(fmt.Sprintf("Returning %d users...", len(users)))
 
 	resetResponse := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -154,30 +158,31 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 // UpdateUser is used to update User information. It can be used to update user details and timezone details as required. Only pass the details to be updated. Email or username is mandatory.
 func (env *Env) UpdateUser(c echo.Context) (err error) {
 
-	log.Println("Update user request received...")
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	log.WithFields(fields).Info("Update user request received...")
 	errorResponse := new(models.Errormessage)
 
 	request := new(models.UserDetail)
 	if err = c.Bind(request); err != nil {
-		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
 
-	log.Println("Checking if user exist...")
+	log.WithFields(fields).Info("Checking if user exist...")
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
-		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
+	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 	go func() {
-		log.Println("Updating user...")
+		log.WithFields(fields).Info("Updating user...")
 		// Check all the user parameters passed and consolidate with existing user record
 
 		_, err := env.AuthDb.UpdateUser(context.Background(), authdb.UpdateUserParams{
@@ -201,10 +206,10 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		})
 
 		if err != nil {
-			log.Println(fmt.Sprintf("Error occured updating user information: %s", err))
+			log.WithFields(fields).WithError(err).Error("Error occured updating user information")
 
 		}
-		log.Println("Successfully updated user details")
+		log.WithFields(fields).Info("Successfully updated user details")
 		// LanguageName              string    `json:"language_name"`
 		// RoleName                  string    `json:"role_name"`
 		// TimezoneName              string    `json:"timezone_name"`
@@ -213,7 +218,7 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		// ClientID                  string    `json:"client_id"`
 		// ClientSecret              string    `json:"client_secret"`
 		// ProviderLogo              string    `json:"provider_logo"`
-		log.Println("Updating User Timezone")
+		log.WithFields(fields).Info("Updating User Timezone")
 		if request.TimezoneName != "" {
 			_, err := env.AuthDb.UpdateUserTimezone(context.Background(), authdb.UpdateUserTimezoneParams{
 				Username:   sql.NullString{String: user.Email, Valid: true},
@@ -221,10 +226,10 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 				Username_2: sql.NullString{String: user.Email, Valid: true},
 			})
 			if err != nil {
-				log.Println(fmt.Sprintf("Error occured updating timezone information: %s", err))
+				log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured updating timezone information: %s", err))
 
 			}
-			log.Println("Successfully updated user details")
+			log.WithFields(fields).Info("Successfully updated user details")
 		}
 	}()
 	response := &models.SuccessResponse{
@@ -237,17 +242,18 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 
 // UpdateUserRole Add Role to applications
 func (env *Env) UpdateUserRole(c echo.Context) (err error) {
-	log.Println("Update user's role request received...")
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	log.WithFields(fields).Info("Update user's role request received...")
 
 	errorResponse := new(models.Errormessage)
 
 	role := c.Param("newRole")
 
-	log.Println(fmt.Sprintf("New Role: %s", role))
+	log.WithFields(fields).Info(fmt.Sprintf("New Role: %s", role))
 	if role == "" {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "New Role not specified"
-		log.Println("Role not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -255,11 +261,11 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 
 	oldRole := c.Param("oldRole")
 
-	log.Println(fmt.Sprintf("Old Role: %s", role))
+	log.WithFields(fields).Info(fmt.Sprintf("Old Role: %s", role))
 	if oldRole == "" {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Old Role not specified"
-		log.Println("Role not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -269,12 +275,12 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 	if username == "" {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Username not specified"
-		log.Println("Username not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Username: %s", username))
+	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
 	dbRole, err := env.AuthDb.UpdateUserRole(context.Background(), authdb.UpdateUserRoleParams{
 		Username:   sql.NullString{String: strings.ToLower(username), Valid: true},
@@ -285,12 +291,12 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not update user to role. Not found"
-		log.Println(fmt.Sprintf("Error occured updating  user role: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating  user role")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully updated user role: %v", dbRole))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated user role: %v", dbRole))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -302,17 +308,18 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 
 // AddUserToRole Add user to a role. This increases the roles the user is being added to including the previous roles. At login a role must be selected else the the default role guest is selected for the user
 func (env *Env) AddUserToRole(c echo.Context) (err error) {
-	log.Println("Add user to role request received...")
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	log.WithFields(fields).Info("Add user to role request received...")
 
 	errorResponse := new(models.Errormessage)
 
 	role := c.Param("role")
 
-	log.Println(fmt.Sprintf("Role: %s", role))
+	log.WithFields(fields).Info(fmt.Sprintf("Role: %s", role))
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Role not specified"
-		log.Println("Role not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -322,12 +329,12 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Username not specified"
-		log.Println("Username not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Username: %s", username))
+	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
 	dbRole, err := env.AuthDb.AddUserRole(context.Background(), authdb.AddUserRoleParams{
 		Username: sql.NullString{String: strings.ToLower(username), Valid: true},
@@ -336,12 +343,12 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not add user to role. Not found"
-		log.Println(fmt.Sprintf("Error occured adding  user to role: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Error occured adding  user to role: %s", err))
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully added role to application: %v", dbRole))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added role to application: %v", dbRole))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -353,7 +360,8 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 
 // DeleteUser is used to disable a users account
 func (env *Env) DeleteUser(c echo.Context) (err error) {
-	log.Println("Delete user Request received")
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	log.WithFields(fields).Info("Delete user Request received")
 
 	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
 
@@ -366,28 +374,28 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Username not specified"
-		log.Println("Username not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Username: %s", username))
+	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "User does not exist"
-		log.Println(fmt.Sprintf("Error fetching user: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Error fetching user: %s", err))
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("User %s exists...", user.Username.String))
+	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 	go func() {
 		err = env.AuthDb.DeleteUser(context.Background(), user.Email)
 		if err != nil {
-			log.Println("Error occured while deleting user")
+			log.WithFields(fields).WithError(err).Error("Error occured while deleting user")
 		}
-		log.Println("Successfully deactivated user")
+		log.WithFields(fields).Info("Successfully deactivated user")
 	}()
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",

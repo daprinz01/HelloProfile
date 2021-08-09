@@ -6,13 +6,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	echoPrometheus "github.com/globocom/echo-prometheus"
 	"github.com/labstack/echo/v4"
@@ -89,6 +90,17 @@ func main() {
 	}
 
 	// Configure Logging
+	log.SetFormatter(&log.JSONFormatter{
+		FieldMap: log.FieldMap{
+			log.FieldKeyTime: "@timestamp",
+			log.FieldKeyMsg:  "message",
+			log.FieldKeyFunc: "function",
+		},
+	})
+	fields := log.Fields{"microservice": "persian.black.authengine.service"}
+	log.WithFields(fields)
+	log.SetLevel(log.TraceLevel)
+
 	logFileLocation := os.Getenv("LOG_FILE_LOCATION")
 	if logFileLocation != "" {
 		log.SetOutput(&lumberjack.Logger{
@@ -98,8 +110,10 @@ func main() {
 			MaxAge:     28,   //days
 			Compress:   true, // disabled by default
 		})
-		log.Println("Successfully initialized log file...")
+
 	}
+
+	log.WithFields(fields).Info("Successfully initialized log file...")
 
 	e := echo.New()
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -206,7 +220,7 @@ func main() {
 
 	// Countries Operations
 	apiAuth.GET("/:application/country/:country", env.GetCountry)
-	apiAuth.GET("/:application/country", env.GetCountries)
+	apiNoAuth.GET("/:application/country", env.GetCountries)
 	apiAdminAuth.POST("/:application/country", env.AddCountry)
 	apiAdminAuth.PUT("/:application/country/:country", env.UpdateCountry)
 	apiAdminAuth.DELETE("/:application/country/:country", env.DeleteCountry)
@@ -234,16 +248,16 @@ func main() {
 	// 		log.Fatal(err)
 	// 	}
 	// }()
-	go func() {
-		log.Println("Starting Server...")
+	go func(fields log.Fields) {
+		log.WithFields(fields).Info("Starting Server...")
 		e.Logger.Fatal(e.StartServer(srv))
-	}()
+	}(fields)
 
 	// Graceful Shutdown
-	waitForShutdown(srv)
+	waitForShutdown(srv, fields)
 }
 
-func waitForShutdown(srv *http.Server) {
+func waitForShutdown(srv *http.Server, fields log.Fields) {
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -254,6 +268,6 @@ func waitForShutdown(srv *http.Server) {
 	defer cancel()
 	srv.Shutdown(ctx)
 
-	log.Println("Shutting down...")
+	log.WithFields(fields).Info("Shutting down...")
 	os.Exit(0)
 }

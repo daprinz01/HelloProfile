@@ -5,28 +5,38 @@ import (
 	"authengine/persistence/orm/authdb"
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/labstack/echo/v4"
 )
 
 // GetStates is used get states
 func (env *Env) GetStates(c echo.Context) (err error) {
-	log.Println("Get states request received...")
-	errorResponse := new(models.Errormessage)
 
+	errorResponse := new(models.Errormessage)
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get states request received...")
 	states, err := env.AuthDb.GetStates(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "States not found"
-		log.Println(fmt.Sprintf("States not found %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("States not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully retrieved states...")
+	log.WithFields(fields).Info("Successfully retrieved states...")
 	statesResponse := make([]string, len(states))
 	for index, value := range states {
 		statesResponse[index] = value.Name
@@ -42,16 +52,25 @@ func (env *Env) GetStates(c echo.Context) (err error) {
 
 // GetStatesByCountry is used get states
 func (env *Env) GetStatesByCountry(c echo.Context) (err error) {
-	log.Println("Get states by country request received...")
-	errorResponse := new(models.Errormessage)
 
+	errorResponse := new(models.Errormessage)
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get states by country request received...")
 	country := c.Param("country")
 
-	log.Println(fmt.Sprintf("Country: %s", country))
+	log.WithFields(fields).Info(fmt.Sprintf("Country: %s", country))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Country not specified"
-		log.Println("Country not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Country not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -61,11 +80,11 @@ func (env *Env) GetStatesByCountry(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "States not found"
-		log.Println(fmt.Sprintf("States not found %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("States not found")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully retrieved states...")
+	log.WithFields(fields).Info("Successfully retrieved states...")
 	statesResponse := make([]string, len(states))
 	for index, value := range states {
 		statesResponse[index] = value.Name
@@ -81,17 +100,25 @@ func (env *Env) GetStatesByCountry(c echo.Context) (err error) {
 
 // GetState is used get states
 func (env *Env) GetState(c echo.Context) (err error) {
-	log.Println("Get state request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get state request received...")
 	state := c.Param("state")
 
-	log.Println(fmt.Sprintf("State: %s", state))
+	log.WithFields(fields).Info(fmt.Sprintf("State: %s", state))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "State not specified"
-		log.Println("State not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("State not specified")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -101,12 +128,12 @@ func (env *Env) GetState(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "State not found"
-		log.Println("State not found")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("State not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully retrieved states: %v", dbState))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully retrieved states: %v", dbState))
 	stateResponse := dbState.Name
 
 	response := &models.SuccessResponse{
@@ -120,17 +147,25 @@ func (env *Env) GetState(c echo.Context) (err error) {
 
 // AddState is used add states
 func (env *Env) AddState(c echo.Context) (err error) {
-	log.Println("Add state request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Add state request received...")
 	state := c.Param("state")
 
-	log.Println(fmt.Sprintf("State: %s", state))
+	log.WithFields(fields).Info(fmt.Sprintf("State: %s", state))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "State not specified"
-		log.Println("State not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("State not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -138,11 +173,11 @@ func (env *Env) AddState(c echo.Context) (err error) {
 
 	country := c.Param("country")
 
-	log.Println(fmt.Sprintf("Country: %s", country))
+	log.WithFields(fields).Info(fmt.Sprintf("Country: %s", country))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Country not specified"
-		log.Println("Country not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Country not specified")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -155,12 +190,12 @@ func (env *Env) AddState(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not add state. Duplicate found"
-		log.Println(fmt.Sprintf("Error occured adding new state: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding new state")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully added timezone ")
+	log.WithFields(fields).Info("Successfully added timezone ")
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -172,17 +207,25 @@ func (env *Env) AddState(c echo.Context) (err error) {
 
 // UpdateState is used add state
 func (env *Env) UpdateState(c echo.Context) (err error) {
-	log.Println("Update state request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Update state request received...")
 	state := c.Param("state")
 
-	log.Println(fmt.Sprintf("State: %s", state))
+	log.WithFields(fields).Info(fmt.Sprintf("State: %s", state))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "State not specified"
-		log.Println("State not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("State not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -190,11 +233,11 @@ func (env *Env) UpdateState(c echo.Context) (err error) {
 
 	newState := c.Param("newState")
 
-	log.Println(fmt.Sprintf("New State: %s", newState))
+	log.WithFields(fields).Info(fmt.Sprintf("New State: %s", newState))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "New State not specified"
-		log.Println("New State not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("New State not specified")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -207,12 +250,12 @@ func (env *Env) UpdateState(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not update state. Not found"
-		log.Println(fmt.Sprintf("Error occured updating new state: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating new state")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully updated state")
+	log.WithFields(fields).Info("Successfully updated state")
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -224,17 +267,25 @@ func (env *Env) UpdateState(c echo.Context) (err error) {
 
 // DeleteState is used add state
 func (env *Env) DeleteState(c echo.Context) (err error) {
-	log.Println("Delete state request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Delete state request received...")
 	state := c.Param("state")
 
-	log.Println(fmt.Sprintf("State: %s", state))
+	log.WithFields(fields).Info(fmt.Sprintf("State: %s", state))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "State not specified"
-		log.Println("State not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("State not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -244,12 +295,12 @@ func (env *Env) DeleteState(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not delete state. State not found"
-		log.Println(fmt.Sprintf("Error occured deleting  state: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Error occured deleting  state: %s", err))
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully deleted state")
+	log.WithFields(fields).Info("Successfully deleted state")
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",

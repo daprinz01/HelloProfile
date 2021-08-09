@@ -6,29 +6,40 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/labstack/echo/v4"
 )
 
 // GetRoles is used get roles
 func (env *Env) GetRoles(c echo.Context) (err error) {
-	log.Println("Get roles request received...")
+
 	errorResponse := new(models.Errormessage)
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get roles request received...")
 	if c.QueryParam("email") != "" {
-		log.Println(fmt.Sprintf("Getting roles for user %s", c.QueryParam("email")))
+		log.WithFields(fields).Info(fmt.Sprintf("Getting roles for user %s", c.QueryParam("email")))
 		roles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullString{String: strings.ToLower(c.QueryParam("email")), Valid: true})
 		if err != nil {
 			errorResponse.Errorcode = "03"
 			errorResponse.ErrorMessage = "Roles not found for user"
-			log.Println(fmt.Sprintf("Roles not found for user: %s", err))
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Roles not found for user")
 
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
 		}
-		log.Println("Successfully retrieved role...")
+		log.WithFields(fields).Info("Successfully retrieved role...")
 		roleResponse := make([]models.Role, len(roles))
 		for index, value := range roles {
 			role := models.Role{
@@ -48,12 +59,12 @@ func (env *Env) GetRoles(c echo.Context) (err error) {
 		if err != nil {
 			errorResponse.Errorcode = "03"
 			errorResponse.ErrorMessage = "Roles not found"
-			log.Println(fmt.Sprintf("Roles not found: %s", err))
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Roles not found")
 
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
 		}
-		log.Println("Successfully retrieved role...")
+		log.WithFields(fields).Info("Successfully retrieved role...")
 		roleResponse := make([]models.Role, len(roles))
 		for index, value := range roles {
 			role := models.Role{
@@ -79,26 +90,25 @@ func (env *Env) GetRolesByApplication(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 
 	application := c.Param("application")
-
-	if err != nil {
-		errorResponse.Errorcode = "15"
+	if application == "" {
+		errorResponse.Errorcode = "01"
 		errorResponse.ErrorMessage = "Application not specified"
-		log.Println("Application not specified")
-
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
-		return err
+		return nil
 	}
-	log.Println(fmt.Sprintf("Application: %s", application))
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info(fmt.Sprintf("Application: %s", application))
 
 	roles, err := env.AuthDb.GetRolesByApplication(context.Background(), application)
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Roles not found"
-		log.Println(fmt.Sprintf("Roles not found: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Roles not found")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully retrieved role...")
+	log.WithFields(fields).Info("Successfully retrieved role...")
 	roleResponse := make([]models.Role, len(roles))
 	for index, value := range roles {
 		role := models.Role{
@@ -118,28 +128,34 @@ func (env *Env) GetRolesByApplication(c echo.Context) (err error) {
 
 // AddApplicationRole Add Role to applications
 func (env *Env) AddApplicationRole(c echo.Context) (err error) {
-	log.Println("Add application to role request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Add application to role request received...")
 	role := c.Param("role")
 
-	log.Println(fmt.Sprintf("Role: %s", role))
+	log.WithFields(fields).Info(fmt.Sprintf("Role: %s", role))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Role not specified"
-		log.Println("Role not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
 
-	application := c.Param("application")
-
-	log.Println(fmt.Sprintf("Application: %s", application))
+	log.WithFields(fields).Info(fmt.Sprintf("Application: %s", application))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Application not specified"
-		log.Println("Application not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -152,12 +168,12 @@ func (env *Env) AddApplicationRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not add role to application. Not found"
-		log.Println(fmt.Sprintf("Error occured adding  role to application: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding  role to application")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully added role to application: %v", dbRole))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added role to application: %v", dbRole))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -169,17 +185,25 @@ func (env *Env) AddApplicationRole(c echo.Context) (err error) {
 
 // GetRole is used get role
 func (env *Env) GetRole(c echo.Context) (err error) {
-	log.Println("Get role request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get role request received...")
 	role := c.Param("role")
 
-	log.Println(fmt.Sprintf("Role: %s", role))
+	log.WithFields(fields).Info(fmt.Sprintf("Role: %s", role))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Role not specified"
-		log.Println("Role not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -189,12 +213,12 @@ func (env *Env) GetRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Role not found"
-		log.Println(fmt.Sprintf("Role not found: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully retrieved role: %v", dbRole))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully retrieved role: %v", dbRole))
 	roleResponse := models.Role{
 		Role:        dbRole.Name,
 		Description: dbRole.Description,
@@ -211,15 +235,23 @@ func (env *Env) GetRole(c echo.Context) (err error) {
 
 // AddRole is used add role
 func (env *Env) AddRole(c echo.Context) (err error) {
-	log.Println("Add role request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Add role request received...")
 	request := new(models.Role)
 	if err = c.Bind(request); err != nil {
-		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
@@ -231,12 +263,12 @@ func (env *Env) AddRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not add role. Duplicate found"
-		log.Println(fmt.Sprintf("Error occured adding new role: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding new role")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully added role: %v", dbRole))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added role: %v", dbRole))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -248,17 +280,25 @@ func (env *Env) AddRole(c echo.Context) (err error) {
 
 // UpdateRole is used add role
 func (env *Env) UpdateRole(c echo.Context) (err error) {
-	log.Println("Update role request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Update role request received...")
 	role := c.Param("role")
 
-	log.Println(fmt.Sprintf("Role: %s", role))
+	log.WithFields(fields).Info(fmt.Sprintf("Role: %s", role))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Role not specified"
-		log.Println("Role not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -266,9 +306,9 @@ func (env *Env) UpdateRole(c echo.Context) (err error) {
 
 	request := new(models.Role)
 	if err = c.Bind(request); err != nil {
-		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
@@ -281,12 +321,12 @@ func (env *Env) UpdateRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not update role. Not found"
-		log.Println(fmt.Sprintf("Error occured updating new role: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating new role")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully updated role: %v", dbRole))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated role: %v", dbRole))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -298,17 +338,26 @@ func (env *Env) UpdateRole(c echo.Context) (err error) {
 
 // DeleteRole is used add role
 func (env *Env) DeleteRole(c echo.Context) (err error) {
-	log.Println("Delete role request received...")
 
 	errorResponse := new(models.Errormessage)
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
 
+	log.WithFields(fields).Info("Delete role request received...")
 	role := c.Param("role")
 
-	log.Println(fmt.Sprintf("Role: %s", role))
+	log.WithFields(fields).Info(fmt.Sprintf("Role: %s", role))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Role not specified"
-		log.Println(fmt.Sprintf("Role not specified %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -318,12 +367,12 @@ func (env *Env) DeleteRole(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not delete role. Role not found"
-		log.Println(fmt.Sprintf("Error occured deleting  role: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured deleting  role")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully deleted role")
+	log.WithFields(fields).Info("Successfully deleted role")
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",

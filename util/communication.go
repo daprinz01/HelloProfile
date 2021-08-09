@@ -2,13 +2,15 @@ package util
 
 import (
 	"fmt"
-	"log"
 	"net/smtp"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // SendEmail is used to send email to users
 func SendEmail(from string, to []string, message string) error {
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "function": "SendEmail"}
 	//Read variables from environment
 	var smtpHost, smtpPort, smtpUser, smtpPassword string
 	smtpHost = os.Getenv("SMTP_HOST")
@@ -24,7 +26,7 @@ func SendEmail(from string, to []string, message string) error {
 	msg := []byte(message)
 	err := smtp.SendMail(fmt.Sprintf("%s:%s", smtpHost, smtpPort), auth, from, to, msg)
 	if err != nil {
-		log.Println(fmt.Sprintf("Error occured sending Email: err"))
+		log.WithFields(fields).Error("Error occured sending Email")
 		return err
 	}
 	return nil

@@ -6,28 +6,37 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/labstack/echo/v4"
 )
 
 // GetCountries is used get countries
 func (env *Env) GetCountries(c echo.Context) (err error) {
-	log.Println("Get countries request received...")
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get countries request received...")
 	countries, err := env.AuthDb.GetCountries(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Countries not found"
-		log.Println(fmt.Sprintf("Countries not found: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Countries not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully retrieved countries...")
+	log.WithFields(fields).Info("Successfully retrieved countries...")
 	countriesResponse := make([]models.Country, len(countries))
 	for index, value := range countries {
 		country := models.Country{
@@ -48,32 +57,40 @@ func (env *Env) GetCountries(c echo.Context) (err error) {
 
 // GetCountry is used get country
 func (env *Env) GetCountry(c echo.Context) (err error) {
-	log.Println("Get country request received...")
 
 	errorResponse := new(models.Errormessage)
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
 
+	log.WithFields(fields).Info("Get country request received...")
 	country := c.Param("country")
-
 	if country == "" {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Country not specified"
-		log.Println("Country not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Country not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Country: %s", country))
+	log.WithFields(fields).Info(fmt.Sprintf("Country: %s", country))
 
 	dbCountry, err := env.AuthDb.GetCountry(context.Background(), strings.ToLower(country))
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Country not found"
-		log.Println("Country not found")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Country not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully retrieved country: %v", dbCountry))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully retrieved country: %v", dbCountry))
 	countryResponse := models.Country{
 		Country:     dbCountry.Name,
 		FlagURL:     dbCountry.FlagImageUrl.String,
@@ -91,15 +108,23 @@ func (env *Env) GetCountry(c echo.Context) (err error) {
 
 // AddCountry is used add country
 func (env *Env) AddCountry(c echo.Context) (err error) {
-	log.Println("Add country request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Add country request received...")
 	request := new(models.Country)
 	if err = c.Bind(request); err != nil {
-		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
@@ -112,12 +137,11 @@ func (env *Env) AddCountry(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not add country. Duplicate found"
-		log.Println(fmt.Sprintf("Error occured adding new country: %s", err))
-
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding new country")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully added country: %v", dbCountry))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added country: %v", dbCountry))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -129,26 +153,34 @@ func (env *Env) AddCountry(c echo.Context) (err error) {
 
 // UpdateCountry is used add country
 func (env *Env) UpdateCountry(c echo.Context) (err error) {
-	log.Println("Update country request received...")
 
 	errorResponse := new(models.Errormessage)
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Update country request received...")
 
 	country := c.Param("country")
-
 	if country == "" {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Country not specified"
-		log.Println("Country not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Country not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Country: %s", country))
+	log.WithFields(fields).Info(fmt.Sprintf("Country: %s", country))
 
 	request := new(models.Country)
 	if err = c.Bind(request); err != nil {
-		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
@@ -162,12 +194,12 @@ func (env *Env) UpdateCountry(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not update country. Country not found"
-		log.Println(fmt.Sprintf("Error occured updating new country: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating new country")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully updated country: %v", dbCountry))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated country: %v", dbCountry))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -179,31 +211,38 @@ func (env *Env) UpdateCountry(c echo.Context) (err error) {
 
 // DeleteCountry is used add country
 func (env *Env) DeleteCountry(c echo.Context) (err error) {
-	log.Println("Delete country request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Delete country request received...")
 	country := c.Param("country")
-
 	if country == "" {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Country not specified"
-		log.Println(fmt.Sprintf("Country not specified %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Country not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Country: %s", country))
+	log.WithFields(fields).Info(fmt.Sprintf("Country: %s", country))
 
 	err = env.AuthDb.DeleteCountry(context.Background(), strings.ToLower(country))
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not delete country. Country not found"
-		log.Println(fmt.Sprintf("Error occured deleting  country: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured deleting  country")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.Println("Successfully deleted country")
+	log.WithFields(fields).Info("Successfully deleted country")
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",

@@ -5,28 +5,37 @@ import (
 	"authengine/persistence/orm/authdb"
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/labstack/echo/v4"
 )
 
 // GetTimezones is used get languages
 func (env *Env) GetTimezones(c echo.Context) (err error) {
-	log.Println("Get timezones request received...")
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get timezones request received...")
 	timezones, err := env.AuthDb.GetTimezones(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Timezones not found"
-		log.Println(fmt.Sprintf("timezones not found %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("timezones not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully retrieved timezones...")
+	log.WithFields(fields).Info("Successfully retrieved timezones...")
 	timezonesResponse := make([]models.Timezone, len(timezones))
 	for index, value := range timezones {
 		timezone := models.Timezone{
@@ -46,17 +55,25 @@ func (env *Env) GetTimezones(c echo.Context) (err error) {
 
 // GetTimezone is used get timezone
 func (env *Env) GetTimezone(c echo.Context) (err error) {
-	log.Println("Get timezone request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Get timezone request received...")
 	timezone := c.Param("timezone")
 
-	log.Println(fmt.Sprintf("Timezone: %s", timezone))
+	log.WithFields(fields).Info(fmt.Sprintf("Timezone: %s", timezone))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Timezone not specified"
-		log.Println("Timezone not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Timezone not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -66,12 +83,12 @@ func (env *Env) GetTimezone(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Timezone not found"
-		log.Println("Timezone not found")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Timezone not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully retrieved user languages: %v", dbTimezone))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully retrieved user languages: %v", dbTimezone))
 	timezoneResponse := models.Timezone{
 		Timezone: dbTimezone.Name,
 		Zone:     dbTimezone.Zone,
@@ -88,13 +105,21 @@ func (env *Env) GetTimezone(c echo.Context) (err error) {
 
 // AddTimezone is used add timezones
 func (env *Env) AddTimezone(c echo.Context) (err error) {
-	log.Println("Add timezone request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Add timezone request received...")
 	request := new(models.Timezone)
 	if err = c.Bind(request); err != nil {
-		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -108,12 +133,12 @@ func (env *Env) AddTimezone(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not add timezone. Duplicate found"
-		log.Println(fmt.Sprintf("Error occured adding new timezone: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding new timezone")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully added timezone: %v", dbTimezone))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added timezone: %v", dbTimezone))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -125,17 +150,25 @@ func (env *Env) AddTimezone(c echo.Context) (err error) {
 
 // UpdateTimezone is used add timezone
 func (env *Env) UpdateTimezone(c echo.Context) (err error) {
-	log.Println("Update timezone request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Update timezone request received...")
 	timezone := c.Param("timezone")
 
-	log.Println(fmt.Sprintf("Timezone: %s", timezone))
+	log.WithFields(fields).Info(fmt.Sprintf("Timezone: %s", timezone))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Timezone not specified"
-		log.Println("Timezone not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Timezone not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -143,7 +176,7 @@ func (env *Env) UpdateTimezone(c echo.Context) (err error) {
 
 	request := new(models.Timezone)
 	if err = c.Bind(request); err != nil {
-		log.Println(fmt.Sprintf("Error occured while trying to marshal request: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		errorResponse.Errorcode = "02"
 		errorResponse.ErrorMessage = "Invalid request"
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -158,12 +191,12 @@ func (env *Env) UpdateTimezone(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not update timezone. Not found"
-		log.Println(fmt.Sprintf("Error occured updating new timezone: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating new timezone")
 
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println(fmt.Sprintf("Successfully updated timezone: %v", dbTimezone))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated timezone: %v", dbTimezone))
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
@@ -175,17 +208,25 @@ func (env *Env) UpdateTimezone(c echo.Context) (err error) {
 
 // DeleteTimezone is used add languages
 func (env *Env) DeleteTimezone(c echo.Context) (err error) {
-	log.Println("Delete timezone request received...")
 
 	errorResponse := new(models.Errormessage)
-
+	application := c.Param("application")
+	if application == "" {
+		errorResponse.Errorcode = "01"
+		errorResponse.ErrorMessage = "Application not specified"
+		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return nil
+	}
+	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	log.WithFields(fields).Info("Delete timezone request received...")
 	timezone := c.Param("timezone")
 
-	log.Println(fmt.Sprintf("Timezone: %s", timezone))
+	log.WithFields(fields).Info(fmt.Sprintf("Timezone: %s", timezone))
 	if err != nil {
 		errorResponse.Errorcode = "15"
 		errorResponse.ErrorMessage = "Timezone not specified"
-		log.Println("Timezone not specified")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Timezone not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -195,11 +236,11 @@ func (env *Env) DeleteTimezone(c echo.Context) (err error) {
 	if err != nil {
 		errorResponse.Errorcode = "03"
 		errorResponse.ErrorMessage = "Could not delete timezone. Timezone not found"
-		log.Println(fmt.Sprintf("Error occured deleting  timezone: %s", err))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured deleting  timezone")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
-	log.Println("Successfully deleted timezone")
+	log.WithFields(fields).Info("Successfully deleted timezone")
 
 	response := &models.SuccessResponse{
 		ResponseCode:    "00",
