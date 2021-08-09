@@ -127,10 +127,10 @@ func AuthorizeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
 		}
-		if !(strings.ToLower(verifiedClaims.Role) == "admin" || strings.ToLower(verifiedClaims.Role) == "superadmin") {
+		if !(strings.Contains(strings.ToLower(verifiedClaims.Role), "admin") || strings.Contains(strings.ToLower(verifiedClaims.Role), "superadmin")) {
 			errorResponse.Errorcode = "09"
 			errorResponse.ErrorMessage = "Sorry, you are not authorized to carry out this operation."
-			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("User is not authorised to perform this operation with role %s...", verifiedClaims.Role))
+			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("User is not authorised to perform this operation with role(s) %s...", verifiedClaims.Role))
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return nil
 		}
