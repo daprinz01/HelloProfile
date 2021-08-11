@@ -24,71 +24,6 @@ import (
 )
 
 func main() {
-	host := os.Getenv("DB_HOST")
-	if host == "" {
-		fmt.Println("Host cannot be empty")
-		panic("DB_HOST cannot be empty, application intialization failed...")
-	}
-	port := 8669
-	dbport := os.Getenv("DB_PORT")
-	if dbport == "" {
-		fmt.Println("Port cannot be empty")
-		panic("DB_PORT cannot be empty, application intialization failed...")
-	} else {
-		portnumber, err := strconv.Atoi(dbport)
-		if err != nil {
-			fmt.Println("Port is not a valid number")
-			panic("Port is not a valid number, please enter a valid number for DB_PORT. Application initialization failed...")
-		} else {
-			port = portnumber
-		}
-	}
-	user := os.Getenv("DB_USER")
-	if user == "" {
-		fmt.Println("User cannot be empty")
-		panic("DB_USER cannot be empty, application intialization failed...")
-	}
-	password := os.Getenv("DB_PASSWORD")
-	if user == "" {
-		fmt.Println("User cannot be empty")
-		panic("DB_USER cannot be empty, application intialization failed...")
-	}
-	dbname := os.Getenv("DB_NAME")
-	if dbname == "" {
-		fmt.Println("Database name cannot be empty")
-		panic("DB_NAME cannot be empty, application intialization failed...")
-	}
-	sslmode := os.Getenv("DB_SSL_MODE")
-	if sslmode == "" {
-		fmt.Println("SSL mode cannot be empty")
-		panic("DB_SSL_MODE cannot be empty, application intialization failed...")
-	}
-	//Connect to database
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port, user, password, dbname, sslmode)
-
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-	authdatabase := authdb.New(db)
-	env := &controllers.Env{AuthDb: authdatabase}
-	fmt.Println("Successfully connected to database!")
-	// // Create Server and Route Handlers
-	// r := mux.NewRouter()
-	// r.Use(controllers.TrackResponseTime)
-
-	srv := &http.Server{
-
-		Addr:         ":8083",
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 10 * time.Second,
-	}
-
 	// Configure Logging
 	log.SetFormatter(&log.JSONFormatter{
 		FieldMap: log.FieldMap{
@@ -114,6 +49,71 @@ func main() {
 	}
 
 	log.WithFields(fields).Info("Successfully initialized log file...")
+
+	host := os.Getenv("DB_HOST")
+	if host == "" {
+		log.WithFields(fields).Warn("Host cannot be empty")
+		panic("DB_HOST cannot be empty, application intialization failed...")
+	}
+	port := 8669
+	dbport := os.Getenv("DB_PORT")
+	if dbport == "" {
+		log.WithFields(fields).Warn("Port cannot be empty")
+		panic("DB_PORT cannot be empty, application intialization failed...")
+	} else {
+		portnumber, err := strconv.Atoi(dbport)
+		if err != nil {
+			log.WithFields(fields).Warn("Port is not a valid number")
+			panic("Port is not a valid number, please enter a valid number for DB_PORT. Application initialization failed...")
+		} else {
+			port = portnumber
+		}
+	}
+	user := os.Getenv("DB_USER")
+	if user == "" {
+		log.WithFields(fields).Warn("User cannot be empty")
+		panic("DB_USER cannot be empty, application intialization failed...")
+	}
+	password := os.Getenv("DB_PASSWORD")
+	if user == "" {
+		log.WithFields(fields).Warn("User cannot be empty")
+		panic("DB_USER cannot be empty, application intialization failed...")
+	}
+	dbname := os.Getenv("DB_NAME")
+	if dbname == "" {
+		log.WithFields(fields).Warn("Database name cannot be empty")
+		panic("DB_NAME cannot be empty, application intialization failed...")
+	}
+	sslmode := os.Getenv("DB_SSL_MODE")
+	if sslmode == "" {
+		log.WithFields(fields).Warn("SSL mode cannot be empty")
+		panic("DB_SSL_MODE cannot be empty, application intialization failed...")
+	}
+	//Connect to database
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s", host, port, user, password, dbname, sslmode)
+
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+	authdatabase := authdb.New(db)
+	env := &controllers.Env{AuthDb: authdatabase}
+	log.WithFields(fields).Warn("Successfully connected to database!")
+	// // Create Server and Route Handlers
+	// r := mux.NewRouter()
+	// r.Use(controllers.TrackResponseTime)
+
+	srv := &http.Server{
+
+		Addr:         ":8083",
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
 
 	e := echo.New()
 	e.Pre(middleware.RemoveTrailingSlash())
