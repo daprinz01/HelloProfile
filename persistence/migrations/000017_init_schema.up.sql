@@ -1,7 +1,7 @@
 create table user_login(
-    id bigserial primary KEY,
-    user_id bigserial,
-    application_id bigserial,
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+    user_id uuid,
+    application_id uuid,
     login_time TIMESTAMPtz not NULL DEFAULT (now()),
     login_status BOOLEAN not null DEFAULT FALSE,
     response_code VARCHAR null,

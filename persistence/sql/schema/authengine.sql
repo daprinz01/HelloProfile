@@ -1,7 +1,7 @@
 
 
 create table "applications" (
-  "id" bigserial PRIMARY KEY,
+  "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(), 
   name varchar NOT NULL,
   "description" varchar NOT NULL,
   "icon_url" varchar null,
@@ -11,7 +11,7 @@ create table "applications" (
 );
 
 create table "users" (
-  "id" bigserial primary key,
+  "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
   "firstname" varchar  null,
   "lastname" varchar  null,
   "username" varchar  null,
@@ -32,13 +32,13 @@ create table "users" (
 );
 
 create table "languages" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     name varchar not null,
     CONSTRAINT "uc_languages" UNIQUE ("id", name)
 );
 
 create table "user_languages" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     "user_id" bigserial ,
     "language_id" bigserial,
     "proficiency" varchar null,
@@ -46,42 +46,42 @@ create table "user_languages" (
 );
 
 create table "timezones" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     name varchar not null,
     "zone" varchar not null,
     CONSTRAINT "uc_timezones" UNIQUE ("id", name)
 );
 
 create table "user_timezones" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     "user_id" bigserial,
     "timezone_id" bigserial,
     CONSTRAINT "uc_user_timezones" UNIQUE ("id", "user_id")
 );
 
 create table "roles" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     name varchar not null,
     "description" varchar not null,
     CONSTRAINT "uc_roles" UNIQUE ("id", name)
 );
 
 create table "user_roles" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     "user_id" bigserial,
     "role_id" bigserial,
     CONSTRAINT "uc_user_roles" UNIQUE ("id")
 );
 
 create table "applications_roles" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     "applications_id" bigserial,
     "roles_id" bigserial,
     CONSTRAINT "uc_applications_roles" UNIQUE ("id")
 );
 
 create table "identity_providers" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     name varchar not null,
     "client_id" varchar not null,
     "client_secret" varchar not null,
@@ -90,20 +90,20 @@ create table "identity_providers" (
 );
 
 create table "user_providers" (
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     "user_id" bigserial,
     "identity_provider_id" bigserial,
     CONSTRAINT "uc_user_providers" UNIQUE ("id")
 );
 create TABLE "countries" (
-    "id" bigserial PRIMARY KEY,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     name VARCHAR not NULL,
     "flag_image_url" VARCHAR null,
 "country_code" varchar null,
     CONSTRAINT "uc_countries" UNIQUE ("id", name, "flag_image_url")
 );
 create TABLE "states" (
-    "id" bigserial PRIMARY KEY,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     name VARCHAR not NULL,
     "country_id" bigserial,
     CONSTRAINT "uc_states" UNIQUE ("id", name)
@@ -119,7 +119,7 @@ create TABLE "states" (
 -- full join identity_providers m on m.id = (select identity_provider_id from user_providers n where n.user_id = b.id);
 
 create table  user_details(
-    "id" bigserial not null,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
   "firstname" varchar  null,
   "lastname" varchar  null,
   "username" varchar  null,
@@ -141,14 +141,14 @@ create table  user_details(
 );
 
 create table refresh_token(
-    "id" bigserial primary key,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     "user_id" bigserial not null,
     "token" varchar not null,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 create table user_login(
-    id bigserial primary KEY,
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     user_id bigserial,
     application_id bigserial,
     login_time TIMESTAMPtz not NULL DEFAULT (now()),
@@ -164,7 +164,7 @@ create table user_login(
 );
 
 create table otp(
-    id bigserial primary key,
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     user_id bigserial,
     otp_token varchar null,
     created_at TIMESTAMPtz not NULL DEFAULT (now()),
@@ -175,12 +175,12 @@ create table otp(
 
 
 Create TABLE language_proficiency(
-    id bigserial PRIMARY KEY,
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     proficiency VARCHAR null UNIQUE
 );
 
 create table email_verification(
-    "id" bigserial PRIMARY KEY,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     "email" varchar,
     "otp" varchar NOT NULL,
     "created_at" timestamptz NOT NULL DEFAULT (now())

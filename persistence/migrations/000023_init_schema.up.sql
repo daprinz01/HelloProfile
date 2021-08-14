@@ -8,7 +8,7 @@ full join timezones k on k.id = (select l.timezone_id from user_timezones l wher
 ALTER TABLE user_languages add COLUMN proficiency VARCHAR null;
 
 Create TABLE language_proficiency(
-    id bigserial PRIMARY KEY,
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     proficiency VARCHAR null UNIQUE
 );
 

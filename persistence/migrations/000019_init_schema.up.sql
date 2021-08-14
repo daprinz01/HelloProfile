@@ -1,6 +1,6 @@
 -- create table otp(
---     id bigserial primary key,
---     user_id bigserial,
+--     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+--     user_id uuid,
 --     otp_token varchar null,
 --     created_at TIMESTAMPtz not NULL DEFAULT (now()),
 --     is_sms_preferred boolean not null default FALSE,

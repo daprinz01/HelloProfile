@@ -1,6 +1,6 @@
 create table refresh_token(
-    "id" bigserial primary key UNIQUE,
-    "user_id" bigserial not null,
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4() UNIQUE,
+    "user_id" uuid not null,
     "token" varchar not null UNIQUE,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );

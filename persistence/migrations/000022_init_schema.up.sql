@@ -8,7 +8,7 @@
 -- ALTER TABLE user_languages add colume proficiency VARCHAR null;
 
 -- Create TABLE language_proficiency(
---     id bigserial PRIMARY KEY,
+--     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 --     proficiency VARCHAR null UNIQUE
 -- );
 

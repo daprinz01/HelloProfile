@@ -1,5 +1,5 @@
 -- -- create table "applications"(
--- --   "id" bigserial PRIMARY KEY,
+-- --   "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --   "name" varchar NOT NULL,
 -- --   "description" varchar NOT NULL,
 -- --   "created_at" timestamptz NOT NULL DEFAULT (now()),
@@ -8,7 +8,7 @@
 -- -- );
 
 -- -- create table "users"(
--- --   "id" bigserial primary key,
+-- --   "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --   "firstname" varchar  null,
 -- --   "lastname" varchar  null,
 -- --   "username" varchar  null,
@@ -27,55 +27,55 @@
 -- -- );
 
 -- -- create table "languages"(
--- --     "id" bigserial primary key,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --     "name" varchar not null,
 -- --     CONSTRAINT "uc_languages" UNIQUE ("id", "name")
 -- -- );
 
 -- -- create table "user_languages"(
--- --     "id" bigserial primary key,
--- --     "user_id" bigserial ,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+-- --     "user_id" uuid ,
 -- --     "language_id" bigserial,
 -- --     CONSTRAINT "uc_user_languages" UNIQUE ("id")
 -- -- );
 
 -- -- create table "timezones"(
--- --     "id" bigserial primary key,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --     "name" varchar not null,
 -- --     "zone" varchar not null,
 -- --     CONSTRAINT "uc_timezones" UNIQUE ("id", "name")
 -- -- );
 
 -- -- create table "user_timezones"(
--- --     "id" bigserial primary key,
--- --     "user_id" bigserial,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+-- --     "user_id" uuid,
 -- --     "timezone_id" bigserial,
 -- --     CONSTRAINT "uc_user_timezones" UNIQUE ("id", "user_id")
 -- -- );
 
 -- -- create table "roles"(
--- --     "id" bigserial primary key,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --     "name" varchar not null,
 -- --     "description" varchar not null,
 -- --     CONSTRAINT "uc_roles" UNIQUE ("id", "name")
 -- -- );
 
 -- -- create table "user_roles"(
--- --     "id" bigserial primary key,
--- --     "user_id" bigserial,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+-- --     "user_id" uuid,
 -- --     "role_id" bigserial,
 -- --     CONSTRAINT "uc_user_roles" UNIQUE ("id")
 -- -- );
 
 -- -- create table "applications_roles"(
--- --     "id" bigserial primary key,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --     "applications_id" bigserial,
 -- --     "roles_id" bigserial,
 -- --     CONSTRAINT "uc_applications_roles" UNIQUE ("id")
 -- -- );
 
 -- -- create table "identity_providers"(
--- --     "id" bigserial primary key,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --     "name" varchar not null,
 -- --     "client_id" varchar not null,
 -- --     "client_secret" varchar not null,
@@ -84,20 +84,20 @@
 -- -- );
 
 -- -- create table "user_providers"(
--- --     "id" bigserial primary key,
--- --     "user_id" bigserial,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+-- --     "user_id" uuid,
 -- --     "identity_provider_id" bigserial,
 -- --     CONSTRAINT "uc_user_providers" UNIQUE ("id")
 -- -- );
 -- -- create TABLE "countries"(
--- --     "id" bigserial PRIMARY KEY,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --     "name" VARCHAR not NULL,
 -- --     "flag_image_url" VARCHAR null,
 
 -- --     CONSTRAINT "uc_countries" UNIQUE ("id", "name", "flag_image_url")
 -- -- );
 -- -- create TABLE "states"(
--- --     "id" bigserial PRIMARY KEY,
+-- --     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
 -- --     "name" VARCHAR not NULL,
 -- --     "country_id" bigserial,
 -- --     CONSTRAINT "uc_states" UNIQUE ("id", "name")
