@@ -106,8 +106,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 		}()
 		go func() {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
-				ApplicationID:       sql.NullInt64{Int64: applicationObject.ID, Valid: true},
-				UserID:              sql.NullInt64{Int64: user.ID, Valid: true},
+				ApplicationID:       applicationObject.ID,
+				UserID:              user.ID,
 				ResponseCode:        sql.NullString{String: "00", Valid: true},
 				ResponseDescription: sql.NullString{String: "Success", Valid: true},
 				LoginStatus:         true,
@@ -115,7 +115,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			if err != nil {
 				log.WithFields(fields).Info("Successful login...")
 			}
-			err := env.AuthDb.UpdateResolvedLogin(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
+			err := env.AuthDb.UpdateResolvedLogin(context.Background(), user.ID)
 			if err != nil {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 			}
@@ -153,8 +153,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Password incorrect...")
 		go func() {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
-				ApplicationID:       sql.NullInt64{Int64: applicationObject.ID, Valid: true},
-				UserID:              sql.NullInt64{Int64: user.ID, Valid: true},
+				ApplicationID:       applicationObject.ID,
+				UserID:              user.ID,
 				ResponseCode:        sql.NullString{String: errorResponse.Errorcode, Valid: true},
 				ResponseDescription: sql.NullString{String: errorResponse.ErrorMessage, Valid: true},
 				LoginStatus:         false,
@@ -165,7 +165,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			}
 		}()
 
-		userLogins, err := env.AuthDb.GetUnResoledLogins(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
+		userLogins, err := env.AuthDb.GetUnResoledLogins(context.Background(), user.ID)
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error ocurred fetching user logins")
 		}
@@ -304,8 +304,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 	}
 	go func() {
 		err = env.saveLogin(authdb.CreateUserLoginParams{
-			ApplicationID:       sql.NullInt64{Int64: application.ID, Valid: true},
-			UserID:              sql.NullInt64{Int64: user.ID, Valid: true},
+			ApplicationID:       application.ID,
+			UserID:              user.ID,
 			ResponseCode:        sql.NullString{String: "00", Valid: true},
 			ResponseDescription: sql.NullString{String: "Registration successful...", Valid: true},
 			LoginStatus:         true,
@@ -351,8 +351,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 	go func() {
 		log.WithFields(fields).Info("Verifying that role exist for the application")
 		applicationRole, err := env.AuthDb.GetApplicationRole(context.Background(), authdb.GetApplicationRoleParams{
-			ApplicationsID: sql.NullInt64{Int64: application.ID, Valid: true},
-			RolesID:        sql.NullInt64{Int64: dbRole.ID, Valid: true},
+			ApplicationsID: application.ID,
+			RolesID:        dbRole.ID,
 		})
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error("Error occured fetching applicationRole")
@@ -560,7 +560,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 	go func() {
 		err = env.AuthDb.CreateOtp(context.Background(), authdb.CreateOtpParams{
 			OtpToken:         sql.NullString{String: otp, Valid: true},
-			UserID:           sql.NullInt64{Int64: user.ID, Valid: true},
+			UserID:           user.ID,
 			IsEmailPreferred: request.IsEmailPrefered,
 			IsSmsPreferred:   !request.IsEmailPrefered,
 			Purpose:          sql.NullString{String: request.Purpose, Valid: true},
@@ -860,7 +860,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		// store refresh token add later
 		go func() {
 			dbRefreshToken, err := env.AuthDb.CreateRefreshToken(context.Background(), authdb.CreateRefreshTokenParams{
-				UserID: dbOtp.UserID.Int64,
+				UserID: dbOtp.UserID,
 				Token:  refreshToken,
 			})
 			if err != nil {
@@ -871,7 +871,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		}()
 		go func() {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
-				ApplicationID:       sql.NullInt64{Int64: applicationObject.ID, Valid: true},
+				ApplicationID:       applicationObject.ID,
 				UserID:              dbOtp.UserID,
 				ResponseCode:        sql.NullString{String: "00", Valid: true},
 				ResponseDescription: sql.NullString{String: "Success", Valid: true},
@@ -983,7 +983,7 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 
 	}()
 	go func() {
-		err := env.AuthDb.UpdateResolvedLogin(context.Background(), sql.NullInt64{Int64: user.ID, Valid: true})
+		err := env.AuthDb.UpdateResolvedLogin(context.Background(), user.ID)
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 		}
