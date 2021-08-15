@@ -7,6 +7,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const addUserLanguage = `-- name: AddUserLanguage :one
@@ -250,7 +252,7 @@ select a.id, a.name, d.proficiency from languages a inner join user_languages d 
 `
 
 type GetUserLanguagesRow struct {
-	ID          int64          `json:"id"`
+	ID          uuid.UUID      `json:"id"`
 	Name        string         `json:"name"`
 	Proficiency sql.NullString `json:"proficiency"`
 }

@@ -5,10 +5,12 @@ package authdb
 import (
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Application struct {
-	ID          int64          `json:"id"`
+	ID          uuid.UUID      `json:"id"`
 	Name        string         `json:"name"`
 	Description string         `json:"description"`
 	IconUrl     sql.NullString `json:"icon_url"`
@@ -16,45 +18,45 @@ type Application struct {
 }
 
 type ApplicationsRole struct {
-	ID             int64         `json:"id"`
+	ID             uuid.UUID     `json:"id"`
 	ApplicationsID sql.NullInt64 `json:"applications_id"`
 	RolesID        sql.NullInt64 `json:"roles_id"`
 }
 
 type Country struct {
-	ID           int64          `json:"id"`
+	ID           uuid.UUID      `json:"id"`
 	Name         string         `json:"name"`
 	FlagImageUrl sql.NullString `json:"flag_image_url"`
 	CountryCode  sql.NullString `json:"country_code"`
 }
 
 type EmailVerification struct {
-	ID        int64          `json:"id"`
+	ID        uuid.UUID      `json:"id"`
 	Email     sql.NullString `json:"email"`
 	Otp       string         `json:"otp"`
 	CreatedAt time.Time      `json:"created_at"`
 }
 
 type IdentityProvider struct {
-	ID           int64  `json:"id"`
-	Name         string `json:"name"`
-	ClientID     string `json:"client_id"`
-	ClientSecret string `json:"client_secret"`
-	ImageUrl     string `json:"image_url"`
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	ClientID     string    `json:"client_id"`
+	ClientSecret string    `json:"client_secret"`
+	ImageUrl     string    `json:"image_url"`
 }
 
 type Language struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 type LanguageProficiency struct {
-	ID          int64          `json:"id"`
+	ID          uuid.UUID      `json:"id"`
 	Proficiency sql.NullString `json:"proficiency"`
 }
 
 type Otp struct {
-	ID               int64          `json:"id"`
+	ID               uuid.UUID      `json:"id"`
 	UserID           sql.NullInt64  `json:"user_id"`
 	OtpToken         sql.NullString `json:"otp_token"`
 	CreatedAt        time.Time      `json:"created_at"`
@@ -64,32 +66,32 @@ type Otp struct {
 }
 
 type RefreshToken struct {
-	ID        int64     `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	UserID    int64     `json:"user_id"`
 	Token     string    `json:"token"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type Role struct {
-	ID          int64  `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
 }
 
 type State struct {
-	ID        int64         `json:"id"`
+	ID        uuid.UUID     `json:"id"`
 	Name      string        `json:"name"`
 	CountryID sql.NullInt64 `json:"country_id"`
 }
 
 type Timezone struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
-	Zone string `json:"zone"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+	Zone string    `json:"zone"`
 }
 
 type User struct {
-	ID                        int64          `json:"id"`
+	ID                        uuid.UUID      `json:"id"`
 	Firstname                 sql.NullString `json:"firstname"`
 	Lastname                  sql.NullString `json:"lastname"`
 	Username                  sql.NullString `json:"username"`
@@ -109,7 +111,7 @@ type User struct {
 }
 
 type UserDetail struct {
-	ID                        int64          `json:"id"`
+	ID                        uuid.UUID      `json:"id"`
 	Firstname                 sql.NullString `json:"firstname"`
 	Lastname                  sql.NullString `json:"lastname"`
 	Username                  sql.NullString `json:"username"`
@@ -131,14 +133,14 @@ type UserDetail struct {
 }
 
 type UserLanguage struct {
-	ID          int64          `json:"id"`
+	ID          uuid.UUID      `json:"id"`
 	UserID      sql.NullInt64  `json:"user_id"`
 	LanguageID  sql.NullInt64  `json:"language_id"`
 	Proficiency sql.NullString `json:"proficiency"`
 }
 
 type UserLogin struct {
-	ID                  int64          `json:"id"`
+	ID                  uuid.UUID      `json:"id"`
 	UserID              sql.NullInt64  `json:"user_id"`
 	ApplicationID       sql.NullInt64  `json:"application_id"`
 	LoginTime           time.Time      `json:"login_time"`
@@ -153,19 +155,19 @@ type UserLogin struct {
 }
 
 type UserProvider struct {
-	ID                 int64         `json:"id"`
+	ID                 uuid.UUID     `json:"id"`
 	UserID             sql.NullInt64 `json:"user_id"`
 	IdentityProviderID sql.NullInt64 `json:"identity_provider_id"`
 }
 
 type UserRole struct {
-	ID     int64         `json:"id"`
+	ID     uuid.UUID     `json:"id"`
 	UserID sql.NullInt64 `json:"user_id"`
 	RoleID sql.NullInt64 `json:"role_id"`
 }
 
 type UserTimezone struct {
-	ID         int64         `json:"id"`
+	ID         uuid.UUID     `json:"id"`
 	UserID     sql.NullInt64 `json:"user_id"`
 	TimezoneID sql.NullInt64 `json:"timezone_id"`
 }
