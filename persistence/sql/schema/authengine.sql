@@ -39,8 +39,8 @@ create table "languages" (
 
 create table "user_languages" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" bigserial ,
-    "language_id" bigserial,
+    "user_id" uuid ,
+    "language_id" uuid,
     "proficiency" varchar null,
     CONSTRAINT "uc_user_languages" UNIQUE ("id")
 );
@@ -54,8 +54,8 @@ create table "timezones" (
 
 create table "user_timezones" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" bigserial,
-    "timezone_id" bigserial,
+    "user_id" uuid,
+    "timezone_id" uuid,
     CONSTRAINT "uc_user_timezones" UNIQUE ("id", "user_id")
 );
 
@@ -68,15 +68,15 @@ create table "roles" (
 
 create table "user_roles" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" bigserial,
-    "role_id" bigserial,
+    "user_id" uuid,
+    "role_id" uuid,
     CONSTRAINT "uc_user_roles" UNIQUE ("id")
 );
 
 create table "applications_roles" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "applications_id" bigserial,
-    "roles_id" bigserial,
+    "applications_id" uuid,
+    "roles_id" uuid,
     CONSTRAINT "uc_applications_roles" UNIQUE ("id")
 );
 
@@ -91,8 +91,8 @@ create table "identity_providers" (
 
 create table "user_providers" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" bigserial,
-    "identity_provider_id" bigserial,
+    "user_id" uuid,
+    "identity_provider_id" uuid,
     CONSTRAINT "uc_user_providers" UNIQUE ("id")
 );
 create TABLE "countries" (
@@ -105,7 +105,7 @@ create TABLE "countries" (
 create TABLE "states" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
     name VARCHAR not NULL,
-    "country_id" bigserial,
+    "country_id" uuid,
     CONSTRAINT "uc_states" UNIQUE ("id", name)
 );
 
@@ -142,15 +142,15 @@ create table  user_details(
 
 create table refresh_token(
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" bigserial not null,
+    "user_id" uuid not null,
     "token" varchar not null,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 create table user_login(
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    user_id bigserial,
-    application_id bigserial,
+    user_id uuid,
+    application_id uuid,
     login_time TIMESTAMPtz not NULL DEFAULT (now()),
     login_status BOOLEAN not null DEFAULT FALSE,
     response_code VARCHAR null,
@@ -165,7 +165,7 @@ create table user_login(
 
 create table otp(
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    user_id bigserial,
+    user_id uuid,
     otp_token varchar null,
     created_at TIMESTAMPtz not NULL DEFAULT (now()),
     is_sms_preferred boolean not null default FALSE,
