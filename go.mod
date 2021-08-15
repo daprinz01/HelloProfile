@@ -7,6 +7,7 @@ require (
 	github.com/globocom/echo-prometheus v0.1.2
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/uuid v1.0.0
 	github.com/labstack/echo/v4 v4.2.2
 	github.com/lib/pq v1.10.2
 	github.com/mattn/go-colorable v0.1.8 // indirect

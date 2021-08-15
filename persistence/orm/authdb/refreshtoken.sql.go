@@ -5,6 +5,8 @@ package authdb
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const createRefreshToken = `-- name: CreateRefreshToken :one
@@ -18,8 +20,8 @@ insert into refresh_token (
 `
 
 type CreateRefreshTokenParams struct {
-	UserID int64  `json:"user_id"`
-	Token  string `json:"token"`
+	UserID uuid.UUID `json:"user_id"`
+	Token  string    `json:"token"`
 }
 
 func (q *Queries) CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error) {
@@ -96,9 +98,9 @@ update refresh_token set "user_id" = $1, "token" = $2 where "token" = $3 returni
 `
 
 type UpdateRefreshTokenParams struct {
-	UserID  int64  `json:"user_id"`
-	Token   string `json:"token"`
-	Token_2 string `json:"token_2"`
+	UserID  uuid.UUID `json:"user_id"`
+	Token   string    `json:"token"`
+	Token_2 string    `json:"token_2"`
 }
 
 func (q *Queries) UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (RefreshToken, error) {

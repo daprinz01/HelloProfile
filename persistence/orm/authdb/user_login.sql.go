@@ -6,6 +6,8 @@ package authdb
 import (
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 const createUserLogin = `-- name: CreateUserLogin :one
@@ -26,8 +28,8 @@ returning id, user_id, application_id, login_time, login_status, response_code, 
 `
 
 type CreateUserLoginParams struct {
-	UserID              sql.NullInt64  `json:"user_id"`
-	ApplicationID       sql.NullInt64  `json:"application_id"`
+	UserID              uuid.UUID      `json:"user_id"`
+	ApplicationID       uuid.UUID      `json:"application_id"`
 	LoginStatus         bool           `json:"login_status"`
 	ResponseCode        sql.NullString `json:"response_code"`
 	ResponseDescription sql.NullString `json:"response_description"`
@@ -74,8 +76,8 @@ delete from user_login where user_id = $1 and application_id = $2
 `
 
 type DeleteUserLoginParams struct {
-	UserID        sql.NullInt64 `json:"user_id"`
-	ApplicationID sql.NullInt64 `json:"application_id"`
+	UserID        uuid.UUID `json:"user_id"`
+	ApplicationID uuid.UUID `json:"application_id"`
 }
 
 func (q *Queries) DeleteUserLogin(ctx context.Context, arg DeleteUserLoginParams) error {
@@ -87,7 +89,7 @@ const getUnResoledLogins = `-- name: GetUnResoledLogins :many
 select id, user_id, application_id, login_time, login_status, response_code, response_description, device, ip_address, longitude, latitude, resolved from user_login where user_id = $1 and resolved = false
 `
 
-func (q *Queries) GetUnResoledLogins(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error) {
+func (q *Queries) GetUnResoledLogins(ctx context.Context, userID uuid.UUID) ([]UserLogin, error) {
 	rows, err := q.query(ctx, q.getUnResoledLoginsStmt, getUnResoledLogins, userID)
 	if err != nil {
 		return nil, err
@@ -127,7 +129,7 @@ const getUserLogin = `-- name: GetUserLogin :many
 select id, user_id, application_id, login_time, login_status, response_code, response_description, device, ip_address, longitude, latitude, resolved from user_login where user_id = $1
 `
 
-func (q *Queries) GetUserLogin(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error) {
+func (q *Queries) GetUserLogin(ctx context.Context, userID uuid.UUID) ([]UserLogin, error) {
 	rows, err := q.query(ctx, q.getUserLoginStmt, getUserLogin, userID)
 	if err != nil {
 		return nil, err
@@ -207,7 +209,7 @@ const updateResolvedLogin = `-- name: UpdateResolvedLogin :exec
 update user_login set resolved = true where user_id = $1 and resolved = false
 `
 
-func (q *Queries) UpdateResolvedLogin(ctx context.Context, userID sql.NullInt64) error {
+func (q *Queries) UpdateResolvedLogin(ctx context.Context, userID uuid.UUID) error {
 	_, err := q.exec(ctx, q.updateResolvedLoginStmt, updateResolvedLogin, userID)
 	return err
 }

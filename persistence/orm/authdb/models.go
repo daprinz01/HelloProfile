@@ -18,9 +18,9 @@ type Application struct {
 }
 
 type ApplicationsRole struct {
-	ID             uuid.UUID     `json:"id"`
-	ApplicationsID sql.NullInt64 `json:"applications_id"`
-	RolesID        sql.NullInt64 `json:"roles_id"`
+	ID             uuid.UUID `json:"id"`
+	ApplicationsID uuid.UUID `json:"applications_id"`
+	RolesID        uuid.UUID `json:"roles_id"`
 }
 
 type Country struct {
@@ -57,7 +57,7 @@ type LanguageProficiency struct {
 
 type Otp struct {
 	ID               uuid.UUID      `json:"id"`
-	UserID           sql.NullInt64  `json:"user_id"`
+	UserID           uuid.UUID      `json:"user_id"`
 	OtpToken         sql.NullString `json:"otp_token"`
 	CreatedAt        time.Time      `json:"created_at"`
 	IsSmsPreferred   bool           `json:"is_sms_preferred"`
@@ -67,7 +67,7 @@ type Otp struct {
 
 type RefreshToken struct {
 	ID        uuid.UUID `json:"id"`
-	UserID    int64     `json:"user_id"`
+	UserID    uuid.UUID `json:"user_id"`
 	Token     string    `json:"token"`
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -79,9 +79,9 @@ type Role struct {
 }
 
 type State struct {
-	ID        uuid.UUID     `json:"id"`
-	Name      string        `json:"name"`
-	CountryID sql.NullInt64 `json:"country_id"`
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	CountryID uuid.UUID `json:"country_id"`
 }
 
 type Timezone struct {
@@ -134,15 +134,15 @@ type UserDetail struct {
 
 type UserLanguage struct {
 	ID          uuid.UUID      `json:"id"`
-	UserID      sql.NullInt64  `json:"user_id"`
-	LanguageID  sql.NullInt64  `json:"language_id"`
+	UserID      uuid.UUID      `json:"user_id"`
+	LanguageID  uuid.UUID      `json:"language_id"`
 	Proficiency sql.NullString `json:"proficiency"`
 }
 
 type UserLogin struct {
 	ID                  uuid.UUID      `json:"id"`
-	UserID              sql.NullInt64  `json:"user_id"`
-	ApplicationID       sql.NullInt64  `json:"application_id"`
+	UserID              uuid.UUID      `json:"user_id"`
+	ApplicationID       uuid.UUID      `json:"application_id"`
 	LoginTime           time.Time      `json:"login_time"`
 	LoginStatus         bool           `json:"login_status"`
 	ResponseCode        sql.NullString `json:"response_code"`
@@ -155,19 +155,19 @@ type UserLogin struct {
 }
 
 type UserProvider struct {
-	ID                 uuid.UUID     `json:"id"`
-	UserID             sql.NullInt64 `json:"user_id"`
-	IdentityProviderID sql.NullInt64 `json:"identity_provider_id"`
+	ID                 uuid.UUID `json:"id"`
+	UserID             uuid.UUID `json:"user_id"`
+	IdentityProviderID uuid.UUID `json:"identity_provider_id"`
 }
 
 type UserRole struct {
-	ID     uuid.UUID     `json:"id"`
-	UserID sql.NullInt64 `json:"user_id"`
-	RoleID sql.NullInt64 `json:"role_id"`
+	ID     uuid.UUID `json:"id"`
+	UserID uuid.UUID `json:"user_id"`
+	RoleID uuid.UUID `json:"role_id"`
 }
 
 type UserTimezone struct {
-	ID         uuid.UUID     `json:"id"`
-	UserID     sql.NullInt64 `json:"user_id"`
-	TimezoneID sql.NullInt64 `json:"timezone_id"`
+	ID         uuid.UUID `json:"id"`
+	UserID     uuid.UUID `json:"user_id"`
+	TimezoneID uuid.UUID `json:"timezone_id"`
 }

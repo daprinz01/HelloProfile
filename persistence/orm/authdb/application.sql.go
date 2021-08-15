@@ -7,6 +7,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const addApplicationRole = `-- name: AddApplicationRole :one
@@ -95,8 +97,8 @@ select id, applications_id, roles_id from applications_roles where roles_id = $1
 `
 
 type GetApplicationRoleParams struct {
-	RolesID        sql.NullInt64 `json:"roles_id"`
-	ApplicationsID sql.NullInt64 `json:"applications_id"`
+	RolesID        uuid.UUID `json:"roles_id"`
+	ApplicationsID uuid.UUID `json:"applications_id"`
 }
 
 func (q *Queries) GetApplicationRole(ctx context.Context, arg GetApplicationRoleParams) (ApplicationsRole, error) {

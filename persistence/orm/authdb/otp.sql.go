@@ -6,6 +6,8 @@ package authdb
 import (
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 const createOtp = `-- name: CreateOtp :exec
@@ -20,7 +22,7 @@ values ($1, $2, $3, $4, $5)
 `
 
 type CreateOtpParams struct {
-	UserID           sql.NullInt64  `json:"user_id"`
+	UserID           uuid.UUID      `json:"user_id"`
 	OtpToken         sql.NullString `json:"otp_token"`
 	IsSmsPreferred   bool           `json:"is_sms_preferred"`
 	IsEmailPreferred bool           `json:"is_email_preferred"`
@@ -43,7 +45,7 @@ delete from otp where user_id = $1 and otp_token = $2
 `
 
 type DeleteOtpParams struct {
-	UserID   sql.NullInt64  `json:"user_id"`
+	UserID   uuid.UUID      `json:"user_id"`
 	OtpToken sql.NullString `json:"otp_token"`
 }
 

@@ -5,6 +5,8 @@ package authdb
 import (
 	"context"
 	"database/sql"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
@@ -66,10 +68,10 @@ type Querier interface {
 	GetStatesByCountry(ctx context.Context, name string) ([]State, error)
 	GetTimezone(ctx context.Context, name string) (Timezone, error)
 	GetTimezones(ctx context.Context) ([]Timezone, error)
-	GetUnResoledLogins(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error)
+	GetUnResoledLogins(ctx context.Context, userID uuid.UUID) ([]UserLogin, error)
 	GetUser(ctx context.Context, username sql.NullString) (UserDetail, error)
 	GetUserLanguages(ctx context.Context, username sql.NullString) ([]GetUserLanguagesRow, error)
-	GetUserLogin(ctx context.Context, userID sql.NullInt64) ([]UserLogin, error)
+	GetUserLogin(ctx context.Context, userID uuid.UUID) ([]UserLogin, error)
 	GetUserLogins(ctx context.Context) ([]UserLogin, error)
 	GetUserProviders(ctx context.Context, username sql.NullString) ([]IdentityProvider, error)
 	GetUserRoles(ctx context.Context, username sql.NullString) ([]string, error)
@@ -82,7 +84,7 @@ type Querier interface {
 	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (Language, error)
 	UpdateLanguageProficiency(ctx context.Context, arg UpdateLanguageProficiencyParams) (LanguageProficiency, error)
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (RefreshToken, error)
-	UpdateResolvedLogin(ctx context.Context, userID sql.NullInt64) error
+	UpdateResolvedLogin(ctx context.Context, userID uuid.UUID) error
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)
 	UpdateState(ctx context.Context, arg UpdateStateParams) error
 	UpdateTimezone(ctx context.Context, arg UpdateTimezoneParams) (Timezone, error)
