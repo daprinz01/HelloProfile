@@ -111,6 +111,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 				ResponseCode:        sql.NullString{String: "00", Valid: true},
 				ResponseDescription: sql.NullString{String: "Success", Valid: true},
 				LoginStatus:         true,
+				IpAddress:           sql.NullString{String: c.RealIP(), Valid: true},
+				Device:              sql.NullString{String: c.Request().UserAgent()},
 			})
 			if err != nil {
 				log.WithFields(fields).Info("Successful login...")
@@ -159,6 +161,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 				ResponseDescription: sql.NullString{String: errorResponse.ErrorMessage, Valid: true},
 				LoginStatus:         false,
 				Resolved:            false,
+				IpAddress:           sql.NullString{String: c.RealIP(), Valid: true},
+				Device:              sql.NullString{String: c.Request().UserAgent()},
 			})
 			if err != nil {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Password incorrect...")
@@ -309,6 +313,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 			ResponseCode:        sql.NullString{String: "00", Valid: true},
 			ResponseDescription: sql.NullString{String: "Registration successful...", Valid: true},
 			LoginStatus:         true,
+			IpAddress:           sql.NullString{String: c.RealIP(), Valid: true},
+			Device:              sql.NullString{String: c.Request().UserAgent()},
 		})
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error("Error occured while saving login...")
@@ -876,6 +882,8 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 				ResponseCode:        sql.NullString{String: "00", Valid: true},
 				ResponseDescription: sql.NullString{String: "Success", Valid: true},
 				LoginStatus:         true,
+				IpAddress:           sql.NullString{String: c.RealIP(), Valid: true},
+				Device:              sql.NullString{String: c.Request().UserAgent()},
 			})
 			if err != nil {
 				log.WithFields(fields).Info("Successful login...")
