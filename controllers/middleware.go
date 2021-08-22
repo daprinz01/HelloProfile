@@ -40,7 +40,7 @@ func (env *Env) CheckApplication(next echo.HandlerFunc) echo.HandlerFunc {
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
 		}
-		log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
+		log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %s", applicationObject.ID))
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		if err := next(c); err != nil {
 			c.Error(err)

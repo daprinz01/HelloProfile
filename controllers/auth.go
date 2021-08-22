@@ -102,7 +102,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while saving refresh token")
 			}
 
-			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
+			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %s", dbRefreshToken.ID))
 		}()
 		go func() {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
@@ -234,7 +234,7 @@ func (env *Env) saveLogin(createParams authdb.CreateUserLoginParams) error {
 		log.WithFields(fields).WithError(err).Error("Error occured saving user login")
 		return err
 	}
-	log.WithFields(fields).Info(fmt.Sprintf("Successfully saved user login, user login id: %d", userLogin.ID))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully saved user login, user login id: %s", userLogin.ID))
 	return err
 }
 
@@ -262,7 +262,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 		return err
 	}
 
-	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %d", application.ID))
+	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %s", application.ID))
 
 	request := new(models.UserDetail)
 	if err = c.Bind(request); err != nil {
@@ -363,7 +363,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error("Error occured fetching applicationRole")
 		}
-		log.WithFields(fields).Info(fmt.Sprintf("Role is valid for application. Application Role Id: %d", applicationRole.ID))
+		log.WithFields(fields).Info(fmt.Sprintf("Role is valid for application. Application Role Id: %s", applicationRole.ID))
 		log.WithFields(fields).Info("Adding user to role...")
 		userRole, err := env.AuthDb.AddUserRole(context.Background(), authdb.AddUserRoleParams{
 			Name:     strings.ToLower(role),
@@ -372,7 +372,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Error occured adding user: %s to role: %s", user.Username.String, role))
 		}
-		log.WithFields(fields).Info(fmt.Sprintf("Successfully added user to role.. User Role Id: %d", userRole.ID))
+		log.WithFields(fields).Info(fmt.Sprintf("Successfully added user to role.. User Role Id: %s", userRole.ID))
 	}()
 	authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"))
 	if err != nil {
@@ -393,7 +393,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to save refresh token")
 		}
 
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Refresh Token Id: %s", dbRefreshToken.ID))
 	}()
 	c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	c.Response().Header().Set("Refresh-Token", refreshToken)
@@ -498,7 +498,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to create refresh token")
 			}
 
-			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
+			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %s", dbRefreshToken.ID))
 		}()
 		resetResponse := &models.RefreshResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
@@ -812,7 +812,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
+	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %s", applicationObject.ID))
 	// errorResponse := new(models.Errormessage)
 	//
 	request := new(models.VerifyOtpRequest)
@@ -873,7 +873,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 				log.WithFields(fields).WithError(err).Error("Error occured saving refresh token")
 			}
 
-			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
+			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %s", dbRefreshToken.ID))
 		}()
 		go func() {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
