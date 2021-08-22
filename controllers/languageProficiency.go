@@ -3,6 +3,7 @@ package controllers
 import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
+	"authengine/util"
 	"context"
 	"database/sql"
 	"fmt"
@@ -20,8 +21,8 @@ func (env *Env) GetLanguageProficiencies(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -30,8 +31,8 @@ func (env *Env) GetLanguageProficiencies(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Get proficiencies request received...")
 	proficiencies, err := env.AuthDb.GetLanguageProficiencies(context.Background())
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Language Proficiencies not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("proficiencies not found")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -42,8 +43,8 @@ func (env *Env) GetLanguageProficiencies(c echo.Context) (err error) {
 		proficienciesResponse[index] = value.Proficiency.String
 	}
 	proficiencyResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: proficienciesResponse,
 	}
 	c.JSON(http.StatusOK, proficiencyResponse)
@@ -56,8 +57,8 @@ func (env *Env) GetLanguageProficiency(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -67,8 +68,8 @@ func (env *Env) GetLanguageProficiency(c echo.Context) (err error) {
 	proficiency := c.Param("proficiency")
 	log.WithFields(fields).Info(fmt.Sprintf("LanguageProficiency: %s", proficiency))
 	if proficiency == "" {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "LanguageProficiency not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("LanguageProficiency not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -77,8 +78,8 @@ func (env *Env) GetLanguageProficiency(c echo.Context) (err error) {
 
 	proficiencies, err := env.AuthDb.GetLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "LanguageProficiency not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("proficiencies not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -88,8 +89,8 @@ func (env *Env) GetLanguageProficiency(c echo.Context) (err error) {
 	proficienciesResponse := proficiencies.Proficiency.String
 
 	proficiencyResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: proficienciesResponse,
 	}
 	c.JSON(http.StatusOK, proficiencyResponse)
@@ -102,8 +103,8 @@ func (env *Env) AddLanguageProficiency(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -114,8 +115,8 @@ func (env *Env) AddLanguageProficiency(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("LanguageProficiency: %s", proficiency))
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "LanguageProficiency not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("LanguageProficiency not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -125,18 +126,18 @@ func (env *Env) AddLanguageProficiency(c echo.Context) (err error) {
 
 	proficiencies, err := env.AuthDb.CreateLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not add proficiency. Duplicate found"
+		errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_MESSAGE
+		errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding new proficiency")
 
-		c.JSON(http.StatusNotFound, errorResponse)
+		c.JSON(http.StatusNotModified, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully added proficiency: %v", proficiencies))
 
 	proficiencyResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, proficiencyResponse)
 	return err
@@ -148,8 +149,8 @@ func (env *Env) UpdateLanguageProficiency(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -160,8 +161,8 @@ func (env *Env) UpdateLanguageProficiency(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("LanguageProficiency: %s", proficiency))
 	if proficiency == "" {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "LanguageProficiency not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("LanguageProficiency not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -172,8 +173,8 @@ func (env *Env) UpdateLanguageProficiency(c echo.Context) (err error) {
 
 	log.Println(fmt.Sprintf("New LanguageProficiency: %s", strings.ToLower(proficiency)))
 	if newLanguageProficiency == "" {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "New LanguageProficiency not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("New LanguageProficiency not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -185,19 +186,19 @@ func (env *Env) UpdateLanguageProficiency(c echo.Context) (err error) {
 		Proficiency_2: sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""},
 	})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not update proficiency. Duplicate found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating new proficiency")
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated proficiency: %v", proficiencies))
 	proficienciesResponse := proficiencies.Proficiency.String
 
 	proficiencyResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: proficienciesResponse,
 	}
 	c.JSON(http.StatusOK, proficiencyResponse)
@@ -210,8 +211,8 @@ func (env *Env) DeleteLanguageProficiency(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -222,8 +223,8 @@ func (env *Env) DeleteLanguageProficiency(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("LanguageProficiency: %s", proficiency))
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "LanguageProficiency not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("LanguageProficiency not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -232,18 +233,18 @@ func (env *Env) DeleteLanguageProficiency(c echo.Context) (err error) {
 
 	err = env.AuthDb.DeleteLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not delete proficiency. LanguageProficiency not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured deleting  proficiency")
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info("Successfully deleted proficiency")
 
 	proficiencyResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, proficiencyResponse)
 	return err

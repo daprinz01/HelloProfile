@@ -24,9 +24,9 @@ func (env *Env) CheckApplication(next echo.HandlerFunc) echo.HandlerFunc {
 
 		application := c.Param("application")
 		if application == "" {
-			errorResponse.Errorcode = "01"
-			errorResponse.ErrorMessage = "Application not specified"
-			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application not specified")
+			errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+			errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
+			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return nil
 		}
@@ -34,10 +34,10 @@ func (env *Env) CheckApplication(next echo.HandlerFunc) echo.HandlerFunc {
 		log.WithFields(fields).Info(fmt.Sprintf("Application: %s", application))
 		applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
 		if err != nil {
-			errorResponse.Errorcode = "06"
-			errorResponse.ErrorMessage = "Application is invalid"
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application not found")
-			c.JSON(http.StatusBadRequest, errorResponse)
+			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_APPLICATION_ERROR_MESSAGE)
+			c.JSON(http.StatusNotFound, errorResponse)
 			return err
 		}
 		log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
@@ -75,9 +75,9 @@ func Authorize(next echo.HandlerFunc) echo.HandlerFunc {
 		var authCode string
 		authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
 		if len(authArray) != 2 {
-			errorResponse.Errorcode = "11"
-			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
-			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Unsupported authentication scheme type")
+			errorResponse.Errorcode = util.INVALID_AUTHENTICATION_SCHEME_ERROR_CODE
+			errorResponse.ErrorMessage = util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE
+			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE)
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return nil
 		}
@@ -86,8 +86,8 @@ func Authorize(next echo.HandlerFunc) echo.HandlerFunc {
 		verifiedClaims, err := util.VerifyToken(authCode)
 
 		if err != nil || verifiedClaims.Email == "" {
-			errorResponse.Errorcode = "09"
-			errorResponse.ErrorMessage = "Session expired. Kindly login again"
+			errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+			errorResponse.ErrorMessage = util.SESSION_EXPIRED_ERROR_MESSAGE
 			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).WithError(err).Error("Token has expired...")
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return nil
@@ -109,9 +109,9 @@ func AuthorizeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 		var authCode string
 		authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
 		if len(authArray) != 2 {
-			errorResponse.Errorcode = "11"
-			errorResponse.ErrorMessage = "Unsupported authentication scheme type"
-			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Unsupported authentication scheme type")
+			errorResponse.Errorcode = util.INVALID_AUTHENTICATION_SCHEME_ERROR_CODE
+			errorResponse.ErrorMessage = util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE
+			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE)
 
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return nil
@@ -121,15 +121,15 @@ func AuthorizeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 		verifiedClaims, err := util.VerifyToken(authCode)
 
 		if err != nil || verifiedClaims.Email == "" {
-			errorResponse.Errorcode = "09"
-			errorResponse.ErrorMessage = "Session expired. Kindly login again..."
+			errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+			errorResponse.ErrorMessage = util.SESSION_EXPIRED_ERROR_MESSAGE
 			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Token has expired...")
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
 		}
 		if !(strings.Contains(strings.ToLower(verifiedClaims.Role), "admin") || strings.Contains(strings.ToLower(verifiedClaims.Role), "superadmin")) {
-			errorResponse.Errorcode = "09"
-			errorResponse.ErrorMessage = "Sorry, you are not authorized to carry out this operation."
+			errorResponse.Errorcode = util.UNAUTHORIZED_ERROR_CODE
+			errorResponse.ErrorMessage = util.UNAUTHORIZED_ERROR_MESSAGE
 			log.WithField("microservice", "persian.black.authengine.service").WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("User is not authorised to perform this operation with role(s) %s...", verifiedClaims.Role))
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return nil

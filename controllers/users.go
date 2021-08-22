@@ -3,6 +3,7 @@ package controllers
 import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
+	"authengine/util"
 	"context"
 	"database/sql"
 	"fmt"
@@ -23,8 +24,8 @@ func (env *Env) CheckAvailability(c echo.Context) (err error) {
 
 	username := c.Param("username")
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -34,17 +35,17 @@ func (env *Env) CheckAvailability(c echo.Context) (err error) {
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "User does not exist"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user: %s")
-		c.JSON(http.StatusOK, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
@@ -64,8 +65,8 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -75,8 +76,8 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "User does not exist"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -84,8 +85,8 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: &models.UserDetail{
 			Address:                   user.Address.String,
 			City:                      user.City.String,
@@ -117,8 +118,8 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 
 	users, err := env.AuthDb.GetUsers(context.Background())
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Users does not exist"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -147,8 +148,8 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("Returning %d users...", len(users)))
 
 	resetResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: &userResponse,
 	}
 	c.JSON(http.StatusOK, resetResponse)
@@ -164,8 +165,8 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 
 	request := new(models.UserDetail)
 	if err = c.Bind(request); err != nil {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -174,8 +175,8 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Checking if user exist...")
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "User does not exist"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -210,14 +211,6 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 
 		}
 		log.WithFields(fields).Info("Successfully updated user details")
-		// LanguageName              string    `json:"language_name"`
-		// RoleName                  string    `json:"role_name"`
-		// TimezoneName              string    `json:"timezone_name"`
-		// Zone                      string    `json:"zone"`
-		// ProviderName              string    `json:"provider_name"`
-		// ClientID                  string    `json:"client_id"`
-		// ClientSecret              string    `json:"client_secret"`
-		// ProviderLogo              string    `json:"provider_logo"`
 		log.WithFields(fields).Info("Updating User Timezone")
 		if request.TimezoneName != "" {
 			_, err := env.AuthDb.UpdateUserTimezone(context.Background(), authdb.UpdateUserTimezoneParams{
@@ -233,8 +226,8 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		}
 	}()
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
@@ -251,8 +244,8 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("New Role: %s", role))
 	if role == "" {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "New Role not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -263,8 +256,8 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("Old Role: %s", role))
 	if oldRole == "" {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Old Role not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -273,8 +266,8 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 
 	username := c.Param("username")
 	if username == "" {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -289,8 +282,8 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 		Name_2:     strings.ToLower(oldRole),
 	})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not update user to role. Not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating  user role")
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -299,8 +292,8 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated user role: %v", dbRole))
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
@@ -317,8 +310,8 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("Role: %s", role))
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Role not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Role not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -327,8 +320,8 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 
 	username := c.Param("username")
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -341,8 +334,8 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 		Name:     strings.ToLower(role),
 	})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not add user to role. Not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Error occured adding  user to role: %s", err))
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -351,8 +344,8 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully added role to application: %v", dbRole))
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
@@ -372,8 +365,8 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -383,8 +376,8 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "User does not exist"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Error fetching user: %s", err))
 		c.JSON(http.StatusNotFound, errorResponse)
 		return err
@@ -398,8 +391,8 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Successfully deactivated user")
 	}()
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err

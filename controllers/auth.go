@@ -30,26 +30,26 @@ func (env *Env) Login(c echo.Context) (err error) {
 
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application not specified")
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
 	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
 	if err != nil {
-		errorResponse.Errorcode = "06"
-		errorResponse.ErrorMessage = "Application is invalid"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application is invalid")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 
-	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %d", applicationObject.ID))
+	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %s", applicationObject.ID))
 	request := new(models.LoginRequest)
 	if err = c.Bind(request); err != nil {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -60,15 +60,15 @@ func (env *Env) Login(c echo.Context) (err error) {
 	username.Valid = true
 	user, err := env.AuthDb.GetUser(context.Background(), username)
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
+		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 	if user.IsLockedOut {
-		errorResponse.Errorcode = "13"
-		errorResponse.ErrorMessage = "Sorry you exceeded the maximum login attempts... Kindly reset your password to continue..."
+		errorResponse.Errorcode = util.ACCOUNT_LOCKOUT_ERROR_CODE
+		errorResponse.ErrorMessage = util.ACCOUNT_LOCKOUT_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Account was locked out....")
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
@@ -85,9 +85,9 @@ func (env *Env) Login(c echo.Context) (err error) {
 		log.WithFields(fields).Info(fmt.Sprintf("Generating authentication token for user: %s role: %v...", user.Email, userRoles))
 		authToken, refreshToken, err := util.GenerateJWT(user.Email, userRoles)
 		if err != nil {
-			errorResponse.Errorcode = "05"
-			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured generating quth token")
+			errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
+			errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured generating auth token")
 			c.JSON(http.StatusConflict, errorResponse)
 			return err
 		}
@@ -108,8 +108,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
 				ApplicationID:       applicationObject.ID,
 				UserID:              user.ID,
-				ResponseCode:        sql.NullString{String: "00", Valid: true},
-				ResponseDescription: sql.NullString{String: "Success", Valid: true},
+				ResponseCode:        sql.NullString{String: util.SUCCESS_RESPONSE_CODE, Valid: true},
+				ResponseDescription: sql.NullString{String: util.SUCCESS_RESPONSE_MESSAGE, Valid: true},
 				LoginStatus:         true,
 				IpAddress:           sql.NullString{String: c.RealIP(), Valid: true},
 				Device:              sql.NullString{String: c.Request().UserAgent()},
@@ -123,8 +123,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 			}
 		}()
 		loginResponse := &models.SuccessResponse{
-			ResponseCode:    "00",
-			ResponseMessage: "Success",
+			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 			ResponseDetails: &models.UserDetail{
 				Address:                   user.Address.String,
 				City:                      user.City.String,
@@ -150,8 +150,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 		c.JSON(http.StatusOK, loginResponse)
 
 	} else {
-		errorResponse.Errorcode = "04"
-		errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
+		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Password incorrect...")
 		go func() {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
@@ -211,13 +211,13 @@ func (env *Env) Login(c echo.Context) (err error) {
 			}
 			log.WithFields(fields).Info(fmt.Sprintf("Account with username: %s has been locked out", lockoutUpdate.Username.String))
 
-			errorResponse.Errorcode = "12"
-			errorResponse.ErrorMessage = "Account locked out, kindly reset your password to continue..."
+			errorResponse.Errorcode = util.ACCOUNT_LOCKOUT_ERROR_CODE
+			errorResponse.ErrorMessage = util.ACCOUNT_LOCKOUT_ERROR_MESSAGE
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
 		}
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 
 	}
 
@@ -247,18 +247,18 @@ func (env *Env) Register(c echo.Context) (err error) {
 
 	applicationName := c.Param("application")
 	if applicationName == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application not specified")
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
 	}
 	application, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(applicationName))
 	if err != nil {
-		errorResponse.Errorcode = "06"
-		errorResponse.ErrorMessage = "Application is invalid"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application is invalid")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 
@@ -266,8 +266,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 
 	request := new(models.UserDetail)
 	if err = c.Bind(request); err != nil {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -300,8 +300,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 	})
 
 	if err != nil {
-		errorResponse.Errorcode = "04"
-		errorResponse.ErrorMessage = "User already exist"
+		errorResponse.Errorcode = util.USER_ALREADY_EXISTS_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_ALREADY_EXISTS_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured creating user")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -310,8 +310,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 		err = env.saveLogin(authdb.CreateUserLoginParams{
 			ApplicationID:       application.ID,
 			UserID:              user.ID,
-			ResponseCode:        sql.NullString{String: "00", Valid: true},
-			ResponseDescription: sql.NullString{String: "Registration successful...", Valid: true},
+			ResponseCode:        sql.NullString{String: util.SUCCESS_RESPONSE_CODE, Valid: true},
+			ResponseDescription: sql.NullString{String: util.REGISTRATION_SUCCESS_RESPONSE_MESSAGE, Valid: true},
 			LoginStatus:         true,
 			IpAddress:           sql.NullString{String: c.RealIP(), Valid: true},
 			Device:              sql.NullString{String: c.Request().UserAgent()},
@@ -321,8 +321,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 		}
 	}()
 	registerResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: &models.UserDetail{
 			Address:                   user.Address.String,
 			City:                      user.City.String,
@@ -376,8 +376,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 	}()
 	authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"))
 	if err != nil {
-		errorResponse.Errorcode = "05"
-		errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
+		errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
+		errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured generating auth token")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -415,9 +415,9 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 	var authCode string
 	authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
 	if len(authArray) != 2 {
-		errorResponse.Errorcode = "11"
-		errorResponse.ErrorMessage = "Unsupported authentication scheme type"
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Unsupported authentication scheme type")
+		errorResponse.Errorcode = util.INVALID_AUTHENTICATION_SCHEME_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE)
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
@@ -426,24 +426,24 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 
 	verifiedClaims, err := util.VerifyToken(authCode)
 	if err == nil {
-		errorResponse.Errorcode = "10"
-		errorResponse.ErrorMessage = "Session is still valid..."
+		errorResponse.Errorcode = util.SESSION_STILL_ACTIVE_ERROR_CODE
+		errorResponse.ErrorMessage = util.SESSION_STILL_ACTIVE_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Token is still valid...")
 		c.JSON(http.StatusTooEarly, errorResponse)
 		return err
 	}
 	if err != nil && verifiedClaims.Email == "" {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Invalid request")
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.MODEL_VALIDATION_ERROR_MESSAGE)
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 
 	dbRefreshToken, err := env.AuthDb.GetRefreshToken(context.Background(), refreshToken)
 	if err != nil {
-		errorResponse.Errorcode = "08"
-		errorResponse.ErrorMessage = "Cannot refresh session. Kindly login again"
+		errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+		errorResponse.ErrorMessage = util.SESSION_EXPIRED_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured refreshing token")
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
@@ -472,8 +472,8 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Generating authentication token...")
 		authToken, refreshToken, err := util.GenerateJWT(verifiedClaims.Email, strings.Split(verifiedClaims.Role, ":"))
 		if err != nil {
-			errorResponse.Errorcode = "05"
-			errorResponse.ErrorMessage = fmt.Sprintf("Error occured generating auth token: %s", err)
+			errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
+			errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured generating auth token")
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
@@ -481,8 +481,8 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Fetching user...")
 		user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
 		if err != nil {
-			errorResponse.Errorcode = "03"
-			errorResponse.ErrorMessage = "Oops... something is wrong here... your email or password is incorrect..."
+			errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
+			errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 			c.JSON(http.StatusUnauthorized, errorResponse)
 			return err
@@ -501,8 +501,8 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %d", dbRefreshToken.ID))
 		}()
 		resetResponse := &models.RefreshResponse{
-			ResponseCode:    "00",
-			ResponseMessage: "Success",
+			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		}
 
 		c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
@@ -511,8 +511,8 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		c.JSON(http.StatusOK, resetResponse)
 
 	} else {
-		errorResponse.Errorcode = "09"
-		errorResponse.ErrorMessage = "Session expired. Kindly login again to continue"
+		errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+		errorResponse.ErrorMessage = util.SESSION_EXPIRED_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Token has expired...")
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
@@ -531,16 +531,16 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 	request := new(models.SendOtpRequest)
 	if err = c.Bind(request); err != nil {
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
 
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "If you have an account with us, you should get an otp"
+		errorResponse.Errorcode = util.SUCCESS_RESPONSE_CODE
+		errorResponse.ErrorMessage = util.OTP_SENT_RESPONSE_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -556,8 +556,8 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 	}
 	otp, err := util.GenerateOTP(otpLength)
 	if err != nil {
-		errorResponse.Errorcode = "14"
-		errorResponse.ErrorMessage = "Error occured generating otp"
+		errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
+		errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured generating otp")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -642,8 +642,8 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 	}()
 	log.WithFields(fields).Info("Successfully generated otp")
 	resetResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.OTP_SENT_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, resetResponse)
 	return err
@@ -657,8 +657,8 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 
 	request := new(models.SendOtpRequest)
 	if err = c.Bind(request); err != nil {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -674,8 +674,8 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 	}
 	otp, err := util.GenerateOTP(otpLength)
 	if err != nil {
-		errorResponse.Errorcode = "14"
-		errorResponse.ErrorMessage = "Error occured generating otp"
+		errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
+		errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured generating otp")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -727,8 +727,8 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 		}
 	}()
 	resetResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, resetResponse)
 	return err
@@ -742,18 +742,18 @@ func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
 
 	request := new(models.VerifyOtpRequest)
 	if err = c.Bind(request); err != nil {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
 	dbOtp, err := env.AuthDb.GetEmailVerification(context.Background(), request.OTP)
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Sorry we could not verify your request. Please try registering again..."
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Invalid request")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.MODEL_VALIDATION_ERROR_MESSAGE)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 	var otpDuration int
@@ -769,13 +769,13 @@ func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
 	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration)*time.Minute).Before(time.Now()) && strings.EqualFold(strings.ToLower(request.Email), strings.ToLower(dbOtp.Email.String)) {
 		log.WithFields(fields).Info("Email token verification successful")
 		verifyResponse := &models.SuccessResponse{
-			ResponseCode:    "00",
-			ResponseMessage: "Success",
+			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		}
 		c.JSON(http.StatusOK, verifyResponse)
 	} else {
-		errorResponse.Errorcode = "16"
-		errorResponse.ErrorMessage = "Oops... something is wrong here... your email verification link has expired.. Kindly register again"
+		errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+		errorResponse.ErrorMessage = util.EMAIL_TOKEN_EXPIRED_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Email otp has expired or is invalid...")
 		c.JSON(http.StatusForbidden, errorResponse)
 
@@ -798,16 +798,16 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application not specified")
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
 	}
 	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
 	if err != nil {
-		errorResponse.Errorcode = "06"
-		errorResponse.ErrorMessage = "Application is invalid"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application is invalid")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -817,8 +817,8 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 	//
 	request := new(models.VerifyOtpRequest)
 	if err = c.Bind(request); err != nil {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -828,10 +828,10 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		Username: sql.NullString{String: strings.ToLower(request.Email), Valid: true},
 	})
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Incorrect OTP. Please try again..."
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Invalid request")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.MODEL_VALIDATION_ERROR_MESSAGE)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 	var otpDuration int
@@ -856,8 +856,8 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		log.WithFields(fields).Info(fmt.Sprintf("Generating authentication token for user: %s role: %s...", request.Email, strings.Join(userRoles, ":")))
 		authToken, refreshToken, err := util.GenerateJWT(request.Email, userRoles)
 		if err != nil {
-			errorResponse.Errorcode = "05"
-			errorResponse.ErrorMessage = "Error occured generating auth token"
+			errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
+			errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured generating wuth token")
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
@@ -879,8 +879,8 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 			err = env.saveLogin(authdb.CreateUserLoginParams{
 				ApplicationID:       applicationObject.ID,
 				UserID:              dbOtp.UserID,
-				ResponseCode:        sql.NullString{String: "00", Valid: true},
-				ResponseDescription: sql.NullString{String: "Success", Valid: true},
+				ResponseCode:        sql.NullString{String: util.SUCCESS_RESPONSE_CODE, Valid: true},
+				ResponseDescription: sql.NullString{String: util.SUCCESS_RESPONSE_MESSAGE, Valid: true},
 				LoginStatus:         true,
 				IpAddress:           sql.NullString{String: c.RealIP(), Valid: true},
 				Device:              sql.NullString{String: c.Request().UserAgent()},
@@ -894,8 +894,8 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 			}
 		}()
 		loginResponse := &models.SuccessResponse{
-			ResponseCode:    "00",
-			ResponseMessage: "Success",
+			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		}
 
 		c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
@@ -904,10 +904,10 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		c.JSON(http.StatusOK, loginResponse)
 
 	} else {
-		errorResponse.Errorcode = "16"
-		errorResponse.ErrorMessage = "Oops... something is wrong here... your one time token has expired. Kindly request another one..."
+		errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+		errorResponse.ErrorMessage = util.OTP_EXPIRED_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Otp has expired...")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 
 	}
 	log.WithFields(fields).Info("Finished processing Verify otp request...")
@@ -923,9 +923,9 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 	var authCode string
 	authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
 	if len(authArray) != 2 {
-		errorResponse.Errorcode = "11"
-		errorResponse.ErrorMessage = "Unsupported authentication scheme type"
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Unsupported authentication scheme type")
+		errorResponse.Errorcode = util.INVALID_AUTHENTICATION_SCHEME_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE)
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
@@ -934,17 +934,17 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 	verifiedClaims, err := util.VerifyToken(authCode)
 
 	if err != nil || verifiedClaims.Email == "" {
-		errorResponse.Errorcode = "09"
-		errorResponse.ErrorMessage = "Session expired. Kindly try generating one time password again"
+		errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+		errorResponse.ErrorMessage = util.RESET_PASSWORD_TOKEN_EXPIRED_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Token has expired...")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 
 	request := new(models.ResetPasswordRequest)
 	if err = c.Bind(request); err != nil {
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -953,10 +953,10 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 	// Try to update password
 	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Oops... something is wrong here... your email is incorrect..."
+		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
 	go func() {
@@ -999,8 +999,8 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 
 	}()
 	resetResponse := &models.RefreshResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, resetResponse)
 	return err

@@ -3,6 +3,7 @@ package controllers
 import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
+	"authengine/util"
 	"context"
 	"database/sql"
 	"fmt"
@@ -25,8 +26,8 @@ func (env *Env) GetUserLanguages(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -36,8 +37,8 @@ func (env *Env) GetUserLanguages(c echo.Context) (err error) {
 	username := c.Param("username")
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 	if username == "" {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -46,11 +47,11 @@ func (env *Env) GetUserLanguages(c echo.Context) (err error) {
 
 	languages, err := env.AuthDb.GetUserLanguages(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "User does not have any language yet"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("User languages not found: %s", err))
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully retrieved user languages: %v", languages))
@@ -60,8 +61,8 @@ func (env *Env) GetUserLanguages(c echo.Context) (err error) {
 		userLanguages[index].Proficiency = value.Proficiency.String
 	}
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: userLanguages,
 	}
 	c.JSON(http.StatusOK, languageResponse)
@@ -80,8 +81,8 @@ func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -90,8 +91,8 @@ func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Add user languages Request received")
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -102,8 +103,8 @@ func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Language not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Language not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -114,8 +115,8 @@ func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("Proficiency: %s", proficiency))
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Proficiency not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Proficiency not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -128,17 +129,17 @@ func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 		Proficiency: sql.NullString{String: strings.ToLower(proficiency), Valid: true},
 	})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Language does not exist"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding user langauge")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully added user languages: %v", languages))
 
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, languageResponse)
 	return err
@@ -156,8 +157,8 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -166,8 +167,8 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Get user languages Request received")
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Username not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Username not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -177,8 +178,8 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 	language := c.Param("language")
 
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Language not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Language not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -192,8 +193,8 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 			Name:     strings.ToLower(language),
 		})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Cannot delete language"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Cannot delete language: %s", err))
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -202,8 +203,8 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Successfully delete user languages")
 
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, languageResponse)
 	return err
@@ -215,8 +216,8 @@ func (env *Env) GetLanguages(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -225,8 +226,8 @@ func (env *Env) GetLanguages(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Get languages request received...")
 	languages, err := env.AuthDb.GetLanguages(context.Background())
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Languages not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("languages not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -238,8 +239,8 @@ func (env *Env) GetLanguages(c echo.Context) (err error) {
 		languagesResponse[index] = value.Name
 	}
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: languagesResponse,
 	}
 	c.JSON(http.StatusOK, languageResponse)
@@ -252,8 +253,8 @@ func (env *Env) GetLanguage(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -263,8 +264,8 @@ func (env *Env) GetLanguage(c echo.Context) (err error) {
 	language := c.Param("language")
 
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Language not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Language not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -274,8 +275,8 @@ func (env *Env) GetLanguage(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
 	languages, err := env.AuthDb.GetLanguage(context.Background(), strings.ToLower(language))
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Language not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("languages not found")
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -285,8 +286,8 @@ func (env *Env) GetLanguage(c echo.Context) (err error) {
 	languagesResponse := languages.Name
 
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: languagesResponse,
 	}
 	c.JSON(http.StatusOK, languageResponse)
@@ -299,8 +300,8 @@ func (env *Env) AddLanguage(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -310,8 +311,8 @@ func (env *Env) AddLanguage(c echo.Context) (err error) {
 	language := c.Param("language")
 
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Language not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Language not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -320,18 +321,18 @@ func (env *Env) AddLanguage(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
 	languages, err := env.AuthDb.CreateLanguage(context.Background(), strings.ToLower(language))
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not add language. Duplicate found"
+		errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_CODE
+		errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding new language")
 
-		c.JSON(http.StatusNotFound, errorResponse)
+		c.JSON(http.StatusNotModified, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully added language: %v", languages))
 
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, languageResponse)
 	return err
@@ -343,8 +344,8 @@ func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -354,8 +355,8 @@ func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 	language := c.Param("language")
 
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Language not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Language not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -367,8 +368,8 @@ func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 
 	log.WithFields(fields).Info(fmt.Sprintf("New Language: %s", strings.ToLower(language)))
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "New Language not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("New Language not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -380,8 +381,8 @@ func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 		Name_2: strings.ToLower(language),
 	})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not update language. Duplicate found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating new language")
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -391,8 +392,8 @@ func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 	languagesResponse := languages.Name
 
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: languagesResponse,
 	}
 	c.JSON(http.StatusOK, languageResponse)
@@ -405,8 +406,8 @@ func (env *Env) DeleteLanguage(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -416,8 +417,8 @@ func (env *Env) DeleteLanguage(c echo.Context) (err error) {
 	language := c.Param("language")
 
 	if err != nil {
-		errorResponse.Errorcode = "15"
-		errorResponse.ErrorMessage = "Language not specified"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Language not specified")
 
 		c.JSON(http.StatusBadRequest, errorResponse)
@@ -426,18 +427,18 @@ func (env *Env) DeleteLanguage(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
 	err = env.AuthDb.DeleteLanguage(context.Background(), strings.ToLower(language))
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not delete language. Language not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(fmt.Sprintf("Error occured deleting  language: %s", err))
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info("Successfully deleted language")
 
 	languageResponse := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, languageResponse)
 	return err

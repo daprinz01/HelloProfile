@@ -3,6 +3,7 @@ package controllers
 import (
 	"authengine/models"
 	"authengine/persistence/orm/authdb"
+	"authengine/util"
 	"context"
 	"fmt"
 	"net/http"
@@ -19,9 +20,9 @@ func (env *Env) GetApplications(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
-		log.WithField("microservice", "persian.black.authengine.service").Error("Application not specified")
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
+		log.WithField("microservice", "persian.black.authengine.service").Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
 	}
@@ -29,11 +30,11 @@ func (env *Env) GetApplications(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Get applications request received...")
 	applications, err := env.AuthDb.GetApplications(context.Background())
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Applications not found"
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application not found")
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_APPLICATION_ERROR_MESSAGE)
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 
@@ -47,8 +48,8 @@ func (env *Env) GetApplications(c echo.Context) (err error) {
 		applicationResponse[index] = application
 	}
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: applicationResponse,
 	}
 	c.JSON(http.StatusOK, response)
@@ -62,9 +63,9 @@ func (env *Env) GetApplication(c echo.Context) (err error) {
 
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
-		log.WithField("microservice", "persian.black.authengine.service").Error("Application not specified")
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
+		log.WithField("microservice", "persian.black.authengine.service").Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
 	}
@@ -72,10 +73,10 @@ func (env *Env) GetApplication(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Get application request received...")
 	dbApplication, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Application not found"
-		log.WithFields(fields).WithError(err).Info("Application not found")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).Info(util.INVALID_APPLICATION_ERROR_MESSAGE)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully retrieved application: %v", dbApplication))
@@ -85,8 +86,8 @@ func (env *Env) GetApplication(c echo.Context) (err error) {
 	}
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: applicationResponse,
 	}
 	c.JSON(http.StatusOK, response)
@@ -99,8 +100,8 @@ func (env *Env) AddApplication(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -110,8 +111,8 @@ func (env *Env) AddApplication(c echo.Context) (err error) {
 	request := new(models.Application)
 	if err = c.Bind(request); err != nil {
 
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -122,18 +123,18 @@ func (env *Env) AddApplication(c echo.Context) (err error) {
 		Description: strings.ToLower(request.Description),
 	})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not add application. Duplicate found"
+		errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_CODE
+		errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured adding new application")
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotModified, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully added application: %v", dbApplication))
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
@@ -146,8 +147,8 @@ func (env *Env) UpdateApplication(c echo.Context) (err error) {
 
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -157,8 +158,8 @@ func (env *Env) UpdateApplication(c echo.Context) (err error) {
 	request := new(models.Application)
 	if err = c.Bind(request); err != nil {
 
-		errorResponse.Errorcode = "02"
-		errorResponse.ErrorMessage = "Invalid request"
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
@@ -170,18 +171,18 @@ func (env *Env) UpdateApplication(c echo.Context) (err error) {
 		Name_2:      strings.ToLower(application),
 	})
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not update application. Not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured updating new application")
 
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusNotFound, errorResponse)
 		return err
 	}
 	log.WithFields(fields).Info("Successfully updated application")
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
@@ -194,8 +195,8 @@ func (env *Env) DeleteApplication(c echo.Context) (err error) {
 
 	application := c.Param("application")
 	if application == "" {
-		errorResponse.Errorcode = "01"
-		errorResponse.ErrorMessage = "Application not specified"
+		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
+		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
 		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
@@ -204,8 +205,8 @@ func (env *Env) DeleteApplication(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Delete application request received...")
 	err = env.AuthDb.DeleteApplication(context.Background(), strings.ToLower(application))
 	if err != nil {
-		errorResponse.Errorcode = "03"
-		errorResponse.ErrorMessage = "Could not delete application. Application not found"
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured deleting  application")
 
 		c.JSON(http.StatusNotFound, errorResponse)
@@ -214,8 +215,8 @@ func (env *Env) DeleteApplication(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Successfully deleted application")
 
 	response := &models.SuccessResponse{
-		ResponseCode:    "00",
-		ResponseMessage: "Success",
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
