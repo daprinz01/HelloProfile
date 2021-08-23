@@ -303,7 +303,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 		errorResponse.Errorcode = util.USER_ALREADY_EXISTS_ERROR_CODE
 		errorResponse.ErrorMessage = util.USER_ALREADY_EXISTS_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured creating user")
-		c.JSON(http.StatusBadRequest, errorResponse)
+		c.JSON(http.StatusAlreadyReported, errorResponse)
 		return err
 	}
 	go func() {
