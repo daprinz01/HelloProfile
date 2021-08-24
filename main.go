@@ -243,12 +243,6 @@ func main() {
 	apiAdminAuth.GET("/:application/role/application/:application", env.GetRolesByApplication)
 	apiAdminAuth.POST("/:application/role/:role/:application", env.AddApplicationRole)
 
-	// go func() {
-	// 	log.Println("Starting Server...")
-	// 	if err := srv.ListenAndServe(); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// }()
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")
 		e.Logger.Fatal(e.StartServer(srv))
