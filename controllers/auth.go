@@ -582,8 +582,8 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 			emailRequest := models.SendEmailRequest{
 				From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
 				To:      []models.EmailAddress{{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
-				Subject: fmt.Sprintf("%s OTP", request.Purpose),
-				Message: fmt.Sprintf("<h5>Hey %s,</h5><p>Kindly use the otp below to complete your request:</p><h4>%s</h4><p>Your account security is paramount to us. Don't share your otp with anyone.</p><h5>Micheal from Persian Black.</h5>", user.Firstname.String, otp),
+				Subject: fmt.Sprintf(util.SEND_OTP_EMAIL_SUBJECT, request.Purpose),
+				Message: fmt.Sprintf(util.SEND_OTP_EMAIL_MESSAGE_BODY, user.Firstname.String, otp),
 			}
 			emailRequestBytes, _ := json.Marshal(emailRequest)
 			emailRequestReader := bytes.NewReader(emailRequestBytes)
@@ -614,7 +614,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 				smsPath := os.Getenv("SMS_PATH")
 				smsRequest := models.SendSmsRequest{
 					Phone:   user.Phone.String,
-					Message: fmt.Sprintf("Your Persian Black %s code is:\n%s", request.Purpose, otp),
+					Message: fmt.Sprintf(util.SENT_OTP_SMS_MESSAGE, request.Purpose, otp),
 				}
 				smsRequestBytes, _ := json.Marshal(smsRequest)
 				smsRequestReader := bytes.NewReader(smsRequestBytes)
@@ -699,8 +699,8 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 		emailRequest := models.SendEmailRequest{
 			From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
 			To:      []models.EmailAddress{{Email: request.Email}},
-			Subject: fmt.Sprintf("%s Email Verification", strings.ToTitle(request.Application)),
-			Message: fmt.Sprintf("<h5>Hey,</h5><p>Kindly click the link below to confirm your email address</p><a href=\"%s/%s/%s\">click here</a><h5>Micheal from Persian Black.</h5>", request.VerifyPath, request.Email, otp),
+			Subject: fmt.Sprintf(util.EMAIL_VERIFICATION_SUBJECT, strings.ToTitle(request.Application)),
+			Message: fmt.Sprintf(util.EMAIL_VERIFICATION_MESSAGE, request.VerifyPath, request.Email, otp),
 		}
 		emailRequestBytes, _ := json.Marshal(emailRequest)
 		emailRequestReader := bytes.NewReader(emailRequestBytes)
