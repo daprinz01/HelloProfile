@@ -8,7 +8,6 @@ import (
 )
 
 const createRole = `-- name: CreateRole :one
-
 insert into roles (name, "description")
 values ($1, $2)
 returning id, name, description
@@ -19,7 +18,6 @@ type CreateRoleParams struct {
 	Description string `json:"description"`
 }
 
-//-- select * from roles c where c.id = (select b.roles_id from applications_roles b where b.applications_id = (select a.id from applications a where a.name = $1));
 func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error) {
 	row := q.queryRow(ctx, q.createRoleStmt, createRole, arg.Name, arg.Description)
 	var i Role
@@ -78,7 +76,7 @@ func (q *Queries) GetRoles(ctx context.Context) ([]Role, error) {
 const getRolesByApplication = `-- name: GetRolesByApplication :many
 select c.id, c.name, c.description from roles c
 inner join applications_roles b on c.id = b.roles_id
-inner join applications a on b.applications_id = a.id inner join applications d on d.name = $1
+inner join applications a on b.applications_id = a.id and a.name = $1
 `
 
 func (q *Queries) GetRolesByApplication(ctx context.Context, name string) ([]Role, error) {

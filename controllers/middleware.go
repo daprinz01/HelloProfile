@@ -35,7 +35,7 @@ func (env *Env) CheckApplication(next echo.HandlerFunc) echo.HandlerFunc {
 		applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
 		if err != nil {
 			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
-			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+			errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_APPLICATION_ERROR_MESSAGE)
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err

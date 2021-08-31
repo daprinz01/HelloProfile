@@ -223,7 +223,7 @@ func (env *Env) UpdateState(c echo.Context) (err error) {
 	state := c.Param("state")
 
 	log.WithFields(fields).Info(fmt.Sprintf("State: %s", state))
-	if err != nil {
+	if state == "" {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("State not specified")
@@ -232,10 +232,10 @@ func (env *Env) UpdateState(c echo.Context) (err error) {
 		return err
 	}
 
-	newState := c.Param("newState")
+	newState := c.QueryParam("newState")
 
 	log.WithFields(fields).Info(fmt.Sprintf("New State: %s", newState))
-	if err != nil {
+	if newState == "" {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("New State not specified")

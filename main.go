@@ -213,11 +213,11 @@ func main() {
 	apiAdminAuth.DELETE("/:application/timezone/:timezone", env.DeleteTimezone)
 
 	// Application Operations
-	apiNoAuth.GET("/:application/application/:application", env.GetApplication)
+	apiNoAuth.GET("/:application/application/:referenceApplication", env.GetApplication)
 	apiNoAuth.GET("/:application/application", env.GetApplications)
 	apiAdminAuth.POST("/:application/application", env.AddApplication)
-	apiAdminAuth.PUT("/:application/application/:application", env.UpdateApplication)
-	apiAdminAuth.DELETE("/:application/application/:application", env.DeleteApplication)
+	apiAdminAuth.PUT("/:application/application/:referenceApplication", env.UpdateApplication)
+	apiAdminAuth.DELETE("/:application/application/:referenceApplication", env.DeleteApplication)
 
 	// Countries Operations
 	apiNoAuth.GET("/:application/country/:country", env.GetCountry)
@@ -230,7 +230,7 @@ func main() {
 	apiNoAuth.GET("/:application/state/:state", env.GetState)
 	apiNoAuth.GET("/:application/state", env.GetStates)
 	apiAdminAuth.POST("/:application/state/:state/:country", env.AddState)
-	apiAdminAuth.PUT("/:application/state/:state/:newState", env.UpdateState)
+	apiAdminAuth.PUT("/:application/state/:state", env.UpdateState)
 	apiAdminAuth.DELETE("/:application/state/:state", env.DeleteState)
 	apiNoAuth.GET("/:application/state/country/:country", env.GetStatesByCountry)
 
@@ -240,8 +240,8 @@ func main() {
 	apiAdminAuth.POST("/:application/role", env.AddRole)
 	apiAdminAuth.PUT("/:application/role/:role", env.UpdateRole)
 	apiAdminAuth.DELETE("/:application/role/:role", env.DeleteRole)
-	apiAdminAuth.GET("/:application/role/application/:application", env.GetRolesByApplication)
-	apiAdminAuth.POST("/:application/role/:role/:application", env.AddApplicationRole)
+	apiAdminAuth.GET("/:application/role/application/:referenceApplication", env.GetRolesByApplication)
+	apiAdminAuth.POST("/:application/role/:role/:referenceApplication", env.AddApplicationRole)
 
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")

@@ -90,7 +90,7 @@ func (env *Env) GetRolesByApplication(c echo.Context) (err error) {
 	log.Println("Get roles by application request received...")
 	errorResponse := new(models.Errormessage)
 
-	application := c.Param("application")
+	application := c.Param("referenceApplication")
 	if application == "" {
 		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
 		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
@@ -131,7 +131,7 @@ func (env *Env) GetRolesByApplication(c echo.Context) (err error) {
 func (env *Env) AddApplicationRole(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
+	application := c.Param("referenceApplication")
 	if application == "" {
 		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
 		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE

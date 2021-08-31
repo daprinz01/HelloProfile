@@ -998,7 +998,7 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Successsfully updated failed logins ")
 
 	}()
-	resetResponse := &models.RefreshResponse{
+	resetResponse := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 	}
