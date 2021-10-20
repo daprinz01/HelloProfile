@@ -1,7 +1,6 @@
 package util
 
 import (
-	"authengine/models"
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"persianblack.com/authengine/models"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"

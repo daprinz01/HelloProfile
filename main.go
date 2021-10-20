@@ -1,8 +1,6 @@
 package main
 
 import (
-	"authengine/controllers"
-	"authengine/persistence/orm/authdb"
 	"context"
 	"database/sql"
 	"fmt"
@@ -14,6 +12,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"persianblack.com/authengine/controllers"
+	"persianblack.com/authengine/persistence/orm/authdb"
 
 	echoPrometheus "github.com/globocom/echo-prometheus"
 	"github.com/labstack/echo/v4"

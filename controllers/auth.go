@@ -1,9 +1,6 @@
 package controllers
 
 import (
-	"authengine/models"
-	"authengine/persistence/orm/authdb"
-	"authengine/util"
 	"bytes"
 	"context"
 	"database/sql"
@@ -17,6 +14,9 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"persianblack.com/authengine/models"
+	"persianblack.com/authengine/persistence/orm/authdb"
+	"persianblack.com/authengine/util"
 
 	"github.com/labstack/echo/v4"
 )

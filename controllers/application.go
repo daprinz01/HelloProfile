@@ -1,15 +1,16 @@
 package controllers
 
 import (
-	"authengine/models"
-	"authengine/persistence/orm/authdb"
-	"authengine/util"
 	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"persianblack.com/authengine/util"
+
 	log "github.com/sirupsen/logrus"
+	"persianblack.com/authengine/models"
+	"persianblack.com/authengine/persistence/orm/authdb"
 
 	"github.com/labstack/echo/v4"
 )

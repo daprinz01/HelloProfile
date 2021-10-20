@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"authengine/models"
-	"authengine/util"
 	"context"
 	"fmt"
 	"net/http"
@@ -10,6 +8,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"persianblack.com/authengine/models"
+	"persianblack.com/authengine/util"
 
 	"github.com/labstack/echo/v4"
 )
