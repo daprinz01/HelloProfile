@@ -12,8 +12,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/controllers"
-	"persianblack.com/authengine/persistence/orm/authdb"
+	"helloprofile.com/controllers"
+	"helloprofile.com/persistence/orm/helloprofiledb"
 
 	echoPrometheus "github.com/globocom/echo-prometheus"
 	"github.com/labstack/echo/v4"
@@ -32,7 +32,7 @@ func main() {
 			log.FieldKeyFunc: "function",
 		},
 	})
-	fields := log.Fields{"microservice": "persian.black.authengine.service"}
+	fields := log.Fields{"microservice": "helloprofile.service"}
 	log.WithFields(fields)
 	log.SetLevel(log.TraceLevel)
 
@@ -101,8 +101,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	authdatabase := authdb.New(db)
-	env := &controllers.Env{AuthDb: authdatabase}
+	helloprofiledatabase := helloprofiledb.New(db)
+	env := &controllers.Env{HelloProfileDb: helloprofiledatabase}
 	log.WithFields(fields).Warn("Successfully connected to database!")
 	// // Create Server and Route Handlers
 	// r := mux.NewRouter()
@@ -126,7 +126,7 @@ func main() {
 			MaxAge:     28,   //days
 			Compress:   true, // disabled by default,
 		},
-		Format: "{\"@timestamp\":\"${time_rfc3339}\", \"uri\":\"${uri}\", \"remote_ip\":\"${remote_ip}\", \"host\":\"${host}\", \"id\":\"${id}\", \"method\":\"${method}\", \"user_agent\":\"${user_agent}\", \"status\":\"${status}\", \"error\":\"${error}\", \"latency\":\"${latency}\", \"latency_human\":\"${latency_human}\", \"bytes_in\":\"${bytes_in}\", \"bytes_out\":\"${bytes_out}\", \"message\":\"Echo http request logger\", \"microservice\": \"persian.black.authengine.service\", \"level\":\"info\", \"user_agent\":\"${user_agent}\"}",
+		Format: "{\"@timestamp\":\"${time_rfc3339}\", \"uri\":\"${uri}\", \"remote_ip\":\"${remote_ip}\", \"host\":\"${host}\", \"id\":\"${id}\", \"method\":\"${method}\", \"user_agent\":\"${user_agent}\", \"status\":\"${status}\", \"error\":\"${error}\", \"latency\":\"${latency}\", \"latency_human\":\"${latency_human}\", \"bytes_in\":\"${bytes_in}\", \"bytes_out\":\"${bytes_out}\", \"message\":\"Echo http request logger\", \"microservice\": \"helloprofile.service\", \"level\":\"info\", \"user_agent\":\"${user_agent}\"}",
 	}))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		ExposeHeaders: []string{"*"},
@@ -134,114 +134,94 @@ func main() {
 		AllowHeaders:  []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, "Role", echo.HeaderAuthorization, "Refresh-Token", echo.HeaderXRealIP},
 	}))
 	e.Use(controllers.TrackResponseTime)
-	// e.Use(middleware.CSRF())
 	e.Use(middleware.Recover())
 	// Enable metrics middleware
 	e.Use(echoPrometheus.MetricsMiddleware())
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	apiNoAuth := e.Group("/api/v1")
-	apiNoAuth.Use(env.CheckApplication)
+	// apiNoAuth.Use(env.CheckApplication)
 	auth := apiNoAuth.Group("/auth")
 	// Methods that require authentication but don't need the information from the applications or authorization to function
 	apiAuth := apiNoAuth.Group("/app")
-	// Configure middleware with the custom claims type
-	// config := middleware.JWTConfig{
-	// 	Claims:     &models.Claims{},
-	// 	SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
-	// }
+
 	apiAuth.Use(controllers.Authorize)
 
 	// Admin operations authorization
 	apiAdminAuth := apiNoAuth.Group("/admin")
 
-	// adminConfig := middleware.JWTConfig{
-	// 	Claims: &models.Claims{
-	// 		Role: "admin",
-	// 	},
-	// 	SigningKey: []byte(os.Getenv("JWT_SECRET_KEY")),
-	// }
 	apiAdminAuth.Use(controllers.AuthorizeAdmin)
 
 	// Methods that don't require the application information is it's being verified in a middleware
-	apiNoAuth.GET("/:application/refresh", env.RefreshToken)
-	apiNoAuth.POST("/:application/otp/send", env.SendOtp)
-	apiNoAuth.POST("/:application/password/reset", env.ResetPassword)
-	apiNoAuth.POST("/:application/confirm/email", env.DoEmailVerification)
-	apiNoAuth.POST("/:application/verify/email", env.VerifyEmailToken)
+	apiNoAuth.GET("/refresh", env.RefreshToken)
+	apiNoAuth.POST("/otp/send", env.SendOtp)
+	apiNoAuth.POST("/password/reset", env.ResetPassword)
+	apiNoAuth.POST("/confirm/email", env.DoEmailVerification)
+	apiNoAuth.POST("/verify/email", env.VerifyEmailToken)
 
 	// Methods that check application themselves and use the applicaiton information
-	auth.POST("/:application/login", env.Login)
-	auth.POST("/:application/otp/verify", env.VerifyOtp)
+	auth.POST("/login", env.Login)
+	auth.POST("/otp/verify", env.VerifyOtp)
 
 	// User operations
-	apiAdminAuth.GET("/:application/user", env.GetUsers)
-	apiNoAuth.GET("/:application/user/:username/check", env.CheckAvailability)
-	apiNoAuth.GET("/:application/user/:username", env.GetUser)
-	auth.POST("/:application/user", env.Register)
-	apiAuth.PUT("/:application/user", env.UpdateUser)
-	apiAuth.DELETE("/:application/user/:username", env.DeleteUser)
+	apiAdminAuth.GET("/user", env.GetUsers)
+	apiNoAuth.GET("/user/:username/check", env.CheckAvailability)
+	apiNoAuth.GET("/user/:username", env.GetUser)
+	auth.POST("/user", env.Register)
+	apiAuth.PUT("/user", env.UpdateUser)
+	apiAuth.DELETE("/user/:username", env.DeleteUser)
 
 	// User Language operations
-	apiNoAuth.GET("/:application/user/language/:username", env.GetUserLanguages)
-	apiAuth.POST("/:application/user/language/:username/:language/:proficiency", env.AddUserLanguage)
-	apiAuth.DELETE("/:application/user/language/:username/:language", env.DeleteUserLanguages)
+	apiNoAuth.GET("/user/language/:username", env.GetUserLanguages)
+	apiAuth.POST("/user/language/:username/:language/:proficiency", env.AddUserLanguage)
+	apiAuth.DELETE("/user/language/:username/:language", env.DeleteUserLanguages)
 
 	// User Role operations
-	apiAuth.PUT("/:application/user/role/:newRole/:oldRole/:username", env.UpdateUserRole)
-	apiAuth.POST("/:application/user/role/:role/:username", env.AddUserToRole)
+	apiAuth.PUT("/user/role/:newRole/:oldRole/:username", env.UpdateUserRole)
+	apiAuth.POST("/user/role/:role/:username", env.AddUserToRole)
 
 	// Language operations
-	apiNoAuth.GET("/:application/language/:language", env.GetLanguage)
-	apiNoAuth.GET("/:application/language", env.GetLanguages)
-	apiAdminAuth.POST("/:application/language/:language", env.AddLanguage)
-	apiAdminAuth.PUT("/:application/language/:language/:newLanguage", env.UpdateLanguage)
-	apiAdminAuth.DELETE("/:application/language/:language", env.DeleteLanguage)
+	apiNoAuth.GET("/language/:language", env.GetLanguage)
+	apiNoAuth.GET("/language", env.GetLanguages)
+	apiAdminAuth.POST("/language/:language", env.AddLanguage)
+	apiAdminAuth.PUT("/language/:language/:newLanguage", env.UpdateLanguage)
+	apiAdminAuth.DELETE("/language/:language", env.DeleteLanguage)
 
 	// Language proficiency operations
-	apiNoAuth.GET("/:application/proficiency/:proficiency", env.GetLanguageProficiency)
-	apiNoAuth.GET("/:application/proficiency", env.GetLanguageProficiencies)
-	apiAdminAuth.POST("/:application/proficiency/:proficiency", env.AddLanguageProficiency)
-	apiAdminAuth.PUT("/:application/proficiency/:proficiency/:newProficiency", env.UpdateLanguageProficiency)
-	apiAdminAuth.DELETE("/:application/proficiency/:proficiency", env.DeleteLanguageProficiency)
+	apiNoAuth.GET("/proficiency/:proficiency", env.GetLanguageProficiency)
+	apiNoAuth.GET("/proficiency", env.GetLanguageProficiencies)
+	apiAdminAuth.POST("/proficiency/:proficiency", env.AddLanguageProficiency)
+	apiAdminAuth.PUT("/proficiency/:proficiency/:newProficiency", env.UpdateLanguageProficiency)
+	apiAdminAuth.DELETE("/proficiency/:proficiency", env.DeleteLanguageProficiency)
 
 	// Timezone Operations
-	apiNoAuth.GET("/:application/timezone/:timezone", env.GetTimezone)
-	apiNoAuth.GET("/:application/timezone", env.GetTimezones)
-	apiAdminAuth.POST("/:application/timezone", env.AddTimezone)
-	apiAdminAuth.PUT("/:application/timezone/:timezone", env.UpdateTimezone)
-	apiAdminAuth.DELETE("/:application/timezone/:timezone", env.DeleteTimezone)
-
-	// Application Operations
-	apiNoAuth.GET("/:application/application/:referenceApplication", env.GetApplication)
-	apiNoAuth.GET("/:application/application", env.GetApplications)
-	apiAdminAuth.POST("/:application/application", env.AddApplication)
-	apiAdminAuth.PUT("/:application/application/:referenceApplication", env.UpdateApplication)
-	apiAdminAuth.DELETE("/:application/application/:referenceApplication", env.DeleteApplication)
+	apiNoAuth.GET("/timezone/:timezone", env.GetTimezone)
+	apiNoAuth.GET("/timezone", env.GetTimezones)
+	apiAdminAuth.POST("/timezone", env.AddTimezone)
+	apiAdminAuth.PUT("/timezone/:timezone", env.UpdateTimezone)
+	apiAdminAuth.DELETE("/timezone/:timezone", env.DeleteTimezone)
 
 	// Countries Operations
-	apiNoAuth.GET("/:application/country/:country", env.GetCountry)
-	apiNoAuth.GET("/:application/country", env.GetCountries)
-	apiAdminAuth.POST("/:application/country", env.AddCountry)
-	apiAdminAuth.PUT("/:application/country/:country", env.UpdateCountry)
-	apiAdminAuth.DELETE("/:application/country/:country", env.DeleteCountry)
+	apiNoAuth.GET("/country/:country", env.GetCountry)
+	apiNoAuth.GET("/country", env.GetCountries)
+	apiAdminAuth.POST("/country", env.AddCountry)
+	apiAdminAuth.PUT("/country/:country", env.UpdateCountry)
+	apiAdminAuth.DELETE("/country/:country", env.DeleteCountry)
 
 	// States Operations
-	apiNoAuth.GET("/:application/state/:state", env.GetState)
-	apiNoAuth.GET("/:application/state", env.GetStates)
-	apiAdminAuth.POST("/:application/state/:state/:country", env.AddState)
-	apiAdminAuth.PUT("/:application/state/:state", env.UpdateState)
-	apiAdminAuth.DELETE("/:application/state/:state", env.DeleteState)
-	apiNoAuth.GET("/:application/state/country/:country", env.GetStatesByCountry)
+	apiNoAuth.GET("/state/:state", env.GetState)
+	apiNoAuth.GET("/state", env.GetStates)
+	apiAdminAuth.POST("/state/:state/:country", env.AddState)
+	apiAdminAuth.PUT("/state/:state", env.UpdateState)
+	apiAdminAuth.DELETE("/state/:state", env.DeleteState)
+	apiNoAuth.GET("/state/country/:country", env.GetStatesByCountry)
 
 	// Roles Operations
-	apiAdminAuth.GET("/:application/role/:role", env.GetRole)
-	apiAdminAuth.GET("/:application/role", env.GetRoles)
-	apiAdminAuth.POST("/:application/role", env.AddRole)
-	apiAdminAuth.PUT("/:application/role/:role", env.UpdateRole)
-	apiAdminAuth.DELETE("/:application/role/:role", env.DeleteRole)
-	apiAdminAuth.GET("/:application/role/application/:referenceApplication", env.GetRolesByApplication)
-	apiAdminAuth.POST("/:application/role/:role/:referenceApplication", env.AddApplicationRole)
+	apiAdminAuth.GET("/role/:role", env.GetRole)
+	apiAdminAuth.GET("/role", env.GetRoles)
+	apiAdminAuth.POST("/role", env.AddRole)
+	apiAdminAuth.PUT("/role/:role", env.UpdateRole)
+	apiAdminAuth.DELETE("/role/:role", env.DeleteRole)
 
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")

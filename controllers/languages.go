@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/models"
-	"persianblack.com/authengine/persistence/orm/authdb"
-	"persianblack.com/authengine/util"
+	"helloprofile.com/models"
+	"helloprofile.com/persistence/orm/helloprofiledb"
+	"helloprofile.com/util"
 
 	"github.com/labstack/echo/v4"
 )
@@ -18,21 +18,9 @@ import (
 // GetUserLanguages is used to retreive languages set by the user
 func (env *Env) GetUserLanguages(c echo.Context) (err error) {
 
-	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
-
-	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
-	// file.WriteString()
-
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get user languages Request received")
 	username := c.Param("username")
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
@@ -45,7 +33,7 @@ func (env *Env) GetUserLanguages(c echo.Context) (err error) {
 		return err
 	}
 
-	languages, err := env.AuthDb.GetUserLanguages(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
+	languages, err := env.HelloProfileDb.GetUserLanguages(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -72,22 +60,10 @@ func (env *Env) GetUserLanguages(c echo.Context) (err error) {
 // AddUserLanguage is used to add languages to a users account
 func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 
-	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
-
-	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
-	// file.WriteString()
-
 	username := c.Param("username")
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Add user languages Request received")
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 	if err != nil {
@@ -123,7 +99,7 @@ func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 		return err
 	}
 
-	languages, err := env.AuthDb.AddUserLanguage(context.Background(), authdb.AddUserLanguageParams{
+	languages, err := env.HelloProfileDb.AddUserLanguage(context.Background(), helloprofiledb.AddUserLanguageParams{
 		Username:    sql.NullString{String: strings.ToLower(username), Valid: true},
 		Name:        strings.ToLower(language),
 		Proficiency: sql.NullString{String: strings.ToLower(proficiency), Valid: true},
@@ -148,22 +124,10 @@ func (env *Env) AddUserLanguage(c echo.Context) (err error) {
 // DeleteUserLanguages is used to retreive languages set by the user
 func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 
-	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
-
-	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
-	// file.WriteString()
-
 	username := c.Param("username")
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get user languages Request received")
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 	if err != nil {
@@ -187,8 +151,8 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
-	err = env.AuthDb.DeleteUserLanguage(context.Background(),
-		authdb.DeleteUserLanguageParams{
+	err = env.HelloProfileDb.DeleteUserLanguage(context.Background(),
+		helloprofiledb.DeleteUserLanguageParams{
 			Username: sql.NullString{String: strings.ToLower(username), Valid: true},
 			Name:     strings.ToLower(language),
 		})
@@ -214,17 +178,10 @@ func (env *Env) DeleteUserLanguages(c echo.Context) (err error) {
 func (env *Env) GetLanguages(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get languages request received...")
-	languages, err := env.AuthDb.GetLanguages(context.Background())
+	languages, err := env.HelloProfileDb.GetLanguages(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -251,15 +208,8 @@ func (env *Env) GetLanguages(c echo.Context) (err error) {
 func (env *Env) GetLanguage(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get languages request received...")
 	language := c.Param("language")
 
@@ -273,7 +223,7 @@ func (env *Env) GetLanguage(c echo.Context) (err error) {
 
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
-	languages, err := env.AuthDb.GetLanguage(context.Background(), strings.ToLower(language))
+	languages, err := env.HelloProfileDb.GetLanguage(context.Background(), strings.ToLower(language))
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -298,15 +248,8 @@ func (env *Env) GetLanguage(c echo.Context) (err error) {
 func (env *Env) AddLanguage(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Add languages request received...")
 	language := c.Param("language")
 
@@ -319,7 +262,7 @@ func (env *Env) AddLanguage(c echo.Context) (err error) {
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
-	languages, err := env.AuthDb.CreateLanguage(context.Background(), strings.ToLower(language))
+	languages, err := env.HelloProfileDb.CreateLanguage(context.Background(), strings.ToLower(language))
 	if err != nil {
 		errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_CODE
 		errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
@@ -342,15 +285,8 @@ func (env *Env) AddLanguage(c echo.Context) (err error) {
 func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Update languages request received...")
 	language := c.Param("language")
 
@@ -376,7 +312,7 @@ func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 		return err
 	}
 
-	languages, err := env.AuthDb.UpdateLanguage(context.Background(), authdb.UpdateLanguageParams{
+	languages, err := env.HelloProfileDb.UpdateLanguage(context.Background(), helloprofiledb.UpdateLanguageParams{
 		Name:   strings.ToLower(newLanguage),
 		Name_2: strings.ToLower(language),
 	})
@@ -404,15 +340,8 @@ func (env *Env) UpdateLanguage(c echo.Context) (err error) {
 func (env *Env) DeleteLanguage(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Delete languages request received...")
 	language := c.Param("language")
 
@@ -425,7 +354,7 @@ func (env *Env) DeleteLanguage(c echo.Context) (err error) {
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Language: %s", language))
-	err = env.AuthDb.DeleteLanguage(context.Background(), strings.ToLower(language))
+	err = env.HelloProfileDb.DeleteLanguage(context.Background(), strings.ToLower(language))
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE

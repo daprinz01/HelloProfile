@@ -10,7 +10,7 @@ import (
 
 // SendEmail is used to send email to users
 func SendEmail(from string, to []string, message string) error {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "function": "SendEmail"}
+	fields := log.Fields{"microservice": "helloprofile.service", "function": "SendEmail"}
 	//Read variables from environment
 	var smtpHost, smtpPort, smtpUser, smtpPassword string
 	smtpHost = os.Getenv("SMTP_HOST")

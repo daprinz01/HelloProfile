@@ -1,10 +1,10 @@
-# Authengine
+# Hello Profile Backend Service
 
-Authentication engine for all Persian Black Applications
+Backend application for Hello profile.
 
 ## Description
-
-The authengine is used to authenticate applications across the Persian Black space. It is built to support OAuth 2.0 protocol.
+This is the backend application for Hello profile. The application is secured using JWT authentication with role based authorization. 
+The application health and API requests and responses can be monitored via Prometheus and visualised using Grafana.
 
 ### Response Codes
 

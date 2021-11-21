@@ -14,38 +14,20 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/models"
-	"persianblack.com/authengine/persistence/orm/authdb"
-	"persianblack.com/authengine/util"
+	"helloprofile.com/models"
+	"helloprofile.com/persistence/orm/helloprofiledb"
+	"helloprofile.com/util"
 
 	"github.com/labstack/echo/v4"
 )
 
 //Login is used to sign users in
 func (env *Env) Login(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Login Request received")
 
 	errorResponse := new(models.Errormessage)
 
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return err
-	}
-	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
-	if err != nil {
-		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
-		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application is invalid")
-		c.JSON(http.StatusNotFound, errorResponse)
-		return err
-	}
-
-	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %s", applicationObject.ID))
 	request := new(models.LoginRequest)
 	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
@@ -58,7 +40,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 	var username sql.NullString
 	username.String = strings.ToLower(request.Username)
 	username.Valid = true
-	user, err := env.AuthDb.GetUser(context.Background(), username)
+	user, err := env.HelloProfileDb.GetUser(context.Background(), username)
 	if err != nil {
 		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
 		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
@@ -76,7 +58,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 	if util.VerifyHash(user.Password.String, request.Password) {
 		log.WithFields(fields).Info("Verifying that user is in the role access is being requested...")
 
-		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullString{String: user.Email, Valid: true})
+		userRoles, err := env.HelloProfileDb.GetUserRoles(context.Background(), sql.NullString{String: user.Email, Valid: true})
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error(`Invalid role entered... Changing to default role of "Guest"`)
 			userRoles[0] = "guest"
@@ -94,7 +76,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Storing refresh token in separate thread...")
 		// store refresh token add later
 		go func() {
-			dbRefreshToken, err := env.AuthDb.CreateRefreshToken(context.Background(), authdb.CreateRefreshTokenParams{
+			dbRefreshToken, err := env.HelloProfileDb.CreateRefreshToken(context.Background(), helloprofiledb.CreateRefreshTokenParams{
 				UserID: user.ID,
 				Token:  refreshToken,
 			})
@@ -105,8 +87,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %s", dbRefreshToken.ID))
 		}()
 		go func() {
-			err = env.saveLogin(authdb.CreateUserLoginParams{
-				ApplicationID:       applicationObject.ID,
+			err = env.saveLogin(helloprofiledb.CreateUserLoginParams{
 				UserID:              user.ID,
 				ResponseCode:        sql.NullString{String: util.SUCCESS_RESPONSE_CODE, Valid: true},
 				ResponseDescription: sql.NullString{String: util.SUCCESS_RESPONSE_MESSAGE, Valid: true},
@@ -117,7 +98,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			if err != nil {
 				log.WithFields(fields).Info("Successful login...")
 			}
-			err := env.AuthDb.UpdateResolvedLogin(context.Background(), user.ID)
+			err := env.HelloProfileDb.UpdateResolvedLogin(context.Background(), user.ID)
 			if err != nil {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 			}
@@ -154,8 +135,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Password incorrect...")
 		go func() {
-			err = env.saveLogin(authdb.CreateUserLoginParams{
-				ApplicationID:       applicationObject.ID,
+			err = env.saveLogin(helloprofiledb.CreateUserLoginParams{
 				UserID:              user.ID,
 				ResponseCode:        sql.NullString{String: errorResponse.Errorcode, Valid: true},
 				ResponseDescription: sql.NullString{String: errorResponse.ErrorMessage, Valid: true},
@@ -169,7 +149,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			}
 		}()
 
-		userLogins, err := env.AuthDb.GetUnResoledLogins(context.Background(), user.ID)
+		userLogins, err := env.HelloProfileDb.GetUnResoledLogins(context.Background(), user.ID)
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error ocurred fetching user logins")
 		}
@@ -187,7 +167,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 		}
 		// Check if account has exceeded the lockout count
 		if len(userLogins) >= lockoutCount {
-			lockoutUpdate, err := env.AuthDb.UpdateUser(context.Background(), authdb.UpdateUserParams{
+			lockoutUpdate, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 				Username_2:                user.Username,
 				IsLockedOut:               true,
 				Address:                   user.Address,
@@ -226,10 +206,10 @@ func (env *Env) Login(c echo.Context) (err error) {
 }
 
 // saveLogin is used to log a login request that failed with incorrect password or was successful
-func (env *Env) saveLogin(createParams authdb.CreateUserLoginParams) error {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "function": "saveLogin"}
+func (env *Env) saveLogin(createParams helloprofiledb.CreateUserLoginParams) error {
+	fields := log.Fields{"microservice": "helloprofile.service", "function": "saveLogin"}
 
-	userLogin, err := env.AuthDb.CreateUserLogin(context.Background(), createParams)
+	userLogin, err := env.HelloProfileDb.CreateUserLogin(context.Background(), createParams)
 	if err != nil {
 		log.WithFields(fields).WithError(err).Error("Error occured saving user login")
 		return err
@@ -240,29 +220,10 @@ func (env *Env) saveLogin(createParams authdb.CreateUserLoginParams) error {
 
 // Register is used to register new users
 func (env *Env) Register(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Register Request received")
 
 	errorResponse := new(models.Errormessage)
-
-	applicationName := c.Param("application")
-	if applicationName == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	application, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(applicationName))
-	if err != nil {
-		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
-		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application is invalid")
-		c.JSON(http.StatusNotFound, errorResponse)
-		return err
-	}
-
-	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %s", application.ID))
 
 	request := new(models.UserDetail)
 	if err = c.Bind(request); err != nil {
@@ -280,7 +241,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info("Successfully hashed password")
 	log.WithFields(fields).Info("Inserting user...")
-	user, err := env.AuthDb.CreateUser(context.Background(), authdb.CreateUserParams{
+	user, err := env.HelloProfileDb.CreateUser(context.Background(), helloprofiledb.CreateUserParams{
 		Address:                   sql.NullString{String: request.Address, Valid: request.Address != ""},
 		City:                      sql.NullString{String: request.City, Valid: request.City != ""},
 		Country:                   sql.NullString{String: request.Country, Valid: request.Country != ""},
@@ -307,8 +268,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 		return err
 	}
 	go func() {
-		err = env.saveLogin(authdb.CreateUserLoginParams{
-			ApplicationID:       application.ID,
+		err = env.saveLogin(helloprofiledb.CreateUserLoginParams{
 			UserID:              user.ID,
 			ResponseCode:        sql.NullString{String: util.SUCCESS_RESPONSE_CODE, Valid: true},
 			ResponseDescription: sql.NullString{String: util.REGISTRATION_SUCCESS_RESPONSE_MESSAGE, Valid: true},
@@ -346,7 +306,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 	// log.Println(fmt.Sprintf("Got to response string: %s", responseString))
 	log.WithFields(fields).Info("Generating authentication token...")
 	role := c.Request().Header.Get("Role")
-	dbRole, err := env.AuthDb.GetRole(context.Background(), strings.ToLower(role))
+	dbRole, err := env.HelloProfileDb.GetRole(context.Background(), strings.ToLower(role))
 	if err != nil {
 		log.WithFields(fields).WithError(err).Error(`Invalid role entered... Changing to default role of "Guest"`)
 		role = "Guest"
@@ -355,17 +315,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 
 	}
 	go func() {
-		log.WithFields(fields).Info("Verifying that role exist for the application")
-		applicationRole, err := env.AuthDb.GetApplicationRole(context.Background(), authdb.GetApplicationRoleParams{
-			ApplicationsID: application.ID,
-			RolesID:        dbRole.ID,
-		})
-		if err != nil {
-			log.WithFields(fields).WithError(err).Error("Error occured fetching applicationRole")
-		}
-		log.WithFields(fields).Info(fmt.Sprintf("Role is valid for application. Application Role Id: %s", applicationRole.ID))
 		log.WithFields(fields).Info("Adding user to role...")
-		userRole, err := env.AuthDb.AddUserRole(context.Background(), authdb.AddUserRoleParams{
+		userRole, err := env.HelloProfileDb.AddUserRole(context.Background(), helloprofiledb.AddUserRoleParams{
 			Name:     strings.ToLower(role),
 			Username: user.Username,
 		})
@@ -385,7 +336,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Storing refresh token in separate thread...")
 	// store refresh token add later
 	go func() {
-		dbRefreshToken, err := env.AuthDb.CreateRefreshToken(context.Background(), authdb.CreateRefreshTokenParams{
+		dbRefreshToken, err := env.HelloProfileDb.CreateRefreshToken(context.Background(), helloprofiledb.CreateRefreshTokenParams{
 			UserID: user.ID,
 			Token:  refreshToken,
 		})
@@ -407,7 +358,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 
 // RefreshToken is used to register expired token
 func (env *Env) RefreshToken(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Refresh token Request received")
 
 	errorResponse := new(models.Errormessage)
@@ -440,7 +391,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		return err
 	}
 
-	dbRefreshToken, err := env.AuthDb.GetRefreshToken(context.Background(), refreshToken)
+	dbRefreshToken, err := env.HelloProfileDb.GetRefreshToken(context.Background(), refreshToken)
 	if err != nil {
 		errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
 		errorResponse.ErrorMessage = util.SESSION_EXPIRED_ERROR_MESSAGE
@@ -449,7 +400,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		return err
 	}
 	defer func() {
-		err = env.AuthDb.DeleteRefreshToken(context.Background(), refreshToken)
+		err = env.HelloProfileDb.DeleteRefreshToken(context.Background(), refreshToken)
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to delete refresh token")
 		}
@@ -479,7 +430,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 			return err
 		}
 		log.WithFields(fields).Info("Fetching user...")
-		user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
+		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
 		if err != nil {
 			errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
 			errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
@@ -490,7 +441,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Storing refresh token in separate thread...")
 		// store refresh token add later
 		go func() {
-			dbRefreshToken, err := env.AuthDb.CreateRefreshToken(context.Background(), authdb.CreateRefreshTokenParams{
+			dbRefreshToken, err := env.HelloProfileDb.CreateRefreshToken(context.Background(), helloprofiledb.CreateRefreshTokenParams{
 				UserID: user.ID,
 				Token:  refreshToken,
 			})
@@ -524,7 +475,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 
 // SendOtp is used to send OTP request after validating user exist
 func (env *Env) SendOtp(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Send OTP Request received")
 	errorResponse := new(models.Errormessage)
 
@@ -537,7 +488,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 		return err
 	}
 
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.SUCCESS_RESPONSE_CODE
 		errorResponse.ErrorMessage = util.OTP_SENT_RESPONSE_MESSAGE
@@ -564,7 +515,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 	}
 	// Save otp to db in another thread
 	go func() {
-		err = env.AuthDb.CreateOtp(context.Background(), authdb.CreateOtpParams{
+		err = env.HelloProfileDb.CreateOtp(context.Background(), helloprofiledb.CreateOtpParams{
 			OtpToken:         sql.NullString{String: otp, Valid: true},
 			UserID:           user.ID,
 			IsEmailPreferred: request.IsEmailPrefered,
@@ -651,7 +602,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 
 // SendOtp is used to send OTP request after validating user exist
 func (env *Env) DoEmailVerification(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Generate OTP Request received")
 	errorResponse := new(models.Errormessage)
 
@@ -684,7 +635,7 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Successfully generated otp")
 	//Save otp to db in another thread
 	go func() {
-		err = env.AuthDb.CreateEmailVerification(context.Background(), authdb.CreateEmailVerificationParams{
+		err = env.HelloProfileDb.CreateEmailVerification(context.Background(), helloprofiledb.CreateEmailVerificationParams{
 			Otp:   otp,
 			Email: sql.NullString{String: strings.ToLower(request.Email), Valid: true},
 		})
@@ -735,7 +686,7 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 }
 
 func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Verify Email token request received")
 
 	errorResponse := new(models.Errormessage)
@@ -748,7 +699,7 @@ func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbOtp, err := env.AuthDb.GetEmailVerification(context.Background(), request.OTP)
+	dbOtp, err := env.HelloProfileDb.GetEmailVerification(context.Background(), request.OTP)
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -786,7 +737,7 @@ func (env *Env) VerifyEmailToken(c echo.Context) (err error) {
 
 // VerifyOtp is used to verify and otp against a user. Authentication token is generated that is used in subsequent requests.
 func (env *Env) VerifyOtp(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Verify otp request received")
 
 	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
@@ -796,25 +747,6 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
 
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE)
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	applicationObject, err := env.AuthDb.GetApplication(context.Background(), strings.ToLower(application))
-	if err != nil {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.INVALID_APPLICATION_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Application is invalid")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return err
-	}
-	log.WithFields(fields).Info(fmt.Sprintf("Applicaiton ID: %s", applicationObject.ID))
-	// errorResponse := new(models.Errormessage)
-	//
 	request := new(models.VerifyOtpRequest)
 	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
@@ -823,7 +755,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbOtp, err := env.AuthDb.GetOtp(context.Background(), authdb.GetOtpParams{
+	dbOtp, err := env.HelloProfileDb.GetOtp(context.Background(), helloprofiledb.GetOtpParams{
 		OtpToken: sql.NullString{String: request.OTP, Valid: true},
 		Username: sql.NullString{String: strings.ToLower(request.Email), Valid: true},
 	})
@@ -847,7 +779,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 	if !dbOtp.CreatedAt.Add(time.Duration(otpDuration) * time.Minute).Before(time.Now()) {
 		log.WithFields(fields).Info("Verifying that user is in the role access is being requested...")
 
-		userRoles, err := env.AuthDb.GetUserRoles(context.Background(), sql.NullString{String: request.Email, Valid: true})
+		userRoles, err := env.HelloProfileDb.GetUserRoles(context.Background(), sql.NullString{String: request.Email, Valid: true})
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(`Invalid role entered... Changing to default role of "Guest"`)
 			userRoles[0] = "Guest"
@@ -865,7 +797,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Storing refresh token in separate thread...")
 		// store refresh token add later
 		go func() {
-			dbRefreshToken, err := env.AuthDb.CreateRefreshToken(context.Background(), authdb.CreateRefreshTokenParams{
+			dbRefreshToken, err := env.HelloProfileDb.CreateRefreshToken(context.Background(), helloprofiledb.CreateRefreshTokenParams{
 				UserID: dbOtp.UserID,
 				Token:  refreshToken,
 			})
@@ -876,8 +808,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 			log.WithFields(fields).Info(fmt.Sprintf("Refresh Token Id: %s", dbRefreshToken.ID))
 		}()
 		go func() {
-			err = env.saveLogin(authdb.CreateUserLoginParams{
-				ApplicationID:       applicationObject.ID,
+			err = env.saveLogin(helloprofiledb.CreateUserLoginParams{
 				UserID:              dbOtp.UserID,
 				ResponseCode:        sql.NullString{String: util.SUCCESS_RESPONSE_CODE, Valid: true},
 				ResponseDescription: sql.NullString{String: util.SUCCESS_RESPONSE_MESSAGE, Valid: true},
@@ -888,7 +819,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 			if err != nil {
 				log.WithFields(fields).Info("Successful login...")
 			}
-			err := env.AuthDb.UpdateResolvedLogin(context.Background(), dbOtp.UserID)
+			err := env.HelloProfileDb.UpdateResolvedLogin(context.Background(), dbOtp.UserID)
 			if err != nil {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 			}
@@ -916,7 +847,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 
 // ResetPassword password is used to reset account password
 func (env *Env) ResetPassword(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Password Reset Request received")
 	errorResponse := new(models.Errormessage)
 
@@ -951,7 +882,7 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 	}
 
 	// Try to update password
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
 		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
@@ -965,7 +896,7 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 			hashedPassword = util.GenerateHash(request.NewPassword)
 
 		}
-		_, err := env.AuthDb.UpdateUser(context.Background(), authdb.UpdateUserParams{
+		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 			Username_2:                user.Username,
 			IsLockedOut:               false,
 			Address:                   user.Address,
@@ -991,7 +922,7 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 
 	}()
 	go func() {
-		err := env.AuthDb.UpdateResolvedLogin(context.Background(), user.ID)
+		err := env.HelloProfileDb.UpdateResolvedLogin(context.Background(), user.ID)
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 		}

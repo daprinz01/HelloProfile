@@ -1,147 +1,291 @@
-
--- create table "applications"(
---   "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---   "name" varchar NOT NULL,
---   "description" varchar NOT NULL,
---   "created_at" timestamptz NOT NULL DEFAULT (now()),
-
---   CONSTRAINT "uc_applications" UNIQUE ("id", "name")
--- );
-
--- create table "users"(
---   "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---   "firstname" varchar  null,
---   "lastname" varchar  null,
---   "username" varchar  null,
---   "email" varchar not null,
---   "is_email_confirmed" BOOLEAN not null DEFAULT FALSE,
---   "password" varchar  null,
---   "is_password_system_generated" BOOLEAN not null DEFAULT FALSE,
---   "address" varchar  null,
---   "city" VARCHAR null,
---   "state" VARCHAR null,
---   "country" VARCHAR null,
---   "created_at" timestamptz NOT NULL DEFAULT (now()),
---   "is_locked_out" BOOLEAN not null default FALSE,
---   "image_url" varchar  null,
---   CONSTRAINT "uc_users" UNIQUE ("id", "username", "email")
--- );
-
--- create table "languages"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "name" varchar not null,
---     CONSTRAINT "uc_languages" UNIQUE ("id", "name")
--- );
-
--- create table "user_languages"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "user_id" uuid ,
---     "language_id" bigserial,
---     CONSTRAINT "uc_user_languages" UNIQUE ("id")
--- );
-
--- create table "timezones"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "name" varchar not null,
---     "zone" varchar not null,
---     CONSTRAINT "uc_timezones" UNIQUE ("id", "name")
--- );
-
--- create table "user_timezones"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "user_id" uuid,
---     "timezone_id" bigserial,
---     CONSTRAINT "uc_user_timezones" UNIQUE ("id", "user_id")
--- );
-
--- create table "roles"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "name" varchar not null,
---     "description" varchar not null,
---     CONSTRAINT "uc_roles" UNIQUE ("id", "name")
--- );
-
--- create table "user_roles"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "user_id" uuid,
---     "role_id" bigserial,
---     CONSTRAINT "uc_user_roles" UNIQUE ("id")
--- );
-
--- create table "applications_roles"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "applications_id" bigserial,
---     "roles_id" bigserial,
---     CONSTRAINT "uc_applications_roles" UNIQUE ("id")
--- );
-
--- create table "identity_providers"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "name" varchar not null,
---     "client_id" varchar not null,
---     "client_secret" varchar not null,
---     "image_url" varchar not null,
---     CONSTRAINT "uc_identity_providers" UNIQUE ("id", "name")
--- );
-
--- create table "user_providers"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "user_id" uuid,
---     "identity_provider_id" bigserial,
---     CONSTRAINT "uc_user_providers" UNIQUE ("id")
--- );
--- create TABLE "countries"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "name" VARCHAR not NULL,
---     "flag_image_url" VARCHAR null,
-
---     CONSTRAINT "uc_countries" UNIQUE ("id", "name", "flag_image_url")
--- );
--- create TABLE "states"(
---     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
---     "name" VARCHAR not NULL,
---     "country_id" bigserial,
---     CONSTRAINT "uc_states" UNIQUE ("id", "name")
--- );
-
--- -- CREATE VIEW user_details as
--- -- SELECT b.firstname, b.lastname, b.email, b.username, b."password", b.address, b.city, b.state, b.country, b.image_url as user_profile_image, b.is_email_confirmed, b.is_locked_out, b.is_password_system_generated, b.created_at, d."name" as language_name, f."name" as role_name, k."name" as timezone_name, k.zone, m."name" as provider_name, m.client_id, m.client_secret, m.image_url as product_image
--- -- from users b
--- -- full join languages d on d.id = (select language_id from user_languages e where e.user_id = b.id)
--- -- full join roles f on f.id = (select role_id from user_roles j where j.user_id = b.id)
--- -- full join timezones k on k.id = (select timezone_id from user_timezones l where l.user_id = b.id)
--- -- full join identity_providers m on m.id = (select identity_provider_id from user_providers n where n.user_id = b.id);
-
-
-
--- alter table "applications_roles" add foreign key ("applications_id") references "applications" ("id");
--- alter table "applications_roles" add foreign key ("roles_id") references roles ("id");
-
-
-
--- alter table "user_roles" add foreign key ("user_id") references "users" ("id");
--- alter table "user_roles" add foreign key ("role_id") references "roles" ("id");
-
--- alter table "user_languages" add foreign key ("user_id") references "users" ("id");
--- alter table "user_languages" add foreign key ("language_id") references "languages" ("id");
-
--- alter table "user_providers" add foreign key ("user_id") references "users" ("id");
--- alter table "user_providers" add foreign key ("identity_provider_id") references "identity_providers" ("id");
-
-
-
--- ALTER TABLE "states" ADD FOREIGN key ("country_id") REFERENCES "countries" ("id");
-
--- CREATE INDEX on "countries" ("id");
--- CREATE INDEX on "applications" ("id","name");
--- CREATE INDEX on "users" ("id","username", "email");
--- CREATE INDEX on "languages" ("id");
--- CREATE INDEX on "user_languages" ("user_id", "language_id");
--- CREATE INDEX on "timezones" ("id");
--- CREATE INDEX on "user_timezones" ("user_id", "timezone_id");
--- CREATE INDEX on "roles" ("id", "name");
--- CREATE INDEX on "user_roles" ("user_id", "role_id");
--- CREATE INDEX on "applications_roles" ("applications_id", "roles_id");
--- CREATE INDEX on "identity_providers" ("id", "name");
--- CREATE INDEX on "user_providers" ("user_id", "identity_provider_id");
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE "users" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "firstname" varchar NULL,
+    "lastname" varchar NULL,
+    "username" varchar NULL,
+    "email" varchar NOT NULL,
+    "phone" varchar NULL,
+    "is_email_confirmed" boolean NOT NULL DEFAULT FALSE,
+    "password" varchar NULL,
+    "is_password_system_generated" boolean NOT NULL DEFAULT FALSE,
+    "address" varchar NULL,
+    "city" varchar NULL,
+    "state" varchar NULL,
+    "country" varchar NULL,
+    "created_at" timestamptz NOT NULL DEFAULT (now()),
+    "is_locked_out" boolean NOT NULL DEFAULT FALSE,
+    "image_url" varchar NULL,
+    "is_active" boolean NOT NULL DEFAULT TRUE,
+    CONSTRAINT "uc_users" UNIQUE ("id", "username", "email")
+);
+
+CREATE TABLE "languages" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "name" varchar NOT NULL,
+    CONSTRAINT "uc_languages" UNIQUE ("id", "name")
+);
+
+CREATE TABLE "user_languages" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid,
+    "language_id" uuid,
+    proficiency varchar NULL,
+    CONSTRAINT "uc_user_languages" UNIQUE ("id")
+);
+
+CREATE TABLE "timezones" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "name" varchar NOT NULL,
+    "zone" varchar NOT NULL,
+    CONSTRAINT "uc_timezones" UNIQUE ("id", "name")
+);
+
+CREATE TABLE "user_timezones" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid,
+    "timezone_id" uuid,
+    CONSTRAINT "uc_user_timezones" UNIQUE ("id", "user_id")
+);
+
+CREATE TABLE "roles" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "name" varchar NOT NULL,
+    "description" varchar NOT NULL,
+    CONSTRAINT "uc_roles" UNIQUE ("id", "name")
+);
+
+CREATE TABLE "user_roles" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid,
+    "role_id" uuid,
+    CONSTRAINT "uc_user_roles" UNIQUE ("id")
+);
+
+CREATE TABLE "identity_providers" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "name" varchar NOT NULL,
+    "client_id" varchar NOT NULL,
+    "client_secret" varchar NOT NULL,
+    "image_url" varchar NOT NULL,
+    CONSTRAINT "uc_identity_providers" UNIQUE ("id", "name")
+);
+
+CREATE TABLE "user_providers" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid,
+    "identity_provider_id" uuid,
+    CONSTRAINT "uc_user_providers" UNIQUE ("id")
+);
+
+CREATE TABLE "countries" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "name" varchar NOT NULL,
+    "flag_image_url" varchar NULL,
+    country_code varchar NULL,
+    CONSTRAINT "uc_countries" UNIQUE ("id", "name", "flag_image_url")
+);
+
+CREATE TABLE "states" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "name" varchar NOT NULL,
+    "country_id" uuid,
+    CONSTRAINT "uc_states" UNIQUE ("id", "name")
+);
+
+CREATE OR REPLACE VIEW user_details AS
+SELECT
+    b.id,
+    b.firstname,
+    b.lastname,
+    b.email,
+    b.phone,
+    b.username,
+    b."password",
+    b.address,
+    b.city,
+    b.state,
+    b.country,
+    b.image_url AS profile_picture,
+    b.is_email_confirmed,
+    b.is_locked_out,
+    b.is_password_system_generated,
+    b.created_at,
+    b.is_active,
+    d."name" AS language_name,
+    f."name" AS role_name,
+    k."name" AS timezone_name,
+    k.zone,
+    m."name" AS provider_name,
+    m.client_id,
+    m.client_secret,
+    m.image_url AS provider_logo
+FROM
+    users b
+    LEFT JOIN languages d ON d.id = (
+        SELECT
+            language_id
+        FROM
+            user_languages e
+        WHERE
+            e.user_id = b.id)
+    LEFT JOIN roles f ON f.id = (
+        SELECT
+            role_id
+        FROM
+            user_roles j
+        WHERE
+            j.user_id = b.id)
+    LEFT JOIN timezones k ON k.id = (
+        SELECT
+            timezone_id
+        FROM
+            user_timezones l
+        WHERE
+            l.user_id = b.id)
+    LEFT JOIN identity_providers m ON m.id = (
+        SELECT
+            identity_provider_id
+        FROM
+            user_providers n
+        WHERE
+            n.user_id = b.id);
+
+-- CREATE or REPLACE VIEW user_details as
+-- SELECT b.id, b.firstname, b.lastname, b.email, b.phone, b.username, b."password", b.address, b.city, b.state, b.country, b.image_url as profile_picture, b.is_email_confirmed, b.is_locked_out, b.is_password_system_generated, b.created_at, b.is_active,  k."name" as timezone_name, k.zone
+-- from users b
+-- left join timezones k on k.id = (select l.timezone_id from user_timezones l where l.user_id = b.id);
+CREATE TABLE language_proficiency (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    proficiency varchar NULL UNIQUE
+);
+
+CREATE TABLE refresh_token (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 () UNIQUE,
+    "user_id" uuid NOT NULL,
+    "token" varchar NOT NULL UNIQUE,
+    "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
+CREATE TABLE user_login (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid,
+    login_time timestamptz NOT NULL DEFAULT (now()),
+    login_status boolean NOT NULL DEFAULT FALSE,
+    response_code varchar NULL,
+    response_description varchar NULL,
+    device varchar NULL,
+    ip_address varchar NULL,
+    longitude DECIMAL NULL,
+    latitude DECIMAL NULL,
+    resolved boolean NOT NULL DEFAULT TRUE,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE TABLE otp (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid,
+    otp_token varchar NULL,
+    created_at timestamptz NOT NULL DEFAULT (now()),
+    is_sms_preferred boolean NOT NULL DEFAULT FALSE,
+    is_email_preferred boolean NOT NULL DEFAULT TRUE,
+    purpose varchar NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
+create table email_verification(
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+    "email" varchar,
+    "otp" varchar NOT NULL,
+    "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+create index on email_verification(otp);
+
+alter table email_verification add constraint uc_email_verification UNIQUE(otp);
+CREATE INDEX ON otp (user_id, otp_token);
+
+CREATE INDEX ON user_login (user_id);
+
+ALTER TABLE "refresh_token"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "user_roles"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "user_roles"
+    ADD FOREIGN KEY ("role_id") REFERENCES "roles" ("id");
+
+ALTER TABLE "user_languages"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "user_languages"
+    ADD FOREIGN KEY ("language_id") REFERENCES "languages" ("id");
+
+ALTER TABLE "user_providers"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "user_providers"
+    ADD FOREIGN KEY ("identity_provider_id") REFERENCES "identity_providers" ("id");
+
+ALTER TABLE "states"
+    ADD FOREIGN KEY ("country_id") REFERENCES "countries" ("id");
+
+CREATE INDEX ON "countries" ("id");
+
+CREATE INDEX ON "users" ("id", "username", "email");
+
+CREATE INDEX ON "languages" ("id");
+
+CREATE INDEX ON "user_languages" ("user_id", "language_id");
+
+CREATE INDEX ON "timezones" ("id");
+
+CREATE INDEX ON "user_timezones" ("user_id", "timezone_id");
+
+CREATE INDEX ON "roles" ("id", "name");
+
+CREATE INDEX ON "user_roles" ("user_id", "role_id");
+
+CREATE INDEX ON "identity_providers" ("id", "name");
+
+CREATE INDEX ON "user_providers" ("user_id", "identity_provider_id");
+
+-- Add necessary constraints to users
+ALTER TABLE Users
+    ADD CONSTRAINT uc_user_id UNIQUE (Id);
+
+ALTER TABLE Users
+    ADD CONSTRAINT uc_user_username UNIQUE (username);
+
+ALTER TABLE Users
+    ADD CONSTRAINT uc_user_email UNIQUE (email);
+
+-- Add necessary constraints to languages
+ALTER TABLE languages
+    ADD CONSTRAINT uc_languages_name UNIQUE (name);
+
+-- Add necessary constraints to timezones
+ALTER TABLE timezones
+    ADD CONSTRAINT uc_timezones_name UNIQUE (name);
+
+-- Add necessary constraints to user_timezones
+ALTER TABLE user_timezones
+    ADD CONSTRAINT uc_user_timezones_user_id UNIQUE (user_id);
+
+-- Add necessary constraints to roles
+ALTER TABLE roles
+    ADD CONSTRAINT uc_roles_name UNIQUE (name);
+
+-- Add necessary constraints to identity_providers
+ALTER TABLE identity_providers
+    ADD CONSTRAINT uc_identity_providers_name UNIQUE (name);
+
+-- Add necessary constraints to countries
+ALTER TABLE countries
+    ADD CONSTRAINT uc_countries_flag_image_url UNIQUE (flag_image_url);
+
+-- Add necessary constraints to states
+ALTER TABLE states
+    ADD CONSTRAINT uc_states_name UNIQUE (name);
+
+alter table language_proficiency add constraint uc_language_proficiency UNIQUE(proficiency);

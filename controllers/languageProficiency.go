@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/models"
-	"persianblack.com/authengine/persistence/orm/authdb"
-	"persianblack.com/authengine/util"
+	"helloprofile.com/models"
+	"helloprofile.com/persistence/orm/helloprofiledb"
+	"helloprofile.com/util"
 
 	"github.com/labstack/echo/v4"
 )
@@ -19,17 +19,10 @@ import (
 func (env *Env) GetLanguageProficiencies(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get proficiencies request received...")
-	proficiencies, err := env.AuthDb.GetLanguageProficiencies(context.Background())
+	proficiencies, err := env.HelloProfileDb.GetLanguageProficiencies(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -55,15 +48,8 @@ func (env *Env) GetLanguageProficiencies(c echo.Context) (err error) {
 func (env *Env) GetLanguageProficiency(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get proficiencies request received...")
 	proficiency := c.Param("proficiency")
 	log.WithFields(fields).Info(fmt.Sprintf("LanguageProficiency: %s", proficiency))
@@ -76,7 +62,7 @@ func (env *Env) GetLanguageProficiency(c echo.Context) (err error) {
 		return err
 	}
 
-	proficiencies, err := env.AuthDb.GetLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
+	proficiencies, err := env.HelloProfileDb.GetLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -101,15 +87,8 @@ func (env *Env) GetLanguageProficiency(c echo.Context) (err error) {
 func (env *Env) AddLanguageProficiency(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Add proficiencies request received...")
 	proficiency := c.Param("proficiency")
 
@@ -124,7 +103,7 @@ func (env *Env) AddLanguageProficiency(c echo.Context) (err error) {
 
 	}
 
-	proficiencies, err := env.AuthDb.CreateLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
+	proficiencies, err := env.HelloProfileDb.CreateLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
 	if err != nil {
 		errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_MESSAGE
 		errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
@@ -147,15 +126,8 @@ func (env *Env) AddLanguageProficiency(c echo.Context) (err error) {
 func (env *Env) UpdateLanguageProficiency(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Update proficiencies request received...")
 	proficiency := c.Param("proficiency")
 
@@ -181,7 +153,7 @@ func (env *Env) UpdateLanguageProficiency(c echo.Context) (err error) {
 		return err
 	}
 
-	proficiencies, err := env.AuthDb.UpdateLanguageProficiency(context.Background(), authdb.UpdateLanguageProficiencyParams{
+	proficiencies, err := env.HelloProfileDb.UpdateLanguageProficiency(context.Background(), helloprofiledb.UpdateLanguageProficiencyParams{
 		Proficiency:   sql.NullString{String: strings.ToLower(newLanguageProficiency), Valid: newLanguageProficiency != ""},
 		Proficiency_2: sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""},
 	})
@@ -213,11 +185,11 @@ func (env *Env) DeleteLanguageProficiency(c echo.Context) (err error) {
 	if application == "" {
 		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
 		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
+		log.WithField("microservice", "helloprofile.service").Error("Calling application not specified")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return nil
 	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Delete proficiencies request received...")
 	proficiency := c.Param("proficiency")
 
@@ -231,7 +203,7 @@ func (env *Env) DeleteLanguageProficiency(c echo.Context) (err error) {
 		return err
 	}
 
-	err = env.AuthDb.DeleteLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
+	err = env.HelloProfileDb.DeleteLanguageProficiency(context.Background(), sql.NullString{String: strings.ToLower(proficiency), Valid: proficiency != ""})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE

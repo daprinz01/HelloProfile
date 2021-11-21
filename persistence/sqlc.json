@@ -1,8 +1,8 @@
 {
   "version": "1",
   "packages": [{
-    "name": "authdb",
-    "path": "./orm/authdb",
+    "name": "helloprofiledb",
+    "path": "./orm/helloprofiledb",
     "queries": "./sql/query/",
     "schema": "./sql/schema/",
     "engine": "postgresql",

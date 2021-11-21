@@ -1,8 +1,8 @@
 package controllers
 
-import "persianblack.com/authengine/persistence/orm/authdb"
+import "helloprofile.com/persistence/orm/helloprofiledb"
 
 // Env is used to declare public variable accessible to the controllers
 type Env struct {
-	AuthDb *authdb.Queries
+	HelloProfileDb *helloprofiledb.Queries
 }

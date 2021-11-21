@@ -33,15 +33,15 @@ type UserDetail struct {
 	Username                  string    `json:"username,omitempty"`
 	Email                     string    `json:"email,omitempty"`
 	Phone                     string    `json:"phone,omitempty"`
-	IsEmailConfirmed          bool      `json:"isEmailConfirmed"`
+	IsEmailConfirmed          bool      `json:"isEmailConfirmed,omitempty"`
 	Password                  string    `json:"password,omitempty"`
-	IsPasswordSystemGenerated bool      `json:"isPasswordSystemGenerated"`
+	IsPasswordSystemGenerated bool      `json:"isPasswordSystemGenerated,omitempty"`
 	Address                   string    `json:"address,omitempty"`
 	City                      string    `json:"city,omitempty"`
 	State                     string    `json:"state,omitempty"`
 	Country                   string    `json:"country,omitempty"`
 	CreatedAt                 time.Time `json:"createdAt,omitempty"`
-	IsLockedOut               bool      `json:"isLockedOut"`
+	IsLockedOut               bool      `json:"isLockedOut,omitempty"`
 	ProfilePicture            string    `json:"profilePicture,omitempty"`
 	IsActive                  bool      `json:"isActive,omitempty"`
 	LanguageName              string    `json:"languageName,omitempty"`

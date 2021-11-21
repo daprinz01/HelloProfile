@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/models"
-	"persianblack.com/authengine/persistence/orm/authdb"
-	"persianblack.com/authengine/util"
+	"helloprofile.com/models"
+	"helloprofile.com/persistence/orm/helloprofiledb"
+	"helloprofile.com/util"
 
 	"github.com/labstack/echo/v4"
 )
@@ -18,17 +18,10 @@ import (
 // GetCountries is used get countries
 func (env *Env) GetCountries(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get countries request received...")
-	countries, err := env.AuthDb.GetCountries(context.Background())
+	countries, err := env.HelloProfileDb.GetCountries(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -60,15 +53,8 @@ func (env *Env) GetCountries(c echo.Context) (err error) {
 func (env *Env) GetCountry(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 
 	log.WithFields(fields).Info("Get country request received...")
 	country := c.Param("country")
@@ -82,7 +68,7 @@ func (env *Env) GetCountry(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Country: %s", country))
 
-	dbCountry, err := env.AuthDb.GetCountry(context.Background(), strings.ToLower(country))
+	dbCountry, err := env.HelloProfileDb.GetCountry(context.Background(), strings.ToLower(country))
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -111,15 +97,8 @@ func (env *Env) GetCountry(c echo.Context) (err error) {
 func (env *Env) AddCountry(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Add country request received...")
 	request := new(models.Country)
 	if err = c.Bind(request); err != nil {
@@ -130,7 +109,7 @@ func (env *Env) AddCountry(c echo.Context) (err error) {
 		return err
 	}
 
-	dbCountry, err := env.AuthDb.CreateCountry(context.Background(), authdb.CreateCountryParams{
+	dbCountry, err := env.HelloProfileDb.CreateCountry(context.Background(), helloprofiledb.CreateCountryParams{
 		Name:         strings.ToLower(request.Country),
 		FlagImageUrl: sql.NullString{String: strings.ToLower(request.FlagURL), Valid: request.FlagURL != ""},
 		CountryCode:  sql.NullString{String: strings.ToLower(request.CountryCode), Valid: request.CountryCode != ""},
@@ -156,15 +135,8 @@ func (env *Env) AddCountry(c echo.Context) (err error) {
 func (env *Env) UpdateCountry(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Update country request received...")
 
 	country := c.Param("country")
@@ -186,7 +158,7 @@ func (env *Env) UpdateCountry(c echo.Context) (err error) {
 		return err
 	}
 
-	dbCountry, err := env.AuthDb.UpdateCountry(context.Background(), authdb.UpdateCountryParams{
+	dbCountry, err := env.HelloProfileDb.UpdateCountry(context.Background(), helloprofiledb.UpdateCountryParams{
 		Name:         strings.ToLower(request.Country),
 		FlagImageUrl: sql.NullString{String: strings.ToLower(request.FlagURL), Valid: true},
 		CountryCode:  sql.NullString{String: strings.ToLower(request.CountryCode), Valid: true},
@@ -214,15 +186,8 @@ func (env *Env) UpdateCountry(c echo.Context) (err error) {
 func (env *Env) DeleteCountry(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Delete country request received...")
 	country := c.Param("country")
 	if country == "" {
@@ -234,7 +199,7 @@ func (env *Env) DeleteCountry(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Country: %s", country))
 
-	err = env.AuthDb.DeleteCountry(context.Background(), strings.ToLower(country))
+	err = env.HelloProfileDb.DeleteCountry(context.Background(), strings.ToLower(country))
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE

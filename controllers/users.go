@@ -8,16 +8,16 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/models"
-	"persianblack.com/authengine/persistence/orm/authdb"
-	"persianblack.com/authengine/util"
+	"helloprofile.com/models"
+	"helloprofile.com/persistence/orm/helloprofiledb"
+	"helloprofile.com/util"
 
 	"github.com/labstack/echo/v4"
 )
 
 // CheckAvailability is used to check user availablity
 func (env *Env) CheckAvailability(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Check availability Request received")
 
 	errorResponse := new(models.Errormessage)
@@ -33,7 +33,7 @@ func (env *Env) CheckAvailability(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -53,13 +53,8 @@ func (env *Env) CheckAvailability(c echo.Context) (err error) {
 
 // GetUser is used to fetch user details
 func (env *Env) GetUser(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get User Request received")
-
-	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
-
-	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
-	// file.WriteString()
 
 	username := c.Param("username")
 	errorResponse := new(models.Errormessage)
@@ -74,7 +69,7 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -111,12 +106,12 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 
 // GetUsers is used to fetch user details. This is an admin function. User must be an admin to access this function
 func (env *Env) GetUsers(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get User Request received")
 
 	errorResponse := new(models.Errormessage)
 
-	users, err := env.AuthDb.GetUsers(context.Background())
+	users, err := env.HelloProfileDb.GetUsers(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -159,7 +154,7 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 // UpdateUser is used to update User information. It can be used to update user details and timezone details as required. Only pass the details to be updated. Email or username is mandatory.
 func (env *Env) UpdateUser(c echo.Context) (err error) {
 
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Update user request received...")
 	errorResponse := new(models.Errormessage)
 
@@ -173,7 +168,7 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 	}
 
 	log.WithFields(fields).Info("Checking if user exist...")
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Email), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -186,7 +181,7 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Updating user...")
 		// Check all the user parameters passed and consolidate with existing user record
 
-		_, err := env.AuthDb.UpdateUser(context.Background(), authdb.UpdateUserParams{
+		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 			Address:                   sql.NullString{String: getValue(request.Address, user.Address.String), Valid: true},
 			City:                      sql.NullString{String: getValue(request.City, user.City.String), Valid: true},
 			Country:                   sql.NullString{String: getValue(request.Country, user.Country.String), Valid: true},
@@ -213,7 +208,7 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Successfully updated user details")
 		log.WithFields(fields).Info("Updating User Timezone")
 		if request.TimezoneName != "" {
-			_, err := env.AuthDb.UpdateUserTimezone(context.Background(), authdb.UpdateUserTimezoneParams{
+			_, err := env.HelloProfileDb.UpdateUserTimezone(context.Background(), helloprofiledb.UpdateUserTimezoneParams{
 				Username:   sql.NullString{String: user.Email, Valid: true},
 				Name:       request.TimezoneName,
 				Username_2: sql.NullString{String: user.Email, Valid: true},
@@ -235,7 +230,7 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 
 // UpdateUserRole Add Role to applications
 func (env *Env) UpdateUserRole(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Update user's role request received...")
 
 	errorResponse := new(models.Errormessage)
@@ -275,7 +270,7 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
-	dbRole, err := env.AuthDb.UpdateUserRole(context.Background(), authdb.UpdateUserRoleParams{
+	dbRole, err := env.HelloProfileDb.UpdateUserRole(context.Background(), helloprofiledb.UpdateUserRoleParams{
 		Username:   sql.NullString{String: strings.ToLower(username), Valid: true},
 		Username_2: sql.NullString{String: strings.ToLower(username), Valid: true},
 		Name:       strings.ToLower(role),
@@ -301,7 +296,7 @@ func (env *Env) UpdateUserRole(c echo.Context) (err error) {
 
 // AddUserToRole Add user to a role. This increases the roles the user is being added to including the previous roles. At login a role must be selected else the the default role guest is selected for the user
 func (env *Env) AddUserToRole(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Add user to role request received...")
 
 	errorResponse := new(models.Errormessage)
@@ -329,7 +324,7 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
-	dbRole, err := env.AuthDb.AddUserRole(context.Background(), authdb.AddUserRoleParams{
+	dbRole, err := env.HelloProfileDb.AddUserRole(context.Background(), helloprofiledb.AddUserRoleParams{
 		Username: sql.NullString{String: strings.ToLower(username), Valid: true},
 		Name:     strings.ToLower(role),
 	})
@@ -353,13 +348,8 @@ func (env *Env) AddUserToRole(c echo.Context) (err error) {
 
 // DeleteUser is used to disable a users account
 func (env *Env) DeleteUser(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Delete user Request received")
-
-	// file, fileHeader, err := r.FormFile("request.AttachmentName[i]")
-
-	// file, err := os.Create(fmt.Sprintf("%s%s", attachmentPath, request.AttachmentName[i].FileName))
-	// file.WriteString()
 
 	username := c.Param("username")
 	errorResponse := new(models.Errormessage)
@@ -374,7 +364,7 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
 
-	user, err := env.AuthDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -384,7 +374,7 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 	go func() {
-		err = env.AuthDb.DeleteUser(context.Background(), user.Email)
+		err = env.HelloProfileDb.DeleteUser(context.Background(), user.Email)
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error("Error occured while deleting user")
 		}

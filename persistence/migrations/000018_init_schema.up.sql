@@ -1,1 +1,0 @@
-alter TABLE user_login add COLUMN resolved BOOLEAN not NULL DEFAULT TRUE; 

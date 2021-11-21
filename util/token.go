@@ -9,7 +9,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/models"
+	"helloprofile.com/models"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -17,7 +17,7 @@ import (
 
 // GenerateHash generates hash using bcrypt
 func GenerateHash(rawString string) string {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "function": "GenerateHash"}
+	fields := log.Fields{"microservice": "helloprofile.service", "function": "GenerateHash"}
 	byteString := []byte(rawString)
 	hash, err := bcrypt.GenerateFromPassword(byteString, bcrypt.DefaultCost)
 	if err != nil {
@@ -28,7 +28,7 @@ func GenerateHash(rawString string) string {
 
 // VerifyHash verifies password using bcrypt
 func VerifyHash(correctPassword string, plainPassword string) bool {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "function": "VerifyHash"}
+	fields := log.Fields{"microservice": "helloprofile.service", "function": "VerifyHash"}
 	err := bcrypt.CompareHashAndPassword([]byte(correctPassword), []byte(plainPassword))
 	if err != nil {
 		log.WithFields(fields).Error("Error occured trying to verify hash")
@@ -42,7 +42,7 @@ var jwtSecretKey = []byte("AnyString")
 
 // GenerateJWT func will used to create the JWT while signing in and signing out
 func GenerateJWT(email string, role []string) (response string, refreshToken string, err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "function": "VerifyHash"}
+	fields := log.Fields{"microservice": "helloprofile.service", "function": "VerifyHash"}
 	authExpirationTime, _ := time.ParseDuration(os.Getenv("TOKEN_LIFESPAN"))
 	expirationTime := time.Now().Add(authExpirationTime)
 	claims := &models.Claims{
@@ -77,7 +77,7 @@ func GenerateJWT(email string, role []string) (response string, refreshToken str
 
 // VerifyToken func will used to Verify the JWT Token while using APIS
 func VerifyToken(tokenString string) (verifiedClaims models.VerifiedClaims, err error) {
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "function": "VerifyHash"}
+	fields := log.Fields{"microservice": "helloprofile.service", "function": "VerifyHash"}
 	claims := &models.Claims{}
 	jwtKey := os.Getenv("JWT_SECRET_KEY")
 	if jwtKey == "" {

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
-	"persianblack.com/authengine/models"
-	"persianblack.com/authengine/persistence/orm/authdb"
-	"persianblack.com/authengine/util"
+	"helloprofile.com/models"
+	"helloprofile.com/persistence/orm/helloprofiledb"
+	"helloprofile.com/util"
 
 	"github.com/labstack/echo/v4"
 )
@@ -17,17 +17,10 @@ import (
 // GetTimezones is used get languages
 func (env *Env) GetTimezones(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get timezones request received...")
-	timezones, err := env.AuthDb.GetTimezones(context.Background())
+	timezones, err := env.HelloProfileDb.GetTimezones(context.Background())
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -58,15 +51,8 @@ func (env *Env) GetTimezones(c echo.Context) (err error) {
 func (env *Env) GetTimezone(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get timezone request received...")
 	timezone := c.Param("timezone")
 
@@ -80,7 +66,7 @@ func (env *Env) GetTimezone(c echo.Context) (err error) {
 		return err
 	}
 
-	dbTimezone, err := env.AuthDb.GetTimezone(context.Background(), strings.ToLower(timezone))
+	dbTimezone, err := env.HelloProfileDb.GetTimezone(context.Background(), strings.ToLower(timezone))
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -108,15 +94,8 @@ func (env *Env) GetTimezone(c echo.Context) (err error) {
 func (env *Env) AddTimezone(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Add timezone request received...")
 	request := new(models.Timezone)
 	if err = c.Bind(request); err != nil {
@@ -127,7 +106,7 @@ func (env *Env) AddTimezone(c echo.Context) (err error) {
 		return err
 	}
 
-	dbTimezone, err := env.AuthDb.CreateTimezone(context.Background(), authdb.CreateTimezoneParams{
+	dbTimezone, err := env.HelloProfileDb.CreateTimezone(context.Background(), helloprofiledb.CreateTimezoneParams{
 		Name: strings.ToLower(request.Timezone),
 		Zone: strings.ToLower(request.Zone),
 	})
@@ -153,15 +132,8 @@ func (env *Env) AddTimezone(c echo.Context) (err error) {
 func (env *Env) UpdateTimezone(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Update timezone request received...")
 	timezone := c.Param("timezone")
 
@@ -184,7 +156,7 @@ func (env *Env) UpdateTimezone(c echo.Context) (err error) {
 		return err
 	}
 
-	dbTimezone, err := env.AuthDb.UpdateTimezone(context.Background(), authdb.UpdateTimezoneParams{
+	dbTimezone, err := env.HelloProfileDb.UpdateTimezone(context.Background(), helloprofiledb.UpdateTimezoneParams{
 		Name:   strings.ToLower(request.Timezone),
 		Zone:   strings.ToLower(request.Zone),
 		Name_2: strings.ToLower(timezone),
@@ -211,15 +183,8 @@ func (env *Env) UpdateTimezone(c echo.Context) (err error) {
 func (env *Env) DeleteTimezone(c echo.Context) (err error) {
 
 	errorResponse := new(models.Errormessage)
-	application := c.Param("application")
-	if application == "" {
-		errorResponse.Errorcode = util.APPLICATION_NOT_SPECIFIED_ERROR_CODE
-		errorResponse.ErrorMessage = util.APPLICATION_NOT_SPECIFIED_ERROR_MESSAGE
-		log.WithField("microservice", "persian.black.authengine.service").Error("Calling application not specified")
-		c.JSON(http.StatusBadRequest, errorResponse)
-		return nil
-	}
-	fields := log.Fields{"microservice": "persian.black.authengine.service", "application": application}
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Delete timezone request received...")
 	timezone := c.Param("timezone")
 
@@ -233,7 +198,7 @@ func (env *Env) DeleteTimezone(c echo.Context) (err error) {
 		return err
 	}
 
-	err = env.AuthDb.DeleteTimezone(context.Background(), strings.ToLower(timezone))
+	err = env.HelloProfileDb.DeleteTimezone(context.Background(), strings.ToLower(timezone))
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE

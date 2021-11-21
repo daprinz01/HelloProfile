@@ -118,15 +118,6 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
 
  
 
--- create table "applications" (
---   "id" bigserial PRIMARY KEY,
---   name varchar NOT NULL,
---   "description" varchar NOT NULL,
---   "created_at" timestamptz NOT NULL DEFAULT (now()),
-
---   CONSTRAINT "uc_applications" UNIQUE ("id", name)
--- );
-
 -- create table "users" (
 --   "id" bigserial primary key,
 --   "firstname" varchar  null,
@@ -188,12 +179,6 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
 --     CONSTRAINT "uc_user_roles" UNIQUE ("id")
 -- );
 
--- create table "applications_roles" (
---     "id" bigserial primary key,
---     "applications_id" bigserial,
---     "roles_id" bigserial,
---     CONSTRAINT "uc_applications_roles" UNIQUE ("id")
--- );
 
 -- create table "identity_providers" (
 --     "id" bigserial primary key,
