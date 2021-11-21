@@ -10,7 +10,6 @@ The application health and API requests and responses can be monitored via Prome
 
 + 00 | Success | The operation/registration was successful
 + 01 | Error   | Application not specified/Application is invalid
-+ 02 | Error   | Request is in an incorrect manner. Kindly check your request and try again.
 + 03 | Error   | Oops... something is wrong here... your email or password is incorrect...
 + 04 | Error   | User already exists
 + 05 | Error   | Operation failed. Please contact our support if error persists after 3 trials.
