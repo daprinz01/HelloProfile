@@ -10,10 +10,6 @@ CREATE TABLE "users" (
     "is_email_confirmed" boolean NOT NULL DEFAULT FALSE,
     "password" varchar NULL,
     "is_password_system_generated" boolean NOT NULL DEFAULT FALSE,
-    "address" varchar NULL,
-    "city" varchar NULL,
-    "state" varchar NULL,
-    "country" varchar NULL,
     "created_at" timestamptz NOT NULL DEFAULT (now()),
     "is_locked_out" boolean NOT NULL DEFAULT FALSE,
     "image_url" varchar NULL,
@@ -76,7 +72,8 @@ CREATE TABLE "user_providers" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     "user_id" uuid,
     "identity_provider_id" uuid,
-    CONSTRAINT "uc_user_providers" UNIQUE ("id")
+    "identifier" varchar NOT NULL,
+    CONSTRAINT "uc_user_providers" UNIQUE ("user_id", "identity_provider_id")
 );
 
 CREATE TABLE "countries" (
@@ -94,6 +91,65 @@ CREATE TABLE "states" (
     CONSTRAINT "uc_states" UNIQUE ("id", "name")
 );
 
+CREATE TABLE recents (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    profile_id uuid NOT NULL,
+    title varchar NOT NULL,
+    highlights varchar NOT NULL,
+    year int NOT NULL,
+    link varchar NOT NULL),
+CONSTRAINT "uc_recents" UNIQUE (
+    "profile_id", title
+);
+
+CREATE TABLE profiles (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid NOT NULL,
+    status boolean NOT NULL DEFAULT TRUE,
+    profile_name varchar NOT NULL,
+    fullname varchar NOT NULL,
+    title varchar NOT NULL,
+    bio varchar NOT NULL,
+    company varchar NOT NULL,
+    company_address varchar NOT NULL,
+    image_url varchar NULL,
+    phone varchar NOT NULL,
+    email varchar NOT NULL,
+    address_id uuid,
+    website varchar NULL,
+    is_default boolean NOT NULL DEFAULT FALSE,
+    color int,
+    CONSTRAINT "uc_profiles" UNIQUE (user_id, profile_name)
+);
+
+CREATE TABLE address_types (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    CONSTRAINT "uc_address_types" UNIQUE (name))
+CREATE TABLE addresses (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid,
+    street varchar NOT NULL,
+    city varchar NOT NULL,
+    state varchar NULL,
+    country_id uuid,
+    address_type uuid,
+    CONSTRAINT "uc_addresses" UNIQUE (user_id, street)
+);
+
+CREATE TABLE contact_categories (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    CONSTRAINT "uc_address_types" UNIQUE (name)
+);
+
+CREATE TABLE contacts (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid NOT NULL,
+    profile_id uuid NOT NULL,
+    contact_category_id uuid NOT NULL CONSTRAINT "uc_address_types" UNIQUE (name)
+);
+
 CREATE OR REPLACE VIEW user_details AS
 SELECT
     b.id,
@@ -103,10 +159,6 @@ SELECT
     b.phone,
     b.username,
     b."password",
-    b.address,
-    b.city,
-    b.state,
-    b.country,
     b.image_url AS profile_picture,
     b.is_email_confirmed,
     b.is_locked_out,
@@ -193,18 +245,26 @@ CREATE TABLE otp (
     purpose varchar NULL,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
-create table email_verification(
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+
+CREATE TABLE email_verification (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     "email" varchar,
     "otp" varchar NOT NULL,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
-create index on email_verification(otp);
 
-alter table email_verification add constraint uc_email_verification UNIQUE(otp);
+CREATE INDEX ON email_verification (otp);
+
+ALTER TABLE email_verification
+    ADD CONSTRAINT uc_email_verification UNIQUE (otp);
+
 CREATE INDEX ON otp (user_id, otp_token);
 
 CREATE INDEX ON user_login (user_id);
+
+CREATE INDEX ON profiles (user_id);
+
+CREATE INDEX ON recents (profile_id);
 
 ALTER TABLE "refresh_token"
     ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
@@ -230,9 +290,40 @@ ALTER TABLE "user_providers"
 ALTER TABLE "states"
     ADD FOREIGN KEY ("country_id") REFERENCES "countries" ("id");
 
+ALTER TABLE "profiles"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "addresses"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "profiles"
+    ADD FOREIGN KEY ("address_id") REFERENCES "addresses" ("id");
+
+ALTER TABLE "addresses"
+    ADD FOREIGN KEY ("country_id") REFERENCES "states" ("id");
+
+ALTER TABLE "recents"
+    ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");
+
+ALTER TABLE "refresh_token"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "contacts"
+    ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "contacts"
+    ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");
+
+ALTER TABLE "contacts"
+    ADD FOREIGN KEY ("contact_category_id") REFERENCES "contact_categories" ("id");
+
 CREATE INDEX ON "countries" ("id");
 
 CREATE INDEX ON "users" ("id", "username", "email");
+
+CREATE INDEX ON "users" ("username");
+
+CREATE INDEX ON "users" ("email");
 
 CREATE INDEX ON "languages" ("id");
 
@@ -288,4 +379,6 @@ ALTER TABLE countries
 ALTER TABLE states
     ADD CONSTRAINT uc_states_name UNIQUE (name);
 
-alter table language_proficiency add constraint uc_language_proficiency UNIQUE(proficiency);
+ALTER TABLE language_proficiency
+    ADD CONSTRAINT uc_language_proficiency UNIQUE (proficiency);
+

@@ -1,99 +1,92 @@
-
-
-
-create table "users" (
-  "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-  "firstname" varchar  null,
-  "lastname" varchar  null,
-  "username" varchar  null,
-  "email" varchar not null,
-  "phone" varchar null,
-  "is_email_confirmed" BOOLEAN not null DEFAULT FALSE,
-  "password" varchar  null,
-  "is_password_system_generated" BOOLEAN not null DEFAULT FALSE,
-  "address" varchar  null,
-  "city" VARCHAR null,
-  "state" VARCHAR null,
-  "country" VARCHAR null,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "is_locked_out" BOOLEAN not null default FALSE,
-  "image_url" varchar  null,
-  "is_active" BOOLEAN not null DEFAULT TRUE,
-  CONSTRAINT "uc_users" UNIQUE ("id", "username", "email")
+CREATE TABLE "users" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "firstname" varchar NULL,
+    "lastname" varchar NULL,
+    "username" varchar NULL,
+    "email" varchar NOT NULL,
+    "phone" varchar NULL,
+    "is_email_confirmed" boolean NOT NULL DEFAULT FALSE,
+    "password" varchar NULL,
+    "is_password_system_generated" boolean NOT NULL DEFAULT FALSE,
+    "created_at" timestamptz NOT NULL DEFAULT (now()),
+    "is_locked_out" boolean NOT NULL DEFAULT FALSE,
+    "image_url" varchar NULL,
+    "is_active" boolean NOT NULL DEFAULT TRUE,
+    CONSTRAINT "uc_users" UNIQUE ("id", "username", "email")
 );
 
-create table "languages" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    name varchar not null,
+CREATE TABLE "languages" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
     CONSTRAINT "uc_languages" UNIQUE ("id", name)
 );
 
-create table "user_languages" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" uuid not null,
-    "language_id" uuid not null,
-    "proficiency" varchar null,
+CREATE TABLE "user_languages" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid NOT NULL,
+    "language_id" uuid NOT NULL,
+    "proficiency" varchar NULL,
     CONSTRAINT "uc_user_languages" UNIQUE ("id")
 );
 
-create table "timezones" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    name varchar not null,
-    "zone" varchar not null,
+CREATE TABLE "timezones" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    "zone" varchar NOT NULL,
     CONSTRAINT "uc_timezones" UNIQUE ("id", name)
 );
 
-create table "user_timezones" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" uuid not null,
-    "timezone_id" uuid not null,
+CREATE TABLE "user_timezones" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid NOT NULL,
+    "timezone_id" uuid NOT NULL,
     CONSTRAINT "uc_user_timezones" UNIQUE ("id", "user_id")
 );
 
-create table "roles" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    name varchar not null,
-    "description" varchar not null,
+CREATE TABLE "roles" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    "description" varchar NOT NULL,
     CONSTRAINT "uc_roles" UNIQUE ("id", name)
 );
 
-create table "user_roles" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" uuid not null,
-    "role_id" uuid not null,
+CREATE TABLE "user_roles" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid NOT NULL,
+    "role_id" uuid NOT NULL,
     CONSTRAINT "uc_user_roles" UNIQUE ("id")
 );
 
-
-create table "identity_providers" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    name varchar not null,
-    "client_id" varchar not null,
-    "client_secret" varchar not null,
-    "image_url" varchar not null,
+CREATE TABLE "identity_providers" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    "client_id" varchar NOT NULL,
+    "client_secret" varchar NOT NULL,
+    "image_url" varchar NOT NULL,
     CONSTRAINT "uc_identity_providers" UNIQUE ("id", name)
 );
 
-create table "user_providers" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" uuid not null,
-    "identity_provider_id" uuid not null,
+CREATE TABLE "user_providers" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid NOT NULL,
+    "identity_provider_id" uuid NOT NULL,
     CONSTRAINT "uc_user_providers" UNIQUE ("id")
 );
-create TABLE "countries" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    name VARCHAR not NULL,
-    "flag_image_url" VARCHAR null,
-"country_code" varchar null,
+
+CREATE TABLE "countries" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    "flag_image_url" varchar NULL,
+    "country_code" varchar NULL,
     CONSTRAINT "uc_countries" UNIQUE ("id", name, "flag_image_url")
 );
-create TABLE "states" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    name VARCHAR not NULL,
-    "country_id" uuid not null,
+
+CREATE TABLE "states" (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    "country_id" uuid NOT NULL,
     CONSTRAINT "uc_states" UNIQUE ("id", name)
 );
-
 
 -- CREATE  VIEW user_details as
 -- SELECT b.firstname, b.lastname, b.email, b.username, b."password", b.address, b.city, b.state, b.country, b.image_url as profile_picture, b.is_email_confirmed, b.is_locked_out, b.is_password_system_generated, b.created_at, b.is_active, d.name as language_name, f.name as role_name, k.name as timezone_name, k.zone, m.name as provider_name, m.client_id, m.client_secret, m.image_url as provider_logo
@@ -102,70 +95,122 @@ create TABLE "states" (
 -- full join roles f on f.id = (select role_id from user_roles j where j.user_id = b.id)
 -- full join timezones k on k.id = (select timezone_id from user_timezones l where l.user_id = b.id)
 -- full join identity_providers m on m.id = (select identity_provider_id from user_providers n where n.user_id = b.id);
-
-create table  user_details(
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-  "firstname" varchar  null,
-  "lastname" varchar  null,
-  "username" varchar  null,
-  "email" varchar not null,
-  "phone" varchar null,
-  "is_email_confirmed" BOOLEAN not null DEFAULT FALSE,
-  "password" varchar  null,
-  "is_password_system_generated" BOOLEAN not null DEFAULT FALSE,
-  "address" varchar  null,
-  "city" VARCHAR null,
-  "state" VARCHAR null,
-  "country" VARCHAR null,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  "is_locked_out" BOOLEAN not null default FALSE,
-  "profile_picture" varchar  null,
-  "is_active" BOOLEAN not null DEFAULT TRUE,
-  "timezone_name" varchar null,
-  "zone" varchar null
+CREATE TABLE user_details (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "firstname" varchar NULL,
+    "lastname" varchar NULL,
+    "username" varchar NULL,
+    "email" varchar NOT NULL,
+    "phone" varchar NULL,
+    "is_email_confirmed" boolean NOT NULL DEFAULT FALSE,
+    "password" varchar NULL,
+    "is_password_system_generated" boolean NOT NULL DEFAULT FALSE,
+    "created_at" timestamptz NOT NULL DEFAULT (now()),
+    "is_locked_out" boolean NOT NULL DEFAULT FALSE,
+    "profile_picture" varchar NULL,
+    "is_active" boolean NOT NULL DEFAULT TRUE,
+    "timezone_name" varchar NULL,
+    "zone" varchar NULL
 );
 
-create table refresh_token(
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "user_id" uuid not null,
-    "token" varchar not null,
+CREATE TABLE refresh_token (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    "user_id" uuid NOT NULL,
+    "token" varchar NOT NULL,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-create table user_login(
-    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    user_id uuid not null,
-    login_time TIMESTAMPtz not NULL DEFAULT (now()),
-    login_status BOOLEAN not null DEFAULT FALSE,
-    response_code VARCHAR null,
-    response_description VARCHAR null,
-    device VARCHAR NULL,
-    ip_address VARCHAR null,
+CREATE TABLE user_login (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid NOT NULL,
+    login_time timestamptz NOT NULL DEFAULT (now()),
+    login_status boolean NOT NULL DEFAULT FALSE,
+    response_code varchar NULL,
+    response_description varchar NULL,
+    device varchar NULL,
+    ip_address varchar NULL,
     longitude DECIMAL NULL,
     latitude DECIMAL NULL,
-    resolved BOOLEAN not null default TRUE
-    
+    resolved boolean NOT NULL DEFAULT TRUE
 );
 
-create table otp(
-    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    user_id uuid not null,
-    otp_token varchar null,
-    created_at TIMESTAMPtz not NULL DEFAULT (now()),
-    is_sms_preferred boolean not null default FALSE,
-    is_email_preferred boolean not null default TRUE,
-    purpose varchar null
+CREATE TABLE otp (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid NOT NULL,
+    otp_token varchar NULL,
+    created_at timestamptz NOT NULL DEFAULT (now()),
+    is_sms_preferred boolean NOT NULL DEFAULT FALSE,
+    is_email_preferred boolean NOT NULL DEFAULT TRUE,
+    purpose varchar NULL
 );
 
-
-Create TABLE language_proficiency(
-    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    proficiency VARCHAR null UNIQUE
+CREATE TABLE language_proficiency (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    proficiency varchar NULL UNIQUE
 );
 
-create table email_verification(
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
+CREATE TABLE email_verification (
+    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     "email" varchar,
     "otp" varchar NOT NULL,
     "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
+CREATE TABLE recents (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    profile_id uuid NOT NULL,
+    title varchar NOT NULL,
+    highlights varchar NOT NULL,
+    year int NOT NULL,
+    link varchar NOT NULL),
+CONSTRAINT "uc_recents" UNIQUE (
+    "profile_id", title
+);
+
+CREATE TABLE profiles (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid NOT NULL,
+    status boolean NOT NULL DEFAULT TRUE,
+    profile_name varchar NOT NULL,
+    fullname varchar NOT NULL,
+    title varchar NOT NULL,
+    bio varchar NOT NULL,
+    company varchar NOT NULL,
+    company_address varchar NOT NULL,
+    image_url varchar NULL,
+    phone varchar NOT NULL,
+    email varchar NOT NULL,
+    address_id uuid,
+    website varchar NULL,
+    is_default boolean NOT NULL DEFAULT FALSE,
+    color int,
+    CONSTRAINT "uc_profiles" UNIQUE (user_id, profile_name)
+);
+
+CREATE TABLE address_types (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    CONSTRAINT "uc_address_types" UNIQUE (name))
+CREATE TABLE addresses (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid,
+    street varchar NOT NULL,
+    city varchar NOT NULL,
+    state varchar NULL,
+    country_id uuid,
+    address_type uuid,
+    CONSTRAINT "uc_addresses" UNIQUE (user_id, street)
+);
+
+CREATE TABLE contact_categories (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    name varchar NOT NULL,
+    CONSTRAINT "uc_address_types" UNIQUE (name)
+);
+
+CREATE TABLE contacts (
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    user_id uuid NOT NULL,
+    profile_id uuid NOT NULL,
+    contact_category_id uuid NOT NULL CONSTRAINT "uc_address_types" UNIQUE (name)
 );
