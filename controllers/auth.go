@@ -107,9 +107,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 			ResponseDetails: &models.UserDetail{
-				Address:                   user.Address.String,
-				City:                      user.City.String,
-				Country:                   user.Country.String,
 				CreatedAt:                 user.CreatedAt,
 				Email:                     user.Email,
 				Firstname:                 user.Firstname.String,
@@ -119,8 +116,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 				IsLockedOut:               user.IsLockedOut,
 				IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
 				Lastname:                  user.Lastname.String,
-				Password:                  "",
-				State:                     user.State.String,
 				Username:                  user.Username.String,
 				Phone:                     user.Phone.String,
 			},
@@ -170,9 +165,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 			lockoutUpdate, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 				Username_2:                user.Username,
 				IsLockedOut:               true,
-				Address:                   user.Address,
-				City:                      user.City,
-				Country:                   user.Country,
 				CreatedAt:                 user.CreatedAt,
 				Email:                     user.Email,
 				Firstname:                 user.Firstname,
@@ -182,7 +174,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 				IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
 				Lastname:                  user.Lastname,
 				Password:                  user.Password,
-				State:                     user.State,
 				Username:                  user.Username,
 				Phone:                     user.Phone,
 			})
@@ -242,9 +233,6 @@ func (env *Env) Register(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Successfully hashed password")
 	log.WithFields(fields).Info("Inserting user...")
 	user, err := env.HelloProfileDb.CreateUser(context.Background(), helloprofiledb.CreateUserParams{
-		Address:                   sql.NullString{String: request.Address, Valid: request.Address != ""},
-		City:                      sql.NullString{String: request.City, Valid: request.City != ""},
-		Country:                   sql.NullString{String: request.Country, Valid: request.Country != ""},
 		CreatedAt:                 time.Now(),
 		Email:                     strings.ToLower(request.Email),
 		Firstname:                 sql.NullString{String: request.Firstname, Valid: request.Firstname != ""},
@@ -255,7 +243,6 @@ func (env *Env) Register(c echo.Context) (err error) {
 		IsPasswordSystemGenerated: request.IsPasswordSystemGenerated,
 		Lastname:                  sql.NullString{String: request.Lastname, Valid: request.Lastname != ""},
 		Password:                  sql.NullString{String: hashedPassword, Valid: hashedPassword != ""},
-		State:                     sql.NullString{String: request.State, Valid: request.State != ""},
 		Username:                  sql.NullString{String: strings.ToLower(request.Username), Valid: request.Username != ""},
 		Phone:                     sql.NullString{String: request.Phone, Valid: request.Phone != ""},
 	})
@@ -284,9 +271,6 @@ func (env *Env) Register(c echo.Context) (err error) {
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: &models.UserDetail{
-			Address:                   user.Address.String,
-			City:                      user.City.String,
-			Country:                   user.Country.String,
 			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
 			Firstname:                 user.Firstname.String,
@@ -296,8 +280,6 @@ func (env *Env) Register(c echo.Context) (err error) {
 			IsLockedOut:               user.IsLockedOut,
 			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
 			Lastname:                  user.Lastname.String,
-			Password:                  "",
-			State:                     user.State.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
 		},
@@ -899,9 +881,6 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 			Username_2:                user.Username,
 			IsLockedOut:               false,
-			Address:                   user.Address,
-			City:                      user.City,
-			Country:                   user.Country,
 			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
 			Firstname:                 user.Firstname,
@@ -911,7 +890,6 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
 			Lastname:                  user.Lastname,
 			Password:                  sql.NullString{String: hashedPassword, Valid: true},
-			State:                     user.State,
 			Username:                  user.Username,
 			Phone:                     user.Phone,
 		})

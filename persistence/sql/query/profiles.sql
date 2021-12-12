@@ -9,7 +9,7 @@ select * from profiles where id=$1 limit 1;
 
 -- name: AddProfile :one
 insert into profiles(
-    user_id
+    user_id,
     status,
     profile_name,
     fullname,
@@ -20,7 +20,7 @@ insert into profiles(
     image_url,
     phone,
     email,
-    address_id uuid,
+    address_id,
     website,
     is_default,
     color
@@ -39,12 +39,12 @@ update profiles set
     company = $6,
     company_address = $7,
     image_url = $8,
-    phone = #9,
+    phone = $9,
     email = $10,
-    address_id uuid = $11,
+    address_id = $11,
     website = $12,
     is_default = $13,
     color = $14 where id=$15;
 
 -- name: DeleteProfile :exec
-delete profiles where id=$1;
+delete from profiles where id=$1;

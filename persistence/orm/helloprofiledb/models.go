@@ -9,6 +9,33 @@ import (
 	"github.com/google/uuid"
 )
 
+type Address struct {
+	ID          uuid.UUID      `json:"id"`
+	UserID      uuid.NullUUID  `json:"user_id"`
+	Street      string         `json:"street"`
+	City        string         `json:"city"`
+	State       sql.NullString `json:"state"`
+	CountryID   uuid.NullUUID  `json:"country_id"`
+	AddressType uuid.NullUUID  `json:"address_type"`
+}
+
+type AddressType struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type Contact struct {
+	ID                uuid.UUID `json:"id"`
+	UserID            uuid.UUID `json:"user_id"`
+	ProfileID         uuid.UUID `json:"profile_id"`
+	ContactCategoryID uuid.UUID `json:"contact_category_id"`
+}
+
+type ContactCategory struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
 type Country struct {
 	ID           uuid.UUID      `json:"id"`
 	Name         string         `json:"name"`
@@ -51,6 +78,34 @@ type Otp struct {
 	Purpose          sql.NullString `json:"purpose"`
 }
 
+type Profile struct {
+	ID             uuid.UUID      `json:"id"`
+	UserID         uuid.UUID      `json:"user_id"`
+	Status         bool           `json:"status"`
+	ProfileName    string         `json:"profile_name"`
+	Fullname       string         `json:"fullname"`
+	Title          string         `json:"title"`
+	Bio            string         `json:"bio"`
+	Company        string         `json:"company"`
+	CompanyAddress string         `json:"company_address"`
+	ImageUrl       sql.NullString `json:"image_url"`
+	Phone          string         `json:"phone"`
+	Email          string         `json:"email"`
+	AddressID      uuid.NullUUID  `json:"address_id"`
+	Website        sql.NullString `json:"website"`
+	IsDefault      bool           `json:"is_default"`
+	Color          sql.NullInt32  `json:"color"`
+}
+
+type Recent struct {
+	ID         uuid.UUID `json:"id"`
+	ProfileID  uuid.UUID `json:"profile_id"`
+	Title      string    `json:"title"`
+	Highlights string    `json:"highlights"`
+	Year       int32     `json:"year"`
+	Link       string    `json:"link"`
+}
+
 type RefreshToken struct {
 	ID        uuid.UUID `json:"id"`
 	UserID    uuid.UUID `json:"user_id"`
@@ -86,10 +141,6 @@ type User struct {
 	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
 	Password                  sql.NullString `json:"password"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
-	Address                   sql.NullString `json:"address"`
-	City                      sql.NullString `json:"city"`
-	State                     sql.NullString `json:"state"`
-	Country                   sql.NullString `json:"country"`
 	CreatedAt                 time.Time      `json:"created_at"`
 	IsLockedOut               bool           `json:"is_locked_out"`
 	ImageUrl                  sql.NullString `json:"image_url"`
@@ -106,10 +157,6 @@ type UserDetail struct {
 	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
 	Password                  sql.NullString `json:"password"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
-	Address                   sql.NullString `json:"address"`
-	City                      sql.NullString `json:"city"`
-	State                     sql.NullString `json:"state"`
-	Country                   sql.NullString `json:"country"`
 	CreatedAt                 time.Time      `json:"created_at"`
 	IsLockedOut               bool           `json:"is_locked_out"`
 	ProfilePicture            sql.NullString `json:"profile_picture"`

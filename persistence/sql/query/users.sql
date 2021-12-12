@@ -1,122 +1,398 @@
 -- name: GetUsers :many
-select * from user_details;
+SELECT
+  *
+FROM
+  user_details;
 
 -- name: GetUser :one
-select * from user_details 
-where username = $1 or email = $1 limit 1;
+SELECT
+  *
+FROM
+  user_details
+WHERE
+  username = $1
+  OR email = $1
+  or id = $1
+LIMIT 1;
 
 -- name: CreateUser :one
-insert into users ("firstname",
-  "lastname",
-  "username",
-  "email",
-  "phone",
-  "is_email_confirmed",
-  "password",
-  "is_password_system_generated",
-  "address",
-  "city" ,
-  "state" ,
-  "country" ,
-  "created_at",
-  "is_locked_out",
-  "image_url",
-  "is_active")
-  values ($1, $2, $3, $4, $5, $6, $7, $8,$9, $10, $11, $12, $13, $14,$15, $16)
-  returning *;
+INSERT INTO users ("firstname", "lastname", "username", "email", "phone", "is_email_confirmed", "password", "is_password_system_generated", "created_at", "is_locked_out", "image_url", "is_active")
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+RETURNING
+  *;
 
 -- name: AddUserLanguage :one
-insert into user_languages (
-    user_id, language_id, proficiency
-) values ((select a.id from users a where a.username = $1 or a.email = $1 limit 1), (select b.id from languages b where  b.name = $2), $3)
-returning *;
+INSERT INTO user_languages (user_id, language_id, proficiency)
+  VALUES ((
+      SELECT
+        a.id
+      FROM
+        users a
+      WHERE
+        a.username = $1
+        OR a.email = $1
+      LIMIT 1),
+    (
+      SELECT
+        b.id
+      FROM
+        languages b
+      WHERE
+        b.name = $2), $3)
+RETURNING
+  *;
 
 -- name: GetUserLanguages :many
-select a.id, a.name, d.proficiency from languages a inner join user_languages d on a.id = d.language_id inner join users e on e.id = d.user_id inner join users f on f.username = $1 or f.email = $1;
+SELECT
+  a.id,
+  a.name,
+  d.proficiency
+FROM
+  languages a
+  INNER JOIN user_languages d ON a.id = d.language_id
+  INNER JOIN users e ON e.id = d.user_id
+  INNER JOIN users f ON f.username = $1
+    OR f.email = $1;
 
 -- name: DeleteUserLanguage :exec
-delete from user_languages a where a.user_id = (select b.id from users b where b.username = $1 or b.email = $1) and a.language_id = (select c.id from languages c where c.name = $2);
+DELETE FROM user_languages a
+WHERE a.user_id = (
+    SELECT
+      b.id
+    FROM
+      users b
+    WHERE
+      b.username = $1
+      OR b.email = $1)
+  AND a.language_id = (
+    SELECT
+      c.id
+    FROM
+      languages c
+    WHERE
+      c.name = $2);
 
 -- name: UpdateUserLanguage :one
-update user_languages set user_id = (select a.id from users a where a.username = $1 or a.email = $1 limit 1) , 
-language_id = (select b.id from languages b where b.name = $2) 
-where user_id = (select c.id from users c where c.username = $3 or c.email = $3 limit 1)
-and language_id = (select d.id from languages d where  d.name = $4) returning *;
+UPDATE
+  user_languages
+SET
+  user_id = (
+    SELECT
+      a.id
+    FROM
+      users a
+    WHERE
+      a.username = $1
+      OR a.email = $1
+    LIMIT 1),
+language_id = (
+  SELECT
+    b.id
+  FROM
+    languages b
+  WHERE
+    b.name = $2)
+WHERE
+  user_id = (
+    SELECT
+      c.id
+    FROM
+      users c
+    WHERE
+      c.username = $3
+      OR c.email = $3
+    LIMIT 1)
+AND language_id = (
+  SELECT
+    d.id
+  FROM
+    languages d
+  WHERE
+    d.name = $4)
+RETURNING
+  *;
 
 -- name: GetUserTimezones :many
-select * from timezones a where a.id = (select b.timezone_id from user_timezones b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1));
-
+SELECT
+  *
+FROM
+  timezones a
+WHERE
+  a.id = (
+    SELECT
+      b.timezone_id
+    FROM
+      user_timezones b
+    WHERE
+      b.user_id = (
+        SELECT
+          c.id
+        FROM
+          users c
+        WHERE
+          c.username = $1
+          OR c.email = $1));
 
 -- name: AddUserTimezone :one
-insert into user_timezones (
-    user_id, timezone_id
-) values ((select a.id from users a where a.username = $1 or a.email = $1), (select b.id from timezones b where b.name = $2))
-returning *;
+INSERT INTO user_timezones (user_id, timezone_id)
+  VALUES ((
+      SELECT
+        a.id
+      FROM
+        users a
+      WHERE
+        a.username = $1
+        OR a.email = $1),
+      (
+        SELECT
+          b.id
+        FROM
+          timezones b
+        WHERE
+          b.name = $2))
+  RETURNING
+    *;
 
 -- name: UpdateUserTimezone :one
-update user_timezones set user_id = (select a.id from users a where a.username = $1 or a.email = $1 limit 1) , 
-timezone_id = (select b.id from timezones b where b.name = $2) where user_id = (select c.id from users c where c.username = $3 or c.email = $3 limit 1) returning *;
-
+UPDATE
+  user_timezones
+SET
+  user_id = (
+    SELECT
+      a.id
+    FROM
+      users a
+    WHERE
+      a.username = $1
+      OR a.email = $1
+    LIMIT 1),
+timezone_id = (
+  SELECT
+    b.id
+  FROM
+    timezones b
+  WHERE
+    b.name = $2)
+WHERE
+  user_id = (
+    SELECT
+      c.id
+    FROM
+      users c
+    WHERE
+      c.username = $3
+      OR c.email = $3
+    LIMIT 1)
+RETURNING
+  *;
 
 -- name: GetUserProviders :many
-select * from identity_providers a where a.id = (select b.identity_provider_id from user_providers b where b.user_id = (select c.id from users c where c.username = $1 or c.email = $1));
+SELECT
+  *
+FROM
+  identity_providers a
+WHERE
+  a.id = (
+    SELECT
+      b.identity_provider_id
+    FROM
+      user_providers b
+    WHERE
+      b.user_id = (
+        SELECT
+          c.id
+        FROM
+          users c
+        WHERE
+          c.username = $1
+          OR c.email = $1));
 
 -- name: AddUserProvider :one
-insert into user_providers (
-    user_id, identity_provider_id
-) values ((select a.id from users a where  a.username = $1 or a.email = $1), (select b.id from identity_providers b where  b.name = $2))
-returning *;
+INSERT INTO user_providers (user_id, identity_provider_id)
+  VALUES ((
+      SELECT
+        a.id
+      FROM
+        users a
+      WHERE
+        a.username = $1
+        OR a.email = $1),
+      (
+        SELECT
+          b.id
+        FROM
+          identity_providers b
+        WHERE
+          b.name = $2))
+  RETURNING
+    *;
 
 -- name: UpdateUserProvider :one
-update user_providers set user_id = (select id from users a where  a.username = $1 or a.email = $1 limit 1) , 
-identity_provider_id = (select b.id from identity_providers b where  b.name = $2) where user_id = (select c.id from users c where c.username = $1 or c.email = $1 limit 1) and identity_provider_id = (select d.id from identity_providers d where  d.name = $2)  returning *;
+UPDATE
+  user_providers
+SET
+  user_id = (
+    SELECT
+      id
+    FROM
+      users a
+    WHERE
+      a.username = $1
+      OR a.email = $1
+    LIMIT 1),
+identity_provider_id = (
+  SELECT
+    b.id
+  FROM
+    identity_providers b
+  WHERE
+    b.name = $2)
+WHERE
+  user_id = (
+    SELECT
+      c.id
+    FROM
+      users c
+    WHERE
+      c.username = $1
+      OR c.email = $1
+    LIMIT 1)
+AND identity_provider_id = (
+  SELECT
+    d.id
+  FROM
+    identity_providers d
+  WHERE
+    d.name = $2)
+RETURNING
+  *;
 
 -- name: DeleteProviders :exec
-delete from user_providers a where a.user_id = (select b.id from users b where b.username = $1 or b.email = $1) and a.identity_provider_id = (select c.id from identity_providers c where c.name = $2);
-
+DELETE FROM user_providers a
+WHERE a.user_id = (
+    SELECT
+      b.id
+    FROM
+      users b
+    WHERE
+      b.username = $1
+      OR b.email = $1)
+  AND a.identity_provider_id = (
+    SELECT
+      c.id
+    FROM
+      identity_providers c
+    WHERE
+      c.name = $2);
 
 -- name: GetUserRoles :many
-select b.name from roles b inner join user_roles a on b.Id = a.role_id and a.user_id = (select c.id from users c where c.username = $1 or c.email=$1 limit 1);
+SELECT
+  b.name
+FROM
+  roles b
+  INNER JOIN user_roles a ON b.Id = a.role_id
+    AND a.user_id = (
+      SELECT
+        c.id
+      FROM
+        users c
+    WHERE
+      c.username = $1
+      OR c.email = $1
+    LIMIT 1);
 
 -- select b.name from roles b where b.Id = (select a.role_id from user_roles a where a.user_id = $1);
-
-
 -- name: AddUserRole :one
-insert into user_roles (
-    user_id, role_id
-) values ((select d.id from users d where d.username = $1 or d.email = $1), (select a.id from roles a where  a.name = $2))
-returning *;
+INSERT INTO user_roles (user_id, role_id)
+  VALUES ((
+      SELECT
+        d.id
+      FROM
+        users d
+      WHERE
+        d.username = $1
+        OR d.email = $1),
+      (
+        SELECT
+          a.id
+        FROM
+          roles a
+        WHERE
+          a.name = $2))
+  RETURNING
+    *;
 
 -- name: UpdateUserRole :one
-update user_roles set user_id = (select a.id from users a where a.username = $1 or a.email = $1 limit 1) , 
-role_id = (select b.id from roles b where  b.name = $2) where user_id = (select c.id from users c where c.username = $3 or c.email = $3 limit 1) 
-and role_id = (select d.id from roles d where  d.name = $4) returning *;
-
+UPDATE
+  user_roles
+SET
+  user_id = (
+    SELECT
+      a.id
+    FROM
+      users a
+    WHERE
+      a.username = $1
+      OR a.email = $1
+    LIMIT 1),
+role_id = (
+  SELECT
+    b.id
+  FROM
+    roles b
+  WHERE
+    b.name = $2)
+WHERE
+  user_id = (
+    SELECT
+      c.id
+    FROM
+      users c
+    WHERE
+      c.username = $3
+      OR c.email = $3
+    LIMIT 1)
+AND role_id = (
+  SELECT
+    d.id
+  FROM
+    roles d
+  WHERE
+    d.name = $4)
+RETURNING
+  *;
 
 -- name: UpdateUser :one
-  update users set "firstname" = $1,
+UPDATE
+  users
+SET
+  "firstname" = $1,
   "lastname" = $2,
   "username" = $3,
   "email" = $4,
   "is_email_confirmed" = $5,
   "password" = $6,
   "is_password_system_generated" = $7,
-  "address" = $8,
-  "city" = $9,
-  "state" = $10,
-  "country" = $11,
-  "created_at" = $12,
-  "is_locked_out" = $13,
-  "image_url" = $14,
-  "is_active" = $15,
-    "phone" = $17
-  where "username" = $16 or "email" = $16
-  returning *;
+  "created_at" = $8,
+  "is_locked_out" = $9,
+  "image_url" = $10,
+  "is_active" = $11,
+  "phone" = $12
+WHERE
+  "username" = $13
+  OR "email" = $13
+  or id=$13
+RETURNING
+  *;
 
 -- name: DeleteUser :exec
- update users set is_active = false where email = $1 or username = $1;
-
- 
+UPDATE
+  users
+SET
+  is_active = FALSE
+WHERE
+  email = $1
+  OR username = $1;
 
 -- create table "users" (
 --   "id" bigserial primary key,
@@ -137,49 +413,41 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
 --   "is_active" BOOLEAN not null DEFAULT TRUE,
 --   CONSTRAINT "uc_users" UNIQUE ("id", "username", "email")
 -- );
-
 -- create table "languages" (
 --     "id" bigserial primary key,
 --     name varchar not null,
 --     CONSTRAINT "uc_languages" UNIQUE ("id", name)
 -- );
-
 -- create table "user_languages" (
 --     "id" bigserial primary key,
 --     "user_id" bigserial ,
 --     "language_id" bigserial,
 --     CONSTRAINT "uc_user_languages" UNIQUE ("id")
 -- );
-
 -- create table "timezones" (
 --     "id" bigserial primary key,
 --     name varchar not null,
 --     "zone" varchar not null,
 --     CONSTRAINT "uc_timezones" UNIQUE ("id", name)
 -- );
-
 -- create table "user_timezones" (
 --     "id" bigserial primary key,
 --     "user_id" bigserial,
 --     "timezone_id" bigserial,
 --     CONSTRAINT "uc_user_timezones" UNIQUE ("id", "user_id")
 -- );
-
 -- create table "roles" (
 --     "id" bigserial primary key,
 --     name varchar not null,
 --     "description" varchar not null,
 --     CONSTRAINT "uc_roles" UNIQUE ("id", name)
 -- );
-
 -- create table "user_roles" (
 --     "id" bigserial primary key,
 --     "user_id" bigserial,
 --     "role_id" bigserial,
 --     CONSTRAINT "uc_user_roles" UNIQUE ("id")
 -- );
-
-
 -- create table "identity_providers" (
 --     "id" bigserial primary key,
 --     name varchar not null,
@@ -188,7 +456,6 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
 --     "image_url" varchar not null,
 --     CONSTRAINT "uc_identity_providers" UNIQUE ("id", name)
 -- );
-
 -- create table "user_providers" (
 --     "id" bigserial primary key,
 --     "user_id" bigserial,
@@ -199,7 +466,6 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
 --     "id" bigserial PRIMARY KEY,
 --     name VARCHAR not NULL,
 --     "flag_image_url" VARCHAR null,
-
 --     CONSTRAINT "uc_countries" UNIQUE ("id", name, "flag_image_url")
 -- );
 -- create TABLE "states" (
@@ -208,8 +474,6 @@ and role_id = (select d.id from roles d where  d.name = $4) returning *;
 --     "country_id" bigserial,
 --     CONSTRAINT "uc_states" UNIQUE ("id", name)
 -- );
-
-
 -- CREATE  VIEW user_details as
 -- SELECT b.firstname, b.lastname, b.email, b.username, b."password", b.address, b.city, b.state, b.country, b.image_url as profile_picture, b.is_email_confirmed, b.is_locked_out, b.is_password_system_generated, b.created_at, b.is_active, d.name as language_name, f.name as role_name, k.name as timezone_name, k.zone, m.name as provider_name, m.client_id, m.client_secret, m.image_url as provider_logo
 -- from users b

@@ -22,6 +22,21 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.addAddressStmt, err = db.PrepareContext(ctx, addAddress); err != nil {
+		return nil, fmt.Errorf("error preparing query AddAddress: %w", err)
+	}
+	if q.addAddressTypeStmt, err = db.PrepareContext(ctx, addAddressType); err != nil {
+		return nil, fmt.Errorf("error preparing query AddAddressType: %w", err)
+	}
+	if q.addContactCategoryStmt, err = db.PrepareContext(ctx, addContactCategory); err != nil {
+		return nil, fmt.Errorf("error preparing query AddContactCategory: %w", err)
+	}
+	if q.addContactsStmt, err = db.PrepareContext(ctx, addContacts); err != nil {
+		return nil, fmt.Errorf("error preparing query AddContacts: %w", err)
+	}
+	if q.addProfileStmt, err = db.PrepareContext(ctx, addProfile); err != nil {
+		return nil, fmt.Errorf("error preparing query AddProfile: %w", err)
+	}
 	if q.addUserLanguageStmt, err = db.PrepareContext(ctx, addUserLanguage); err != nil {
 		return nil, fmt.Errorf("error preparing query AddUserLanguage: %w", err)
 	}
@@ -70,6 +85,18 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createUserLoginStmt, err = db.PrepareContext(ctx, createUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUserLogin: %w", err)
 	}
+	if q.deleteAddressStmt, err = db.PrepareContext(ctx, deleteAddress); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteAddress: %w", err)
+	}
+	if q.deleteAddressTypeStmt, err = db.PrepareContext(ctx, deleteAddressType); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteAddressType: %w", err)
+	}
+	if q.deleteContactStmt, err = db.PrepareContext(ctx, deleteContact); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteContact: %w", err)
+	}
+	if q.deleteContactCategoryStmt, err = db.PrepareContext(ctx, deleteContactCategory); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteContactCategory: %w", err)
+	}
 	if q.deleteCountryStmt, err = db.PrepareContext(ctx, deleteCountry); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteCountry: %w", err)
 	}
@@ -87,6 +114,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteOtpStmt, err = db.PrepareContext(ctx, deleteOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOtp: %w", err)
+	}
+	if q.deleteProfileStmt, err = db.PrepareContext(ctx, deleteProfile); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteProfile: %w", err)
 	}
 	if q.deleteProvidersStmt, err = db.PrepareContext(ctx, deleteProviders); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteProviders: %w", err)
@@ -112,8 +142,35 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteUserLoginStmt, err = db.PrepareContext(ctx, deleteUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUserLogin: %w", err)
 	}
+	if q.getAddressStmt, err = db.PrepareContext(ctx, getAddress); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAddress: %w", err)
+	}
+	if q.getAddressTypeStmt, err = db.PrepareContext(ctx, getAddressType); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAddressType: %w", err)
+	}
+	if q.getAllAddressTypesStmt, err = db.PrepareContext(ctx, getAllAddressTypes); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllAddressTypes: %w", err)
+	}
+	if q.getAllAddressesStmt, err = db.PrepareContext(ctx, getAllAddresses); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllAddresses: %w", err)
+	}
+	if q.getAllContactCategoriesStmt, err = db.PrepareContext(ctx, getAllContactCategories); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllContactCategories: %w", err)
+	}
+	if q.getAllContactsStmt, err = db.PrepareContext(ctx, getAllContacts); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllContacts: %w", err)
+	}
 	if q.getAllOtpStmt, err = db.PrepareContext(ctx, getAllOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllOtp: %w", err)
+	}
+	if q.getAllProfilesStmt, err = db.PrepareContext(ctx, getAllProfiles); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllProfiles: %w", err)
+	}
+	if q.getContactCategoryStmt, err = db.PrepareContext(ctx, getContactCategory); err != nil {
+		return nil, fmt.Errorf("error preparing query GetContactCategory: %w", err)
+	}
+	if q.getContactsStmt, err = db.PrepareContext(ctx, getContacts); err != nil {
+		return nil, fmt.Errorf("error preparing query GetContacts: %w", err)
 	}
 	if q.getCountriesStmt, err = db.PrepareContext(ctx, getCountries); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCountries: %w", err)
@@ -148,6 +205,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getOtpStmt, err = db.PrepareContext(ctx, getOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetOtp: %w", err)
 	}
+	if q.getProfileStmt, err = db.PrepareContext(ctx, getProfile); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfile: %w", err)
+	}
+	if q.getProfilesStmt, err = db.PrepareContext(ctx, getProfiles); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfiles: %w", err)
+	}
 	if q.getRefreshTokenStmt, err = db.PrepareContext(ctx, getRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query GetRefreshToken: %w", err)
 	}
@@ -181,6 +244,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
 	}
+	if q.getUserAddressesStmt, err = db.PrepareContext(ctx, getUserAddresses); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserAddresses: %w", err)
+	}
 	if q.getUserLanguagesStmt, err = db.PrepareContext(ctx, getUserLanguages); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserLanguages: %w", err)
 	}
@@ -202,6 +268,18 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUsersStmt, err = db.PrepareContext(ctx, getUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUsers: %w", err)
 	}
+	if q.updateAddressStmt, err = db.PrepareContext(ctx, updateAddress); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateAddress: %w", err)
+	}
+	if q.updateAddressTypeStmt, err = db.PrepareContext(ctx, updateAddressType); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateAddressType: %w", err)
+	}
+	if q.updateContactStmt, err = db.PrepareContext(ctx, updateContact); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateContact: %w", err)
+	}
+	if q.updateContactCategoryStmt, err = db.PrepareContext(ctx, updateContactCategory); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateContactCategory: %w", err)
+	}
 	if q.updateCountryStmt, err = db.PrepareContext(ctx, updateCountry); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateCountry: %w", err)
 	}
@@ -213,6 +291,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.updateLanguageProficiencyStmt, err = db.PrepareContext(ctx, updateLanguageProficiency); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateLanguageProficiency: %w", err)
+	}
+	if q.updateProfileStmt, err = db.PrepareContext(ctx, updateProfile); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateProfile: %w", err)
 	}
 	if q.updateRefreshTokenStmt, err = db.PrepareContext(ctx, updateRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateRefreshToken: %w", err)
@@ -249,6 +330,31 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.addAddressStmt != nil {
+		if cerr := q.addAddressStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addAddressStmt: %w", cerr)
+		}
+	}
+	if q.addAddressTypeStmt != nil {
+		if cerr := q.addAddressTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addAddressTypeStmt: %w", cerr)
+		}
+	}
+	if q.addContactCategoryStmt != nil {
+		if cerr := q.addContactCategoryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addContactCategoryStmt: %w", cerr)
+		}
+	}
+	if q.addContactsStmt != nil {
+		if cerr := q.addContactsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addContactsStmt: %w", cerr)
+		}
+	}
+	if q.addProfileStmt != nil {
+		if cerr := q.addProfileStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addProfileStmt: %w", cerr)
+		}
+	}
 	if q.addUserLanguageStmt != nil {
 		if cerr := q.addUserLanguageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing addUserLanguageStmt: %w", cerr)
@@ -329,6 +435,26 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createUserLoginStmt: %w", cerr)
 		}
 	}
+	if q.deleteAddressStmt != nil {
+		if cerr := q.deleteAddressStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteAddressStmt: %w", cerr)
+		}
+	}
+	if q.deleteAddressTypeStmt != nil {
+		if cerr := q.deleteAddressTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteAddressTypeStmt: %w", cerr)
+		}
+	}
+	if q.deleteContactStmt != nil {
+		if cerr := q.deleteContactStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteContactStmt: %w", cerr)
+		}
+	}
+	if q.deleteContactCategoryStmt != nil {
+		if cerr := q.deleteContactCategoryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteContactCategoryStmt: %w", cerr)
+		}
+	}
 	if q.deleteCountryStmt != nil {
 		if cerr := q.deleteCountryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteCountryStmt: %w", cerr)
@@ -357,6 +483,11 @@ func (q *Queries) Close() error {
 	if q.deleteOtpStmt != nil {
 		if cerr := q.deleteOtpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteOtpStmt: %w", cerr)
+		}
+	}
+	if q.deleteProfileStmt != nil {
+		if cerr := q.deleteProfileStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteProfileStmt: %w", cerr)
 		}
 	}
 	if q.deleteProvidersStmt != nil {
@@ -399,9 +530,54 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteUserLoginStmt: %w", cerr)
 		}
 	}
+	if q.getAddressStmt != nil {
+		if cerr := q.getAddressStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAddressStmt: %w", cerr)
+		}
+	}
+	if q.getAddressTypeStmt != nil {
+		if cerr := q.getAddressTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAddressTypeStmt: %w", cerr)
+		}
+	}
+	if q.getAllAddressTypesStmt != nil {
+		if cerr := q.getAllAddressTypesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllAddressTypesStmt: %w", cerr)
+		}
+	}
+	if q.getAllAddressesStmt != nil {
+		if cerr := q.getAllAddressesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllAddressesStmt: %w", cerr)
+		}
+	}
+	if q.getAllContactCategoriesStmt != nil {
+		if cerr := q.getAllContactCategoriesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllContactCategoriesStmt: %w", cerr)
+		}
+	}
+	if q.getAllContactsStmt != nil {
+		if cerr := q.getAllContactsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllContactsStmt: %w", cerr)
+		}
+	}
 	if q.getAllOtpStmt != nil {
 		if cerr := q.getAllOtpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAllOtpStmt: %w", cerr)
+		}
+	}
+	if q.getAllProfilesStmt != nil {
+		if cerr := q.getAllProfilesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllProfilesStmt: %w", cerr)
+		}
+	}
+	if q.getContactCategoryStmt != nil {
+		if cerr := q.getContactCategoryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getContactCategoryStmt: %w", cerr)
+		}
+	}
+	if q.getContactsStmt != nil {
+		if cerr := q.getContactsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getContactsStmt: %w", cerr)
 		}
 	}
 	if q.getCountriesStmt != nil {
@@ -459,6 +635,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getOtpStmt: %w", cerr)
 		}
 	}
+	if q.getProfileStmt != nil {
+		if cerr := q.getProfileStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfileStmt: %w", cerr)
+		}
+	}
+	if q.getProfilesStmt != nil {
+		if cerr := q.getProfilesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfilesStmt: %w", cerr)
+		}
+	}
 	if q.getRefreshTokenStmt != nil {
 		if cerr := q.getRefreshTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getRefreshTokenStmt: %w", cerr)
@@ -514,6 +700,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
 		}
 	}
+	if q.getUserAddressesStmt != nil {
+		if cerr := q.getUserAddressesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserAddressesStmt: %w", cerr)
+		}
+	}
 	if q.getUserLanguagesStmt != nil {
 		if cerr := q.getUserLanguagesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserLanguagesStmt: %w", cerr)
@@ -549,6 +740,26 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUsersStmt: %w", cerr)
 		}
 	}
+	if q.updateAddressStmt != nil {
+		if cerr := q.updateAddressStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateAddressStmt: %w", cerr)
+		}
+	}
+	if q.updateAddressTypeStmt != nil {
+		if cerr := q.updateAddressTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateAddressTypeStmt: %w", cerr)
+		}
+	}
+	if q.updateContactStmt != nil {
+		if cerr := q.updateContactStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateContactStmt: %w", cerr)
+		}
+	}
+	if q.updateContactCategoryStmt != nil {
+		if cerr := q.updateContactCategoryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateContactCategoryStmt: %w", cerr)
+		}
+	}
 	if q.updateCountryStmt != nil {
 		if cerr := q.updateCountryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateCountryStmt: %w", cerr)
@@ -567,6 +778,11 @@ func (q *Queries) Close() error {
 	if q.updateLanguageProficiencyStmt != nil {
 		if cerr := q.updateLanguageProficiencyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateLanguageProficiencyStmt: %w", cerr)
+		}
+	}
+	if q.updateProfileStmt != nil {
+		if cerr := q.updateProfileStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateProfileStmt: %w", cerr)
 		}
 	}
 	if q.updateRefreshTokenStmt != nil {
@@ -658,6 +874,11 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 type Queries struct {
 	db                            DBTX
 	tx                            *sql.Tx
+	addAddressStmt                *sql.Stmt
+	addAddressTypeStmt            *sql.Stmt
+	addContactCategoryStmt        *sql.Stmt
+	addContactsStmt               *sql.Stmt
+	addProfileStmt                *sql.Stmt
 	addUserLanguageStmt           *sql.Stmt
 	addUserProviderStmt           *sql.Stmt
 	addUserRoleStmt               *sql.Stmt
@@ -674,12 +895,17 @@ type Queries struct {
 	createTimezoneStmt            *sql.Stmt
 	createUserStmt                *sql.Stmt
 	createUserLoginStmt           *sql.Stmt
+	deleteAddressStmt             *sql.Stmt
+	deleteAddressTypeStmt         *sql.Stmt
+	deleteContactStmt             *sql.Stmt
+	deleteContactCategoryStmt     *sql.Stmt
 	deleteCountryStmt             *sql.Stmt
 	deleteEmailVerificationStmt   *sql.Stmt
 	deleteIdentityProviderStmt    *sql.Stmt
 	deleteLanguageStmt            *sql.Stmt
 	deleteLanguageProficiencyStmt *sql.Stmt
 	deleteOtpStmt                 *sql.Stmt
+	deleteProfileStmt             *sql.Stmt
 	deleteProvidersStmt           *sql.Stmt
 	deleteRefreshTokenStmt        *sql.Stmt
 	deleteRolesStmt               *sql.Stmt
@@ -688,7 +914,16 @@ type Queries struct {
 	deleteUserStmt                *sql.Stmt
 	deleteUserLanguageStmt        *sql.Stmt
 	deleteUserLoginStmt           *sql.Stmt
+	getAddressStmt                *sql.Stmt
+	getAddressTypeStmt            *sql.Stmt
+	getAllAddressTypesStmt        *sql.Stmt
+	getAllAddressesStmt           *sql.Stmt
+	getAllContactCategoriesStmt   *sql.Stmt
+	getAllContactsStmt            *sql.Stmt
 	getAllOtpStmt                 *sql.Stmt
+	getAllProfilesStmt            *sql.Stmt
+	getContactCategoryStmt        *sql.Stmt
+	getContactsStmt               *sql.Stmt
 	getCountriesStmt              *sql.Stmt
 	getCountryStmt                *sql.Stmt
 	getEmailVerificationStmt      *sql.Stmt
@@ -700,6 +935,8 @@ type Queries struct {
 	getLanguageProficiencyStmt    *sql.Stmt
 	getLanguagesStmt              *sql.Stmt
 	getOtpStmt                    *sql.Stmt
+	getProfileStmt                *sql.Stmt
+	getProfilesStmt               *sql.Stmt
 	getRefreshTokenStmt           *sql.Stmt
 	getRefreshTokensStmt          *sql.Stmt
 	getRoleStmt                   *sql.Stmt
@@ -711,6 +948,7 @@ type Queries struct {
 	getTimezonesStmt              *sql.Stmt
 	getUnResoledLoginsStmt        *sql.Stmt
 	getUserStmt                   *sql.Stmt
+	getUserAddressesStmt          *sql.Stmt
 	getUserLanguagesStmt          *sql.Stmt
 	getUserLoginStmt              *sql.Stmt
 	getUserLoginsStmt             *sql.Stmt
@@ -718,10 +956,15 @@ type Queries struct {
 	getUserRolesStmt              *sql.Stmt
 	getUserTimezonesStmt          *sql.Stmt
 	getUsersStmt                  *sql.Stmt
+	updateAddressStmt             *sql.Stmt
+	updateAddressTypeStmt         *sql.Stmt
+	updateContactStmt             *sql.Stmt
+	updateContactCategoryStmt     *sql.Stmt
 	updateCountryStmt             *sql.Stmt
 	updateIdentityProviderStmt    *sql.Stmt
 	updateLanguageStmt            *sql.Stmt
 	updateLanguageProficiencyStmt *sql.Stmt
+	updateProfileStmt             *sql.Stmt
 	updateRefreshTokenStmt        *sql.Stmt
 	updateResolvedLoginStmt       *sql.Stmt
 	updateRoleStmt                *sql.Stmt
@@ -738,6 +981,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
 		db:                            tx,
 		tx:                            tx,
+		addAddressStmt:                q.addAddressStmt,
+		addAddressTypeStmt:            q.addAddressTypeStmt,
+		addContactCategoryStmt:        q.addContactCategoryStmt,
+		addContactsStmt:               q.addContactsStmt,
+		addProfileStmt:                q.addProfileStmt,
 		addUserLanguageStmt:           q.addUserLanguageStmt,
 		addUserProviderStmt:           q.addUserProviderStmt,
 		addUserRoleStmt:               q.addUserRoleStmt,
@@ -754,12 +1002,17 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createTimezoneStmt:            q.createTimezoneStmt,
 		createUserStmt:                q.createUserStmt,
 		createUserLoginStmt:           q.createUserLoginStmt,
+		deleteAddressStmt:             q.deleteAddressStmt,
+		deleteAddressTypeStmt:         q.deleteAddressTypeStmt,
+		deleteContactStmt:             q.deleteContactStmt,
+		deleteContactCategoryStmt:     q.deleteContactCategoryStmt,
 		deleteCountryStmt:             q.deleteCountryStmt,
 		deleteEmailVerificationStmt:   q.deleteEmailVerificationStmt,
 		deleteIdentityProviderStmt:    q.deleteIdentityProviderStmt,
 		deleteLanguageStmt:            q.deleteLanguageStmt,
 		deleteLanguageProficiencyStmt: q.deleteLanguageProficiencyStmt,
 		deleteOtpStmt:                 q.deleteOtpStmt,
+		deleteProfileStmt:             q.deleteProfileStmt,
 		deleteProvidersStmt:           q.deleteProvidersStmt,
 		deleteRefreshTokenStmt:        q.deleteRefreshTokenStmt,
 		deleteRolesStmt:               q.deleteRolesStmt,
@@ -768,7 +1021,16 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteUserStmt:                q.deleteUserStmt,
 		deleteUserLanguageStmt:        q.deleteUserLanguageStmt,
 		deleteUserLoginStmt:           q.deleteUserLoginStmt,
+		getAddressStmt:                q.getAddressStmt,
+		getAddressTypeStmt:            q.getAddressTypeStmt,
+		getAllAddressTypesStmt:        q.getAllAddressTypesStmt,
+		getAllAddressesStmt:           q.getAllAddressesStmt,
+		getAllContactCategoriesStmt:   q.getAllContactCategoriesStmt,
+		getAllContactsStmt:            q.getAllContactsStmt,
 		getAllOtpStmt:                 q.getAllOtpStmt,
+		getAllProfilesStmt:            q.getAllProfilesStmt,
+		getContactCategoryStmt:        q.getContactCategoryStmt,
+		getContactsStmt:               q.getContactsStmt,
 		getCountriesStmt:              q.getCountriesStmt,
 		getCountryStmt:                q.getCountryStmt,
 		getEmailVerificationStmt:      q.getEmailVerificationStmt,
@@ -780,6 +1042,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getLanguageProficiencyStmt:    q.getLanguageProficiencyStmt,
 		getLanguagesStmt:              q.getLanguagesStmt,
 		getOtpStmt:                    q.getOtpStmt,
+		getProfileStmt:                q.getProfileStmt,
+		getProfilesStmt:               q.getProfilesStmt,
 		getRefreshTokenStmt:           q.getRefreshTokenStmt,
 		getRefreshTokensStmt:          q.getRefreshTokensStmt,
 		getRoleStmt:                   q.getRoleStmt,
@@ -791,6 +1055,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getTimezonesStmt:              q.getTimezonesStmt,
 		getUnResoledLoginsStmt:        q.getUnResoledLoginsStmt,
 		getUserStmt:                   q.getUserStmt,
+		getUserAddressesStmt:          q.getUserAddressesStmt,
 		getUserLanguagesStmt:          q.getUserLanguagesStmt,
 		getUserLoginStmt:              q.getUserLoginStmt,
 		getUserLoginsStmt:             q.getUserLoginsStmt,
@@ -798,10 +1063,15 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getUserRolesStmt:              q.getUserRolesStmt,
 		getUserTimezonesStmt:          q.getUserTimezonesStmt,
 		getUsersStmt:                  q.getUsersStmt,
+		updateAddressStmt:             q.updateAddressStmt,
+		updateAddressTypeStmt:         q.updateAddressTypeStmt,
+		updateContactStmt:             q.updateContactStmt,
+		updateContactCategoryStmt:     q.updateContactCategoryStmt,
 		updateCountryStmt:             q.updateCountryStmt,
 		updateIdentityProviderStmt:    q.updateIdentityProviderStmt,
 		updateLanguageStmt:            q.updateLanguageStmt,
 		updateLanguageProficiencyStmt: q.updateLanguageProficiencyStmt,
+		updateProfileStmt:             q.updateProfileStmt,
 		updateRefreshTokenStmt:        q.updateRefreshTokenStmt,
 		updateResolvedLoginStmt:       q.updateResolvedLoginStmt,
 		updateRoleStmt:                q.updateRoleStmt,

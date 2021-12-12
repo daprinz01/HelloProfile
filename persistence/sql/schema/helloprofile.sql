@@ -162,10 +162,10 @@ CREATE TABLE recents (
     title varchar NOT NULL,
     highlights varchar NOT NULL,
     year int NOT NULL,
-    link varchar NOT NULL),
+    link varchar NOT NULL,
 CONSTRAINT "uc_recents" UNIQUE (
     "profile_id", title
-);
+));
 
 CREATE TABLE profiles (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
@@ -190,7 +190,8 @@ CREATE TABLE profiles (
 CREATE TABLE address_types (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     name varchar NOT NULL,
-    CONSTRAINT "uc_address_types" UNIQUE (name))
+    CONSTRAINT "uc_address_types" UNIQUE (name));
+    
 CREATE TABLE addresses (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     user_id uuid,
@@ -205,12 +206,12 @@ CREATE TABLE addresses (
 CREATE TABLE contact_categories (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     name varchar NOT NULL,
-    CONSTRAINT "uc_address_types" UNIQUE (name)
+    CONSTRAINT "uc_contact_categories" UNIQUE (name)
 );
 
 CREATE TABLE contacts (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     user_id uuid NOT NULL,
     profile_id uuid NOT NULL,
-    contact_category_id uuid NOT NULL CONSTRAINT "uc_address_types" UNIQUE (name)
+    contact_category_id uuid NOT NULL, CONSTRAINT "uc_contacts" UNIQUE (user_id, profile_id)
 );

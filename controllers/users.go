@@ -83,9 +83,6 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		ResponseDetails: &models.UserDetail{
-			Address:                   user.Address.String,
-			City:                      user.City.String,
-			Country:                   user.Country.String,
 			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
 			Firstname:                 user.Firstname.String,
@@ -95,7 +92,6 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 			IsLockedOut:               user.IsLockedOut,
 			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
 			Lastname:                  user.Lastname.String,
-			State:                     user.State.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
 		},
@@ -122,9 +118,6 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 	userResponse := make([]models.UserDetail, len(users))
 	for index, user := range users {
 		tempUser := models.UserDetail{
-			Address:                   user.Address.String,
-			City:                      user.City.String,
-			Country:                   user.Country.String,
 			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
 			Firstname:                 user.Firstname.String,
@@ -134,7 +127,6 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 			IsLockedOut:               user.IsLockedOut,
 			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
 			Lastname:                  user.Lastname.String,
-			State:                     user.State.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
 		}
@@ -182,9 +174,6 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		// Check all the user parameters passed and consolidate with existing user record
 
 		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
-			Address:                   sql.NullString{String: getValue(request.Address, user.Address.String), Valid: true},
-			City:                      sql.NullString{String: getValue(request.City, user.City.String), Valid: true},
-			Country:                   sql.NullString{String: getValue(request.Country, user.Country.String), Valid: true},
 			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
 			Firstname:                 sql.NullString{String: getValue(request.Firstname, user.Firstname.String), Valid: true},
@@ -195,7 +184,6 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
 			Lastname:                  sql.NullString{String: getValue(request.Lastname, user.Lastname.String), Valid: true},
 			Password:                  user.Password,
-			State:                     sql.NullString{String: getValue(request.State, user.State.String), Valid: true},
 			Username:                  sql.NullString{String: getValue(request.Username, user.Username.String), Valid: true},
 			Phone:                     sql.NullString{String: getValue(request.Phone, user.Phone.String), Valid: true},
 			Username_2:                sql.NullString{String: user.Email, Valid: true},

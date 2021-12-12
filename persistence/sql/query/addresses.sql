@@ -29,12 +29,12 @@ RETURNING
 
 -- name: UpdateAddress :exec
 UPDATE
-    address
+    addresses
 SET
     street = $2,
     city = $3,
     state = $4,
-    country_id = % 5,
+    country_id = $5,
     address_type = $6
 WHERE
     id = $1;
