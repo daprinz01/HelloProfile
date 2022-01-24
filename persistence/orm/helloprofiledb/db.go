@@ -25,9 +25,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.addAddressStmt, err = db.PrepareContext(ctx, addAddress); err != nil {
 		return nil, fmt.Errorf("error preparing query AddAddress: %w", err)
 	}
-	if q.addAddressTypeStmt, err = db.PrepareContext(ctx, addAddressType); err != nil {
-		return nil, fmt.Errorf("error preparing query AddAddressType: %w", err)
-	}
 	if q.addContactCategoryStmt, err = db.PrepareContext(ctx, addContactCategory); err != nil {
 		return nil, fmt.Errorf("error preparing query AddContactCategory: %w", err)
 	}
@@ -88,9 +85,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteAddressStmt, err = db.PrepareContext(ctx, deleteAddress); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteAddress: %w", err)
 	}
-	if q.deleteAddressTypeStmt, err = db.PrepareContext(ctx, deleteAddressType); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteAddressType: %w", err)
-	}
 	if q.deleteContactStmt, err = db.PrepareContext(ctx, deleteContact); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteContact: %w", err)
 	}
@@ -144,12 +138,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getAddressStmt, err = db.PrepareContext(ctx, getAddress); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAddress: %w", err)
-	}
-	if q.getAddressTypeStmt, err = db.PrepareContext(ctx, getAddressType); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAddressType: %w", err)
-	}
-	if q.getAllAddressTypesStmt, err = db.PrepareContext(ctx, getAllAddressTypes); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAllAddressTypes: %w", err)
 	}
 	if q.getAllAddressesStmt, err = db.PrepareContext(ctx, getAllAddresses); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllAddresses: %w", err)
@@ -271,9 +259,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateAddressStmt, err = db.PrepareContext(ctx, updateAddress); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateAddress: %w", err)
 	}
-	if q.updateAddressTypeStmt, err = db.PrepareContext(ctx, updateAddressType); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateAddressType: %w", err)
-	}
 	if q.updateContactStmt, err = db.PrepareContext(ctx, updateContact); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateContact: %w", err)
 	}
@@ -333,11 +318,6 @@ func (q *Queries) Close() error {
 	if q.addAddressStmt != nil {
 		if cerr := q.addAddressStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing addAddressStmt: %w", cerr)
-		}
-	}
-	if q.addAddressTypeStmt != nil {
-		if cerr := q.addAddressTypeStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing addAddressTypeStmt: %w", cerr)
 		}
 	}
 	if q.addContactCategoryStmt != nil {
@@ -440,11 +420,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteAddressStmt: %w", cerr)
 		}
 	}
-	if q.deleteAddressTypeStmt != nil {
-		if cerr := q.deleteAddressTypeStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteAddressTypeStmt: %w", cerr)
-		}
-	}
 	if q.deleteContactStmt != nil {
 		if cerr := q.deleteContactStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteContactStmt: %w", cerr)
@@ -533,16 +508,6 @@ func (q *Queries) Close() error {
 	if q.getAddressStmt != nil {
 		if cerr := q.getAddressStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAddressStmt: %w", cerr)
-		}
-	}
-	if q.getAddressTypeStmt != nil {
-		if cerr := q.getAddressTypeStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAddressTypeStmt: %w", cerr)
-		}
-	}
-	if q.getAllAddressTypesStmt != nil {
-		if cerr := q.getAllAddressTypesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAllAddressTypesStmt: %w", cerr)
 		}
 	}
 	if q.getAllAddressesStmt != nil {
@@ -745,11 +710,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateAddressStmt: %w", cerr)
 		}
 	}
-	if q.updateAddressTypeStmt != nil {
-		if cerr := q.updateAddressTypeStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateAddressTypeStmt: %w", cerr)
-		}
-	}
 	if q.updateContactStmt != nil {
 		if cerr := q.updateContactStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateContactStmt: %w", cerr)
@@ -875,7 +835,6 @@ type Queries struct {
 	db                            DBTX
 	tx                            *sql.Tx
 	addAddressStmt                *sql.Stmt
-	addAddressTypeStmt            *sql.Stmt
 	addContactCategoryStmt        *sql.Stmt
 	addContactsStmt               *sql.Stmt
 	addProfileStmt                *sql.Stmt
@@ -896,7 +855,6 @@ type Queries struct {
 	createUserStmt                *sql.Stmt
 	createUserLoginStmt           *sql.Stmt
 	deleteAddressStmt             *sql.Stmt
-	deleteAddressTypeStmt         *sql.Stmt
 	deleteContactStmt             *sql.Stmt
 	deleteContactCategoryStmt     *sql.Stmt
 	deleteCountryStmt             *sql.Stmt
@@ -915,8 +873,6 @@ type Queries struct {
 	deleteUserLanguageStmt        *sql.Stmt
 	deleteUserLoginStmt           *sql.Stmt
 	getAddressStmt                *sql.Stmt
-	getAddressTypeStmt            *sql.Stmt
-	getAllAddressTypesStmt        *sql.Stmt
 	getAllAddressesStmt           *sql.Stmt
 	getAllContactCategoriesStmt   *sql.Stmt
 	getAllContactsStmt            *sql.Stmt
@@ -957,7 +913,6 @@ type Queries struct {
 	getUserTimezonesStmt          *sql.Stmt
 	getUsersStmt                  *sql.Stmt
 	updateAddressStmt             *sql.Stmt
-	updateAddressTypeStmt         *sql.Stmt
 	updateContactStmt             *sql.Stmt
 	updateContactCategoryStmt     *sql.Stmt
 	updateCountryStmt             *sql.Stmt
@@ -982,7 +937,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                            tx,
 		tx:                            tx,
 		addAddressStmt:                q.addAddressStmt,
-		addAddressTypeStmt:            q.addAddressTypeStmt,
 		addContactCategoryStmt:        q.addContactCategoryStmt,
 		addContactsStmt:               q.addContactsStmt,
 		addProfileStmt:                q.addProfileStmt,
@@ -1003,7 +957,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		createUserStmt:                q.createUserStmt,
 		createUserLoginStmt:           q.createUserLoginStmt,
 		deleteAddressStmt:             q.deleteAddressStmt,
-		deleteAddressTypeStmt:         q.deleteAddressTypeStmt,
 		deleteContactStmt:             q.deleteContactStmt,
 		deleteContactCategoryStmt:     q.deleteContactCategoryStmt,
 		deleteCountryStmt:             q.deleteCountryStmt,
@@ -1022,8 +975,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteUserLanguageStmt:        q.deleteUserLanguageStmt,
 		deleteUserLoginStmt:           q.deleteUserLoginStmt,
 		getAddressStmt:                q.getAddressStmt,
-		getAddressTypeStmt:            q.getAddressTypeStmt,
-		getAllAddressTypesStmt:        q.getAllAddressTypesStmt,
 		getAllAddressesStmt:           q.getAllAddressesStmt,
 		getAllContactCategoriesStmt:   q.getAllContactCategoriesStmt,
 		getAllContactsStmt:            q.getAllContactsStmt,
@@ -1064,7 +1015,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getUserTimezonesStmt:          q.getUserTimezonesStmt,
 		getUsersStmt:                  q.getUsersStmt,
 		updateAddressStmt:             q.updateAddressStmt,
-		updateAddressTypeStmt:         q.updateAddressTypeStmt,
 		updateContactStmt:             q.updateContactStmt,
 		updateContactCategoryStmt:     q.updateContactCategoryStmt,
 		updateCountryStmt:             q.updateCountryStmt,

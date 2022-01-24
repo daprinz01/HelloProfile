@@ -12,7 +12,6 @@ FROM
 WHERE
   username = $1
   OR email = $1
-  or id = $1
 LIMIT 1;
 
 -- name: CreateUser :one

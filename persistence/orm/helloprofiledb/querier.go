@@ -11,7 +11,6 @@ import (
 
 type Querier interface {
 	AddAddress(ctx context.Context, arg AddAddressParams) (Address, error)
-	AddAddressType(ctx context.Context, name string) (AddressType, error)
 	AddContactCategory(ctx context.Context, name string) (ContactCategory, error)
 	AddContacts(ctx context.Context, arg AddContactsParams) (Contact, error)
 	AddProfile(ctx context.Context, arg AddProfileParams) (Profile, error)
@@ -32,9 +31,8 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserLogin(ctx context.Context, arg CreateUserLoginParams) (UserLogin, error)
 	DeleteAddress(ctx context.Context, id uuid.UUID) error
-	DeleteAddressType(ctx context.Context, id uuid.UUID) error
 	DeleteContact(ctx context.Context, arg DeleteContactParams) error
-	DeleteContactCategory(ctx context.Context, id uuid.UUID) error
+	DeleteContactCategory(ctx context.Context, name string) error
 	DeleteCountry(ctx context.Context, name string) error
 	DeleteEmailVerification(ctx context.Context, otp string) error
 	DeleteIdentityProvider(ctx context.Context, name string) error
@@ -51,14 +49,12 @@ type Querier interface {
 	DeleteUserLanguage(ctx context.Context, arg DeleteUserLanguageParams) error
 	DeleteUserLogin(ctx context.Context, userID uuid.UUID) error
 	GetAddress(ctx context.Context, id uuid.UUID) (Address, error)
-	GetAddressType(ctx context.Context, id uuid.UUID) (AddressType, error)
-	GetAllAddressTypes(ctx context.Context) ([]AddressType, error)
 	GetAllAddresses(ctx context.Context) ([]Address, error)
 	GetAllContactCategories(ctx context.Context) ([]ContactCategory, error)
 	GetAllContacts(ctx context.Context) ([]Contact, error)
 	GetAllOtp(ctx context.Context) ([]Otp, error)
 	GetAllProfiles(ctx context.Context) ([]Profile, error)
-	GetContactCategory(ctx context.Context, id uuid.UUID) (ContactCategory, error)
+	GetContactCategory(ctx context.Context, name string) (ContactCategory, error)
 	GetContacts(ctx context.Context, userID uuid.UUID) ([]Contact, error)
 	GetCountries(ctx context.Context) ([]Country, error)
 	GetCountry(ctx context.Context, name string) (Country, error)
@@ -93,7 +89,6 @@ type Querier interface {
 	GetUserTimezones(ctx context.Context, username sql.NullString) ([]Timezone, error)
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	UpdateAddress(ctx context.Context, arg UpdateAddressParams) error
-	UpdateAddressType(ctx context.Context, arg UpdateAddressTypeParams) error
 	UpdateContact(ctx context.Context, arg UpdateContactParams) error
 	UpdateContactCategory(ctx context.Context, arg UpdateContactCategoryParams) error
 	UpdateCountry(ctx context.Context, arg UpdateCountryParams) (Country, error)

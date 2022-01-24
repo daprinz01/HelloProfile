@@ -43,6 +43,7 @@ const INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE = "Unsupported authentication 
 
 const UNAUTHORIZED_ERROR_CODE = "11"
 const UNAUTHORIZED_ERROR_MESSAGE = "Sorry, you are not authorized to carry out this operation."
+const UNAUTHORIZED_ERROR_MESSAGE_WRONG_JWT = "Sorry we cannot proceed with your login. Reason: Invalid token."
 
 const ACCOUNT_LOCKOUT_ERROR_CODE = "12"
 const ACCOUNT_LOCKOUT_ERROR_MESSAGE = "Sorry you exceeded the maximum login attempts... Kindly reset your password to continue..."

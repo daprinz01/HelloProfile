@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
@@ -37,10 +38,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 		return err
 	}
 
-	var username sql.NullString
-	username.String = strings.ToLower(request.Username)
-	username.Valid = true
-	user, err := env.HelloProfileDb.GetUser(context.Background(), username)
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(request.Username), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
 		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
@@ -103,6 +101,65 @@ func (env *Env) Login(c echo.Context) (err error) {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 			}
 		}()
+		addresses := make(chan []models.Address)
+		go func() {
+			log.WithFields(fields).Info(`Getting the primary address for the user`)
+			var addressList []models.Address
+			dbAddresses, err := env.HelloProfileDb.GetUserAddresses(context.Background(), uuid.NullUUID{UUID: user.ID, Valid: true})
+			if err != nil {
+				log.WithFields(fields).WithError(err).Error("Error occured fetching address for user")
+				addresses <- addressList
+			}
+
+			for _, value := range dbAddresses {
+				address := models.Address{
+					ID:      value.ID,
+					Street:  value.Street,
+					City:    value.City,
+					State:   value.State.String,
+					Country: value.Country.String,
+				}
+				addressList = append(addressList, address)
+			}
+			addresses <- addressList
+
+		}()
+		userAddress := <-addresses
+		profiles := make(chan []models.Profile)
+		go func(userAddresses []models.Address) {
+			log.WithFields(fields).Info(`Fetching profiles for user...`)
+			var profileList []models.Profile
+			dbProfiles, err := env.HelloProfileDb.GetProfiles(context.Background(), user.ID)
+			if err != nil {
+				log.WithFields(fields).WithError(err).Error(`Error occured while fetching profiles for user...`)
+			}
+			for _, value := range dbProfiles {
+				address := new(models.Address)
+				for _, addressValue := range userAddresses {
+					if addressValue.ID == value.AddressID.UUID {
+						address = &addressValue
+					}
+				}
+				profileList = append(profileList, models.Profile{
+					ID:             value.ID,
+					Status:         value.Status,
+					ProfileName:    value.ProfileName,
+					Fullname:       value.Fullname,
+					Title:          value.Title,
+					Bio:            value.Bio,
+					Company:        value.Company,
+					CompanyAddress: value.CompanyAddress,
+					ImageUrl:       value.ImageUrl.String,
+					Phone:          value.Phone,
+					Email:          value.Email,
+					Address:        *address,
+					Website:        value.Website.String,
+					IsDefault:      value.IsDefault,
+					Color:          value.Color.Int32,
+				})
+			}
+			profiles <- profileList
+		}(userAddress)
 		loginResponse := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
@@ -118,13 +175,14 @@ func (env *Env) Login(c echo.Context) (err error) {
 				Lastname:                  user.Lastname.String,
 				Username:                  user.Username.String,
 				Phone:                     user.Phone.String,
+				Profiles:                  <-profiles,
 			},
 		}
 		c.Response().Header().Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
 		c.Response().Header().Set("Refresh-Token", refreshToken)
 		c.Response().Header().Set("Role", strings.Join(userRoles, ":"))
 		c.JSON(http.StatusOK, loginResponse)
-
+		return err
 	} else {
 		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
 		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
@@ -189,11 +247,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 		}
 
 		c.JSON(http.StatusUnauthorized, errorResponse)
-
+		return err
 	}
-
-	return err
-
 }
 
 // saveLogin is used to log a login request that failed with incorrect password or was successful
@@ -876,7 +931,6 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 		var hashedPassword string
 		if request.NewPassword != "" {
 			hashedPassword = util.GenerateHash(request.NewPassword)
-
 		}
 		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 			Username_2:                user.Username,

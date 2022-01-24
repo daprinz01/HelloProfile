@@ -121,11 +121,6 @@ CREATE TABLE profiles (
     color int,
     CONSTRAINT "uc_profiles" UNIQUE (user_id, profile_name)
 );
-
-CREATE TABLE address_types (
-    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
-    name varchar NOT NULL,
-    CONSTRAINT "uc_address_types" UNIQUE (name));
     
 CREATE TABLE addresses (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
@@ -133,8 +128,8 @@ CREATE TABLE addresses (
     street varchar NOT NULL,
     city varchar NOT NULL,
     state varchar NULL,
-    country_id uuid,
-    address_type uuid,
+    country varchar null,
+    isPrimaryAddress BOOLEAN DEFAULT FALSE,
     CONSTRAINT "uc_addresses" UNIQUE (user_id, street)
 );
 
@@ -299,9 +294,6 @@ ALTER TABLE "addresses"
 
 ALTER TABLE "profiles"
     ADD FOREIGN KEY ("address_id") REFERENCES "addresses" ("id");
-
-ALTER TABLE "addresses"
-    ADD FOREIGN KEY ("country_id") REFERENCES "states" ("id");
 
 ALTER TABLE "recents"
     ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");

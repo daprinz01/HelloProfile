@@ -10,18 +10,13 @@ import (
 )
 
 type Address struct {
-	ID          uuid.UUID      `json:"id"`
-	UserID      uuid.NullUUID  `json:"user_id"`
-	Street      string         `json:"street"`
-	City        string         `json:"city"`
-	State       sql.NullString `json:"state"`
-	CountryID   uuid.NullUUID  `json:"country_id"`
-	AddressType uuid.NullUUID  `json:"address_type"`
-}
-
-type AddressType struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID               uuid.UUID      `json:"id"`
+	UserID           uuid.NullUUID  `json:"user_id"`
+	Street           string         `json:"street"`
+	City             string         `json:"city"`
+	State            sql.NullString `json:"state"`
+	Country          sql.NullString `json:"country"`
+	Isprimaryaddress sql.NullBool   `json:"isprimaryaddress"`
 }
 
 type Contact struct {

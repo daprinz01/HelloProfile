@@ -162,6 +162,7 @@ func main() {
 	// Methods that check application themselves and use the applicaiton information
 	auth.POST("/login", env.Login)
 	auth.POST("/otp/verify", env.VerifyOtp)
+	auth.POST("/login/google", env.GoogleLoginHandler)
 
 	// User operations
 	apiAdminAuth.GET("/user", env.GetUsers)

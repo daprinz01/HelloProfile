@@ -11,19 +11,18 @@ import (
 )
 
 const addAddress = `-- name: AddAddress :one
-INSERT INTO addresses (user_id, street, city, state, country_id, address_type)
-    VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO addresses (user_id, street, city, state, country)
+    VALUES ($1, $2, $3, $4, $5)
 RETURNING
-    id, user_id, street, city, state, country_id, address_type
+    id, user_id, street, city, state, country, isprimaryaddress
 `
 
 type AddAddressParams struct {
-	UserID      uuid.NullUUID  `json:"user_id"`
-	Street      string         `json:"street"`
-	City        string         `json:"city"`
-	State       sql.NullString `json:"state"`
-	CountryID   uuid.NullUUID  `json:"country_id"`
-	AddressType uuid.NullUUID  `json:"address_type"`
+	UserID  uuid.NullUUID  `json:"user_id"`
+	Street  string         `json:"street"`
+	City    string         `json:"city"`
+	State   sql.NullString `json:"state"`
+	Country sql.NullString `json:"country"`
 }
 
 func (q *Queries) AddAddress(ctx context.Context, arg AddAddressParams) (Address, error) {
@@ -32,8 +31,7 @@ func (q *Queries) AddAddress(ctx context.Context, arg AddAddressParams) (Address
 		arg.Street,
 		arg.City,
 		arg.State,
-		arg.CountryID,
-		arg.AddressType,
+		arg.Country,
 	)
 	var i Address
 	err := row.Scan(
@@ -42,8 +40,8 @@ func (q *Queries) AddAddress(ctx context.Context, arg AddAddressParams) (Address
 		&i.Street,
 		&i.City,
 		&i.State,
-		&i.CountryID,
-		&i.AddressType,
+		&i.Country,
+		&i.Isprimaryaddress,
 	)
 	return i, err
 }
@@ -60,7 +58,7 @@ func (q *Queries) DeleteAddress(ctx context.Context, id uuid.UUID) error {
 
 const getAddress = `-- name: GetAddress :one
 SELECT
-    id, user_id, street, city, state, country_id, address_type
+    id, user_id, street, city, state, country, isprimaryaddress
 FROM
     addresses
 WHERE
@@ -77,15 +75,15 @@ func (q *Queries) GetAddress(ctx context.Context, id uuid.UUID) (Address, error)
 		&i.Street,
 		&i.City,
 		&i.State,
-		&i.CountryID,
-		&i.AddressType,
+		&i.Country,
+		&i.Isprimaryaddress,
 	)
 	return i, err
 }
 
 const getAllAddresses = `-- name: GetAllAddresses :many
 SELECT
-    id, user_id, street, city, state, country_id, address_type
+    id, user_id, street, city, state, country, isprimaryaddress
 FROM
     addresses
 `
@@ -105,8 +103,8 @@ func (q *Queries) GetAllAddresses(ctx context.Context) ([]Address, error) {
 			&i.Street,
 			&i.City,
 			&i.State,
-			&i.CountryID,
-			&i.AddressType,
+			&i.Country,
+			&i.Isprimaryaddress,
 		); err != nil {
 			return nil, err
 		}
@@ -123,7 +121,7 @@ func (q *Queries) GetAllAddresses(ctx context.Context) ([]Address, error) {
 
 const getUserAddresses = `-- name: GetUserAddresses :many
 SELECT
-    id, user_id, street, city, state, country_id, address_type
+    id, user_id, street, city, state, country, isprimaryaddress
 FROM
     addresses
 WHERE
@@ -145,8 +143,8 @@ func (q *Queries) GetUserAddresses(ctx context.Context, userID uuid.NullUUID) ([
 			&i.Street,
 			&i.City,
 			&i.State,
-			&i.CountryID,
-			&i.AddressType,
+			&i.Country,
+			&i.Isprimaryaddress,
 		); err != nil {
 			return nil, err
 		}
@@ -168,19 +166,17 @@ SET
     street = $2,
     city = $3,
     state = $4,
-    country_id = $5,
-    address_type = $6
+    country = $5
 WHERE
     id = $1
 `
 
 type UpdateAddressParams struct {
-	ID          uuid.UUID      `json:"id"`
-	Street      string         `json:"street"`
-	City        string         `json:"city"`
-	State       sql.NullString `json:"state"`
-	CountryID   uuid.NullUUID  `json:"country_id"`
-	AddressType uuid.NullUUID  `json:"address_type"`
+	ID      uuid.UUID      `json:"id"`
+	Street  string         `json:"street"`
+	City    string         `json:"city"`
+	State   sql.NullString `json:"state"`
+	Country sql.NullString `json:"country"`
 }
 
 func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) error {
@@ -189,8 +185,7 @@ func (q *Queries) UpdateAddress(ctx context.Context, arg UpdateAddressParams) er
 		arg.Street,
 		arg.City,
 		arg.State,
-		arg.CountryID,
-		arg.AddressType,
+		arg.Country,
 	)
 	return err
 }

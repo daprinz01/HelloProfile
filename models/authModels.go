@@ -4,6 +4,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
 // LoginRequest is used to contruct the login request
@@ -36,10 +37,6 @@ type UserDetail struct {
 	IsEmailConfirmed          bool      `json:"isEmailConfirmed,omitempty"`
 	Password                  string    `json:"password,omitempty"`
 	IsPasswordSystemGenerated bool      `json:"isPasswordSystemGenerated,omitempty"`
-	Address                   string    `json:"address,omitempty"`
-	City                      string    `json:"city,omitempty"`
-	State                     string    `json:"state,omitempty"`
-	Country                   string    `json:"country,omitempty"`
 	CreatedAt                 time.Time `json:"createdAt,omitempty"`
 	IsLockedOut               bool      `json:"isLockedOut,omitempty"`
 	ProfilePicture            string    `json:"profilePicture,omitempty"`
@@ -47,6 +44,33 @@ type UserDetail struct {
 	LanguageName              string    `json:"languageName,omitempty"`
 	TimezoneName              string    `json:"timezoneName,omitempty"`
 	Zone                      string    `json:"zone,omitempty"`
+	Address                   Address   `json:"primaryAddress,omitempty"`
+	Profiles                  []Profile `json:"profiles,omitempty"`
+}
+type Profile struct {
+	ID             uuid.UUID `json:"id"`
+	Status         bool      `json:"status"`
+	ProfileName    string    `json:"profile_name"`
+	Fullname       string    `json:"fullname"`
+	Title          string    `json:"title"`
+	Bio            string    `json:"bio"`
+	Company        string    `json:"company"`
+	CompanyAddress string    `json:"company_address"`
+	ImageUrl       string    `json:"image_url"`
+	Phone          string    `json:"phone"`
+	Email          string    `json:"email"`
+	Address        Address   `json:"address"`
+	Website        string    `json:"website"`
+	IsDefault      bool      `json:"is_default"`
+	Color          int32     `json:"color"`
+}
+
+type Address struct {
+	ID      uuid.UUID `json:"id"`
+	Street  string    `json:"street"`
+	City    string    `json:"city"`
+	State   string    `json:"state"`
+	Country string    `json:"country"`
 }
 
 // RefreshResponse is used to send success message for a successful refresh of auth token
@@ -75,4 +99,17 @@ type VerifyOtpRequest struct {
 // ResetPasswordRequest is used to reset user password after
 type ResetPasswordRequest struct {
 	NewPassword string `json:"newPassword,omitempty"`
+}
+
+// GoogleClaims -
+type GoogleClaims struct {
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	FirstName     string `json:"given_name"`
+	LastName      string `json:"family_name"`
+	jwt.StandardClaims
+}
+
+type GoogleJWT struct {
+	GoogleJWT string `json:"token"`
 }

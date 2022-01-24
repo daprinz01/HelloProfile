@@ -25,11 +25,11 @@ func (q *Queries) AddContactCategory(ctx context.Context, name string) (ContactC
 }
 
 const deleteContactCategory = `-- name: DeleteContactCategory :exec
-delete from contact_categories where id=$1 or name=$1
+delete from contact_categories where name=$1
 `
 
-func (q *Queries) DeleteContactCategory(ctx context.Context, id uuid.UUID) error {
-	_, err := q.exec(ctx, q.deleteContactCategoryStmt, deleteContactCategory, id)
+func (q *Queries) DeleteContactCategory(ctx context.Context, name string) error {
+	_, err := q.exec(ctx, q.deleteContactCategoryStmt, deleteContactCategory, name)
 	return err
 }
 
@@ -61,11 +61,11 @@ func (q *Queries) GetAllContactCategories(ctx context.Context) ([]ContactCategor
 }
 
 const getContactCategory = `-- name: GetContactCategory :one
-select id, name from contact_categories where id=$1 or name=$1
+select id, name from contact_categories where name=$1
 `
 
-func (q *Queries) GetContactCategory(ctx context.Context, id uuid.UUID) (ContactCategory, error) {
-	row := q.queryRow(ctx, q.getContactCategoryStmt, getContactCategory, id)
+func (q *Queries) GetContactCategory(ctx context.Context, name string) (ContactCategory, error) {
+	row := q.queryRow(ctx, q.getContactCategoryStmt, getContactCategory, name)
 	var i ContactCategory
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err

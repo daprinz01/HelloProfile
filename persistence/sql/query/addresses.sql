@@ -22,8 +22,8 @@ WHERE
 LIMIT 1;
 
 -- name: AddAddress :one
-INSERT INTO addresses (user_id, street, city, state, country_id, address_type)
-    VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO addresses (user_id, street, city, state, country)
+    VALUES ($1, $2, $3, $4, $5)
 RETURNING
     *;
 
@@ -34,8 +34,7 @@ SET
     street = $2,
     city = $3,
     state = $4,
-    country_id = $5,
-    address_type = $6
+    country = $5
 WHERE
     id = $1;
 

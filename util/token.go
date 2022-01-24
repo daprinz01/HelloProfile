@@ -4,6 +4,11 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -50,7 +55,8 @@ func GenerateJWT(email string, role []string) (response string, refreshToken str
 		Role:  strings.Join(role, ":"),
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
-			Issuer:    "Persian Black",
+			Issuer:    "helloprofile.io",
+			Audience:  "Zm032Nh7TJO_A_vifLUk8gX1R49YPEMe",
 		},
 	}
 	jwtKey := os.Getenv("JWT_SECRET_KEY")
@@ -101,7 +107,7 @@ func VerifyToken(tokenString string) (verifiedClaims models.VerifiedClaims, err 
 	if token != nil && !token.Valid {
 		verifiedClaim.Email = claims.Email
 		verifiedClaim.Role = claims.Role
-		return verifiedClaim, err
+		return verifiedClaim, fmt.Errorf("token is not valid")
 	}
 	return verifiedClaim, err
 
@@ -123,4 +129,80 @@ func GenerateOTP(length int) (string, error) {
 	}
 
 	return string(buffer), nil
+}
+
+// ValidateGoogleJWT -
+func ValidateGoogleJWT(tokenString, device string) (models.GoogleClaims, error) {
+	claimsStruct := models.GoogleClaims{}
+
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&claimsStruct,
+		func(token *jwt.Token) (interface{}, error) {
+			pem, err := getGooglePublicKey(fmt.Sprintf("%s", token.Header["kid"]))
+			if err != nil {
+				return nil, err
+			}
+			key, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pem))
+			if err != nil {
+				return nil, err
+			}
+			return key, nil
+		},
+	)
+	if err != nil {
+		return models.GoogleClaims{}, err
+	}
+
+	claims, ok := token.Claims.(*models.GoogleClaims)
+	if !ok {
+		return models.GoogleClaims{}, errors.New("invalid google jwt")
+	}
+
+	if claims.Issuer != "accounts.google.com" && claims.Issuer != "https://accounts.google.com" {
+		return models.GoogleClaims{}, errors.New("iss is invalid")
+	}
+	switch device {
+	case "ios":
+		if claims.Audience != os.Getenv("GOOGLE_CLIENT_ID_IOS") {
+			return models.GoogleClaims{}, errors.New("aud is invalid")
+		}
+	case "android":
+		if claims.Audience != os.Getenv("GOOGLE_CLIENT_ID_ANDROID") {
+			return models.GoogleClaims{}, errors.New("aud is invalid")
+		}
+	case "web":
+	default:
+		if claims.Audience != os.Getenv("GOOGLE_CLIENT_ID_WEB") {
+			return models.GoogleClaims{}, errors.New("aud is invalid")
+		}
+	}
+
+	if claims.ExpiresAt < time.Now().UTC().Unix() {
+		return models.GoogleClaims{}, errors.New("JWT is expired")
+	}
+
+	return *claims, nil
+}
+
+func getGooglePublicKey(keyID string) (string, error) {
+	resp, err := http.Get("https://www.googleapis.com/oauth2/v1/certs")
+	if err != nil {
+		return "", err
+	}
+	dat, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	myResp := map[string]string{}
+	err = json.Unmarshal(dat, &myResp)
+	if err != nil {
+		return "", err
+	}
+	key, ok := myResp[keyID]
+	if !ok {
+		return "", errors.New("key not found")
+	}
+	return key, nil
 }
