@@ -21,6 +21,16 @@ WHERE
     id = $1
 LIMIT 1;
 
+-- name: GetPrimaryAddress :one
+SELECT
+    *
+FROM
+    addresses
+WHERE
+    user_id = $1
+    AND isPrimaryAddress IS TRUE
+LIMIT 1;
+
 -- name: AddAddress :one
 INSERT INTO addresses (user_id, street, city, state, country)
     VALUES ($1, $2, $3, $4, $5)

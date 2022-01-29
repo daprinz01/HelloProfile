@@ -67,6 +67,7 @@ type Querier interface {
 	GetLanguageProficiency(ctx context.Context, proficiency sql.NullString) (LanguageProficiency, error)
 	GetLanguages(ctx context.Context) ([]Language, error)
 	GetOtp(ctx context.Context, arg GetOtpParams) (Otp, error)
+	GetPrimaryAddress(ctx context.Context, userID uuid.NullUUID) (Address, error)
 	GetProfile(ctx context.Context, id uuid.UUID) (Profile, error)
 	GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile, error)
 	GetRefreshToken(ctx context.Context, token string) (RefreshToken, error)

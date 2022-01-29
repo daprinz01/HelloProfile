@@ -167,40 +167,40 @@ func main() {
 	// User operations
 	apiAdminAuth.GET("/user", env.GetUsers)
 	apiNoAuth.GET("/user/:username/check", env.CheckAvailability)
-	apiNoAuth.GET("/user/:username", env.GetUser)
+	apiAuth.GET("/user", env.GetUser)
 	auth.POST("/user", env.Register)
 	apiAuth.PUT("/user", env.UpdateUser)
 	apiAuth.DELETE("/user/:username", env.DeleteUser)
 
 	// User Language operations
-	apiNoAuth.GET("/user/language/:username", env.GetUserLanguages)
-	apiAuth.POST("/user/language/:username/:language/:proficiency", env.AddUserLanguage)
-	apiAuth.DELETE("/user/language/:username/:language", env.DeleteUserLanguages)
+	// apiNoAuth.GET("/user/language/:username", env.GetUserLanguages)
+	// apiAuth.POST("/user/language/:username/:language/:proficiency", env.AddUserLanguage)
+	// apiAuth.DELETE("/user/language/:username/:language", env.DeleteUserLanguages)
 
 	// User Role operations
 	apiAuth.PUT("/user/role/:newRole/:oldRole/:username", env.UpdateUserRole)
 	apiAuth.POST("/user/role/:role/:username", env.AddUserToRole)
 
 	// Language operations
-	apiNoAuth.GET("/language/:language", env.GetLanguage)
-	apiNoAuth.GET("/language", env.GetLanguages)
-	apiAdminAuth.POST("/language/:language", env.AddLanguage)
-	apiAdminAuth.PUT("/language/:language/:newLanguage", env.UpdateLanguage)
-	apiAdminAuth.DELETE("/language/:language", env.DeleteLanguage)
+	// apiNoAuth.GET("/language/:language", env.GetLanguage)
+	// apiNoAuth.GET("/language", env.GetLanguages)
+	// apiAdminAuth.POST("/language/:language", env.AddLanguage)
+	// apiAdminAuth.PUT("/language/:language/:newLanguage", env.UpdateLanguage)
+	// apiAdminAuth.DELETE("/language/:language", env.DeleteLanguage)
 
 	// Language proficiency operations
-	apiNoAuth.GET("/proficiency/:proficiency", env.GetLanguageProficiency)
-	apiNoAuth.GET("/proficiency", env.GetLanguageProficiencies)
-	apiAdminAuth.POST("/proficiency/:proficiency", env.AddLanguageProficiency)
-	apiAdminAuth.PUT("/proficiency/:proficiency/:newProficiency", env.UpdateLanguageProficiency)
-	apiAdminAuth.DELETE("/proficiency/:proficiency", env.DeleteLanguageProficiency)
+	// apiNoAuth.GET("/proficiency/:proficiency", env.GetLanguageProficiency)
+	// apiNoAuth.GET("/proficiency", env.GetLanguageProficiencies)
+	// apiAdminAuth.POST("/proficiency/:proficiency", env.AddLanguageProficiency)
+	// apiAdminAuth.PUT("/proficiency/:proficiency/:newProficiency", env.UpdateLanguageProficiency)
+	// apiAdminAuth.DELETE("/proficiency/:proficiency", env.DeleteLanguageProficiency)
 
 	// Timezone Operations
-	apiNoAuth.GET("/timezone/:timezone", env.GetTimezone)
-	apiNoAuth.GET("/timezone", env.GetTimezones)
-	apiAdminAuth.POST("/timezone", env.AddTimezone)
-	apiAdminAuth.PUT("/timezone/:timezone", env.UpdateTimezone)
-	apiAdminAuth.DELETE("/timezone/:timezone", env.DeleteTimezone)
+	// apiNoAuth.GET("/timezone/:timezone", env.GetTimezone)
+	// apiNoAuth.GET("/timezone", env.GetTimezones)
+	// apiAdminAuth.POST("/timezone", env.AddTimezone)
+	// apiAdminAuth.PUT("/timezone/:timezone", env.UpdateTimezone)
+	// apiAdminAuth.DELETE("/timezone/:timezone", env.DeleteTimezone)
 
 	// Countries Operations
 	apiNoAuth.GET("/country/:country", env.GetCountry)

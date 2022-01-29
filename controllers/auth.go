@@ -72,6 +72,10 @@ func (env *Env) Login(c echo.Context) (err error) {
 			return err
 		}
 		log.WithFields(fields).Info("Storing refresh token in separate thread...")
+		profiles := make(chan []models.Profile)
+		go env.getProfiles(user.ID, profiles, fields)
+		primaryAddress := make(chan models.Address)
+		go env.getPrimaryAddress(user.ID, primaryAddress, fields)
 		// store refresh token add later
 		go func() {
 			dbRefreshToken, err := env.HelloProfileDb.CreateRefreshToken(context.Background(), helloprofiledb.CreateRefreshTokenParams{
@@ -101,65 +105,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 			}
 		}()
-		addresses := make(chan []models.Address)
-		go func() {
-			log.WithFields(fields).Info(`Getting the primary address for the user`)
-			var addressList []models.Address
-			dbAddresses, err := env.HelloProfileDb.GetUserAddresses(context.Background(), uuid.NullUUID{UUID: user.ID, Valid: true})
-			if err != nil {
-				log.WithFields(fields).WithError(err).Error("Error occured fetching address for user")
-				addresses <- addressList
-			}
 
-			for _, value := range dbAddresses {
-				address := models.Address{
-					ID:      value.ID,
-					Street:  value.Street,
-					City:    value.City,
-					State:   value.State.String,
-					Country: value.Country.String,
-				}
-				addressList = append(addressList, address)
-			}
-			addresses <- addressList
-
-		}()
-		userAddress := <-addresses
-		profiles := make(chan []models.Profile)
-		go func(userAddresses []models.Address) {
-			log.WithFields(fields).Info(`Fetching profiles for user...`)
-			var profileList []models.Profile
-			dbProfiles, err := env.HelloProfileDb.GetProfiles(context.Background(), user.ID)
-			if err != nil {
-				log.WithFields(fields).WithError(err).Error(`Error occured while fetching profiles for user...`)
-			}
-			for _, value := range dbProfiles {
-				address := new(models.Address)
-				for _, addressValue := range userAddresses {
-					if addressValue.ID == value.AddressID.UUID {
-						address = &addressValue
-					}
-				}
-				profileList = append(profileList, models.Profile{
-					ID:             value.ID,
-					Status:         value.Status,
-					ProfileName:    value.ProfileName,
-					Fullname:       value.Fullname,
-					Title:          value.Title,
-					Bio:            value.Bio,
-					Company:        value.Company,
-					CompanyAddress: value.CompanyAddress,
-					ImageUrl:       value.ImageUrl.String,
-					Phone:          value.Phone,
-					Email:          value.Email,
-					Address:        *address,
-					Website:        value.Website.String,
-					IsDefault:      value.IsDefault,
-					Color:          value.Color.Int32,
-				})
-			}
-			profiles <- profileList
-		}(userAddress)
 		loginResponse := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
@@ -175,6 +121,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 				Lastname:                  user.Lastname.String,
 				Username:                  user.Username.String,
 				Phone:                     user.Phone.String,
+				Address:                   <-primaryAddress,
 				Profiles:                  <-profiles,
 			},
 		}
@@ -209,10 +156,10 @@ func (env *Env) Login(c echo.Context) (err error) {
 		var lockoutCount int
 		lockOutCountKey := os.Getenv("LOCK_OUT_COUNT")
 		if lockOutCountKey == "" {
-			log.WithFields(fields).Error("LOCK_OUT_COUNT cannot be empty")
-			log.WithFields(fields).Info("LOCK_OUT_COUNT cannot be empty, setting default of 5...")
+			log.WithFields(fields).Error(`LOCK_OUT_COUNT cannot be empty`)
+			log.WithFields(fields).Info(`LOCK_OUT_COUNT cannot be empty, setting default of 5...`)
 		} else {
-			log.WithFields(fields).Info("Setting lock out count...")
+			log.WithFields(fields).Info(`Setting lock out count...`)
 			lockoutCount, err = strconv.Atoi(lockOutCountKey)
 			if err != nil {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while converting lock out count")
@@ -238,7 +185,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 			if err != nil {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to lockout account")
 			}
-			log.WithFields(fields).Info(fmt.Sprintf("Account with username: %s has been locked out", lockoutUpdate.Username.String))
+			log.WithFields(fields).Info(fmt.Sprintf(`Account with username: %s has been locked out`, lockoutUpdate.Username.String))
 
 			errorResponse.Errorcode = util.ACCOUNT_LOCKOUT_ERROR_CODE
 			errorResponse.ErrorMessage = util.ACCOUNT_LOCKOUT_ERROR_MESSAGE
@@ -249,6 +196,82 @@ func (env *Env) Login(c echo.Context) (err error) {
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
+}
+func (env *Env) getPrimaryAddress(userID uuid.UUID, primaryAddress chan models.Address, fields log.Fields) {
+	address, err := env.HelloProfileDb.GetPrimaryAddress(context.Background(), uuid.NullUUID{UUID: userID, Valid: true})
+	if err != nil {
+		log.WithFields(fields).Error(`No address found for user`)
+		return
+	}
+	primaryAddress <- models.Address{
+		ID:      address.ID,
+		Street:  address.Street,
+		City:    address.City,
+		State:   address.State.String,
+		Country: address.Country.String,
+	}
+}
+func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fields log.Fields) {
+	addresses := make(chan []models.Address)
+	go func() {
+		log.WithFields(fields).Info(`Getting the primary address for the user`)
+		var addressList []models.Address
+		dbAddresses, err := env.HelloProfileDb.GetUserAddresses(context.Background(), uuid.NullUUID{UUID: userID, Valid: true})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(`Error occured fetching address for user`)
+			addresses <- addressList
+		}
+
+		for _, value := range dbAddresses {
+			address := models.Address{
+				ID:      value.ID,
+				Street:  value.Street,
+				City:    value.City,
+				State:   value.State.String,
+				Country: value.Country.String,
+			}
+			addressList = append(addressList, address)
+		}
+		addresses <- addressList
+
+	}()
+	userAddress := <-addresses
+
+	go func(userAddresses []models.Address) {
+		log.WithFields(fields).Info(`Fetching profiles for user...`)
+		var profileList []models.Profile
+		dbProfiles, err := env.HelloProfileDb.GetProfiles(context.Background(), userID)
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(`Error occured while fetching profiles for user...`)
+		}
+		for _, value := range dbProfiles {
+			address := new(models.Address)
+			for _, addressValue := range userAddresses {
+				if addressValue.ID == value.AddressID.UUID {
+					address = &addressValue
+				}
+			}
+			profileList = append(profileList, models.Profile{
+				ID:             value.ID,
+				Status:         value.Status,
+				ProfileName:    value.ProfileName,
+				Fullname:       value.Fullname,
+				Title:          value.Title,
+				Bio:            value.Bio,
+				Company:        value.Company,
+				CompanyAddress: value.CompanyAddress,
+				ImageUrl:       value.ImageUrl.String,
+				Phone:          value.Phone,
+				Email:          value.Email,
+				Address:        *address,
+				Website:        value.Website.String,
+				IsDefault:      value.IsDefault,
+				Color:          value.Color.Int32,
+			})
+		}
+		profiles <- profileList
+	}(userAddress)
+
 }
 
 // saveLogin is used to log a login request that failed with incorrect password or was successful

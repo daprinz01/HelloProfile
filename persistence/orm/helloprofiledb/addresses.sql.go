@@ -119,6 +119,32 @@ func (q *Queries) GetAllAddresses(ctx context.Context) ([]Address, error) {
 	return items, nil
 }
 
+const getPrimaryAddress = `-- name: GetPrimaryAddress :one
+SELECT
+    id, user_id, street, city, state, country, isprimaryaddress
+FROM
+    addresses
+WHERE
+    user_id = $1
+    AND isPrimaryAddress IS TRUE
+LIMIT 1
+`
+
+func (q *Queries) GetPrimaryAddress(ctx context.Context, userID uuid.NullUUID) (Address, error) {
+	row := q.queryRow(ctx, q.getPrimaryAddressStmt, getPrimaryAddress, userID)
+	var i Address
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Street,
+		&i.City,
+		&i.State,
+		&i.Country,
+		&i.Isprimaryaddress,
+	)
+	return i, err
+}
+
 const getUserAddresses = `-- name: GetUserAddresses :many
 SELECT
     id, user_id, street, city, state, country, isprimaryaddress

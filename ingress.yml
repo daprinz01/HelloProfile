@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: helloprofile
+  namespace: default
+  labels:
+    app: helloprofile
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    persianblackid: io.helloprofile.backend.ingress
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - helloprofile.test.devtroy.com
+      secretName: helloprofile-ingress
+  rules:
+    - host: helloprofile.test.devtroy.com
+      http:
+        paths:
+          - pathType: ImplementationSpecific
+            backend:
+              service:
+                name: helloprofile
+                port:
+                  number: 8083

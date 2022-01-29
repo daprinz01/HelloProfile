@@ -193,6 +193,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getOtpStmt, err = db.PrepareContext(ctx, getOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetOtp: %w", err)
 	}
+	if q.getPrimaryAddressStmt, err = db.PrepareContext(ctx, getPrimaryAddress); err != nil {
+		return nil, fmt.Errorf("error preparing query GetPrimaryAddress: %w", err)
+	}
 	if q.getProfileStmt, err = db.PrepareContext(ctx, getProfile); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfile: %w", err)
 	}
@@ -600,6 +603,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getOtpStmt: %w", cerr)
 		}
 	}
+	if q.getPrimaryAddressStmt != nil {
+		if cerr := q.getPrimaryAddressStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getPrimaryAddressStmt: %w", cerr)
+		}
+	}
 	if q.getProfileStmt != nil {
 		if cerr := q.getProfileStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getProfileStmt: %w", cerr)
@@ -891,6 +899,7 @@ type Queries struct {
 	getLanguageProficiencyStmt    *sql.Stmt
 	getLanguagesStmt              *sql.Stmt
 	getOtpStmt                    *sql.Stmt
+	getPrimaryAddressStmt         *sql.Stmt
 	getProfileStmt                *sql.Stmt
 	getProfilesStmt               *sql.Stmt
 	getRefreshTokenStmt           *sql.Stmt
@@ -993,6 +1002,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getLanguageProficiencyStmt:    q.getLanguageProficiencyStmt,
 		getLanguagesStmt:              q.getLanguagesStmt,
 		getOtpStmt:                    q.getOtpStmt,
+		getPrimaryAddressStmt:         q.getPrimaryAddressStmt,
 		getProfileStmt:                q.getProfileStmt,
 		getProfilesStmt:               q.getProfilesStmt,
 		getRefreshTokenStmt:           q.getRefreshTokenStmt,

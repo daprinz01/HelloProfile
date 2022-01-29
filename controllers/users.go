@@ -56,7 +56,7 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get User Request received")
 
-	username := c.Param("username")
+	email := c.Request().Header.Get("email")
 	errorResponse := new(models.Errormessage)
 
 	if err != nil {
@@ -67,9 +67,9 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", username))
+	log.WithFields(fields).Info(fmt.Sprintf("Username: %s", email))
 
-	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(username), Valid: true})
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(email), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
@@ -78,7 +78,10 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 		return err
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
-
+	profiles := make(chan []models.Profile)
+	go env.getProfiles(user.ID, profiles, fields)
+	primaryAddress := make(chan models.Address)
+	go env.getPrimaryAddress(user.ID, primaryAddress, fields)
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
@@ -94,6 +97,8 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 			Lastname:                  user.Lastname.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
+			Address:                   <-primaryAddress,
+			Profiles:                  <-profiles,
 		},
 	}
 	c.JSON(http.StatusOK, response)
@@ -116,7 +121,12 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 		return err
 	}
 	userResponse := make([]models.UserDetail, len(users))
+
 	for index, user := range users {
+		profiles := make(chan []models.Profile)
+		go env.getProfiles(user.ID, profiles, fields)
+		primaryAddress := make(chan models.Address)
+		go env.getPrimaryAddress(user.ID, primaryAddress, fields)
 		tempUser := models.UserDetail{
 			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
@@ -129,6 +139,8 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 			Lastname:                  user.Lastname.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
+			Address:                   <-primaryAddress,
+			Profiles:                  <-profiles,
 		}
 		userResponse[index] = tempUser
 	}

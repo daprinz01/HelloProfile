@@ -50,18 +50,18 @@ type UserDetail struct {
 type Profile struct {
 	ID             uuid.UUID `json:"id"`
 	Status         bool      `json:"status"`
-	ProfileName    string    `json:"profile_name"`
+	ProfileName    string    `json:"profileName"`
 	Fullname       string    `json:"fullname"`
 	Title          string    `json:"title"`
 	Bio            string    `json:"bio"`
 	Company        string    `json:"company"`
-	CompanyAddress string    `json:"company_address"`
-	ImageUrl       string    `json:"image_url"`
+	CompanyAddress string    `json:"companyAddress"`
+	ImageUrl       string    `json:"imageUrl"`
 	Phone          string    `json:"phone"`
 	Email          string    `json:"email"`
 	Address        Address   `json:"address"`
 	Website        string    `json:"website"`
-	IsDefault      bool      `json:"is_default"`
+	IsDefault      bool      `json:"isDefault"`
 	Color          int32     `json:"color"`
 }
 
