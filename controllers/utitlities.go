@@ -25,30 +25,31 @@ func (env *Env) getPrimaryAddress(userID uuid.UUID, primaryAddress chan models.A
 		}
 	}
 }
+func (env Env) getUserAddresses(userID uuid.UUID, addresses chan []models.Address, fields log.Fields) {
+	log.WithFields(fields).Info(`Getting the primary address for the user`)
+	var addressList []models.Address
+	dbAddresses, err := env.HelloProfileDb.GetUserAddresses(context.Background(), uuid.NullUUID{UUID: userID, Valid: true})
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(`Error occured fetching address for user`)
+		addresses <- addressList
+	}
+
+	for _, value := range dbAddresses {
+		address := models.Address{
+			ID:      value.ID,
+			Street:  value.Street,
+			City:    value.City,
+			State:   value.State.String,
+			Country: value.Country.String,
+		}
+		addressList = append(addressList, address)
+	}
+	addresses <- addressList
+}
+
 func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fields log.Fields) {
 	addresses := make(chan []models.Address)
-	go func() {
-		log.WithFields(fields).Info(`Getting the primary address for the user`)
-		var addressList []models.Address
-		dbAddresses, err := env.HelloProfileDb.GetUserAddresses(context.Background(), uuid.NullUUID{UUID: userID, Valid: true})
-		if err != nil {
-			log.WithFields(fields).WithError(err).Error(`Error occured fetching address for user`)
-			addresses <- addressList
-		}
-
-		for _, value := range dbAddresses {
-			address := models.Address{
-				ID:      value.ID,
-				Street:  value.Street,
-				City:    value.City,
-				State:   value.State.String,
-				Country: value.Country.String,
-			}
-			addressList = append(addressList, address)
-		}
-		addresses <- addressList
-
-	}()
+	go env.getUserAddresses(userID, addresses, fields)
 	userAddress := <-addresses
 
 	go func(userAddresses []models.Address) {
@@ -86,7 +87,6 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 		}
 		profiles <- profileList
 	}(userAddress)
-
 }
 
 // saveLogin is used to log a login request that failed with incorrect password or was successful

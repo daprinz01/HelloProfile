@@ -48,29 +48,29 @@ type UserDetail struct {
 	Profiles                  []Profile `json:"profiles,omitempty"`
 }
 type Profile struct {
-	ID             uuid.UUID `json:"id"`
-	Status         bool      `json:"status"`
-	ProfileName    string    `json:"profileName"`
-	Fullname       string    `json:"fullname"`
-	Title          string    `json:"title"`
-	Bio            string    `json:"bio"`
-	Company        string    `json:"company"`
-	CompanyAddress string    `json:"companyAddress"`
-	ImageUrl       string    `json:"imageUrl"`
-	Phone          string    `json:"phone"`
-	Email          string    `json:"email"`
-	Address        Address   `json:"address"`
-	Website        string    `json:"website"`
-	IsDefault      bool      `json:"isDefault"`
-	Color          int32     `json:"color"`
+	ID             uuid.UUID `json:"id,omitempty"`
+	Status         bool      `json:"status,omitempty"`
+	ProfileName    string    `json:"profileName,omitempty"`
+	Fullname       string    `json:"fullname,omitempty"`
+	Title          string    `json:"title,omitempty"`
+	Bio            string    `json:"bio,omitempty"`
+	Company        string    `json:"company,omitempty"`
+	CompanyAddress string    `json:"companyAddress,omitempty"`
+	ImageUrl       string    `json:"imageUrl,omitempty"`
+	Phone          string    `json:"phone,omitempty"`
+	Email          string    `json:"email,omitempty"`
+	Address        Address   `json:"address,omitempty"`
+	Website        string    `json:"website,omitempty"`
+	IsDefault      bool      `json:"isDefault,omitempty"`
+	Color          int32     `json:"color,omitempty"`
 }
 
 type Address struct {
-	ID      uuid.UUID `json:"id"`
-	Street  string    `json:"street"`
-	City    string    `json:"city"`
-	State   string    `json:"state"`
-	Country string    `json:"country"`
+	ID      uuid.UUID `json:"id,omitempty"`
+	Street  string    `json:"street,omitempty"`
+	City    string    `json:"city,omitempty"`
+	State   string    `json:"state,omitempty"`
+	Country string    `json:"country,omitempty"`
 }
 
 // RefreshResponse is used to send success message for a successful refresh of auth token

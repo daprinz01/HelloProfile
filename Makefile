@@ -5,7 +5,7 @@ migrationUp:
 migrationDown:
 	migrate -path persistence/migrations -database "postgres://xenonprimus:Sarah4Daprinz@localhost/helloprofile?sslmode=disable" -verbose down 
 migrationForce:
-	migrate -path persistence/migrations -database "postgres://xenonprimus:Sarah4Daprinz@localhost/helloprofile?sslmode=disable" -verbose force 1
+	migrate -path persistence/migrations -database "postgres://xenonprimus:Sarah4Daprinz@localhost/helloprofile?sslmode=disable" -verbose force 2
 migrationGoto:
 	migrate -path persistence/migrations -database "postgres://xenonprimus:Sarah4Daprinz@localhost/helloprofile?sslmode=disable" -verbose goto 2
 installSqlc:

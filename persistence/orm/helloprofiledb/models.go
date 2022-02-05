@@ -19,6 +19,12 @@ type Address struct {
 	Isprimaryaddress sql.NullBool   `json:"isprimaryaddress"`
 }
 
+type CallToAction struct {
+	ID          uuid.UUID `json:"id"`
+	Type        string    `json:"type"`
+	DisplayName string    `json:"display_name"`
+}
+
 type Contact struct {
 	ID                uuid.UUID `json:"id"`
 	UserID            uuid.UUID `json:"user_id"`
@@ -29,6 +35,12 @@ type Contact struct {
 type ContactCategory struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
+}
+
+type Content struct {
+	ID       uuid.UUID `json:"id"`
+	Type     string    `json:"type"`
+	ImageUrl string    `json:"image_url"`
 }
 
 type Country struct {
@@ -43,6 +55,16 @@ type EmailVerification struct {
 	Email     sql.NullString `json:"email"`
 	Otp       string         `json:"otp"`
 	CreatedAt time.Time      `json:"created_at"`
+}
+
+type EmbeddedContent struct {
+	ID         uuid.UUID `json:"id"`
+	Title      string    `json:"title"`
+	ContentUrl string    `json:"content_url"`
+	LinkUrl    string    `json:"link_url"`
+	IsVideo    bool      `json:"is_video"`
+	ProfileID  uuid.UUID `json:"profile_id"`
+	Order      int32     `json:"order"`
 }
 
 type IdentityProvider struct {
@@ -61,6 +83,28 @@ type Language struct {
 type LanguageProficiency struct {
 	ID          uuid.UUID      `json:"id"`
 	Proficiency sql.NullString `json:"proficiency"`
+}
+
+type LinkContent struct {
+	ID             uuid.UUID `json:"id"`
+	Title          string    `json:"title"`
+	DisplayTitle   string    `json:"display_title"`
+	Description    string    `json:"description"`
+	Url            string    `json:"url"`
+	ProfileID      uuid.UUID `json:"profile_id"`
+	CallToActionID uuid.UUID `json:"call_to_action_id"`
+	Order          int32     `json:"order"`
+}
+
+type MeetingContent struct {
+	ID             uuid.UUID `json:"id"`
+	Title          string    `json:"title"`
+	DisplayTitle   string    `json:"display_title"`
+	Description    string    `json:"description"`
+	Url            string    `json:"url"`
+	ProfileID      uuid.UUID `json:"profile_id"`
+	CallToActionID uuid.UUID `json:"call_to_action_id"`
+	Order          int32     `json:"order"`
 }
 
 type Otp struct {
@@ -92,6 +136,14 @@ type Profile struct {
 	Color          sql.NullInt32  `json:"color"`
 }
 
+type ProfileSocial struct {
+	ID        uuid.UUID `json:"id"`
+	Username  string    `json:"username"`
+	SocialsID uuid.UUID `json:"socials_id"`
+	ProfileID uuid.UUID `json:"profile_id"`
+	Order     int32     `json:"order"`
+}
+
 type Recent struct {
 	ID         uuid.UUID `json:"id"`
 	ProfileID  uuid.UUID `json:"profile_id"`
@@ -112,6 +164,13 @@ type Role struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
+}
+
+type Social struct {
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Placeholder string    `json:"placeholder"`
+	ImageUrl    string    `json:"image_url"`
 }
 
 type State struct {
