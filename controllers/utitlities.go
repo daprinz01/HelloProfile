@@ -25,7 +25,7 @@ func (env *Env) getPrimaryAddress(userID uuid.UUID, primaryAddress chan models.A
 		}
 	}
 }
-func (env Env) getUserAddresses(userID uuid.UUID, addresses chan []models.Address, fields log.Fields) {
+func (env *Env) getUserAddresses(userID uuid.UUID, addresses chan []models.Address, fields log.Fields) {
 	log.WithFields(fields).Info(`Getting the primary address for the user`)
 	var addressList []models.Address
 	dbAddresses, err := env.HelloProfileDb.GetUserAddresses(context.Background(), uuid.NullUUID{UUID: userID, Valid: true})
@@ -101,3 +101,5 @@ func (env *Env) saveLogin(createParams helloprofiledb.CreateUserLoginParams) err
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully saved user login, user login id: %s", userLogin.ID))
 	return err
 }
+
+// func (env *Env) getSocails(profileID uuid.UUID, socials chan []models)

@@ -12,6 +12,7 @@ CREATE TABLE "profile_socials" (
     "username" varchar NOT NULL,
     "socials_id" uuid NOT NULL,
     "profile_id" uuid not null,
+    "order" int not null default 0,
     CONSTRAINT "uc_supported_socials" UNIQUE ("socials_id", "profile_id")
 );
 
@@ -29,7 +30,8 @@ VALUES
 ('embedded videos', 'https://helloprofile.io'),
 ('embedded audios', 'https://helloprofile.io'),
 ('forms', 'https://helloprofile.io'),
-('meetings', 'https://helloprofile.io');
+('meetings', 'https://helloprofile.io'),
+('events', 'https://helloprofile.io');
 
 
 CREATE TABLE "call_to_action" (
@@ -45,7 +47,7 @@ VALUES
 ('book_now', 'Book Now'),
 ('sign_up', 'Sign Up');
 
-CREATE TABLE "link_content" (
+CREATE TABLE "profile_contents" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     "title" varchar NOT NULL,
     "display_title" VARCHAR not null,
@@ -53,33 +55,11 @@ CREATE TABLE "link_content" (
     "url" varchar NOT NULL,
     "profile_id" uuid NOT NULL,
     "call_to_action_id" uuid not null,
+    "content_id" uuid not null,
     "order" int not null default 0,
-    CONSTRAINT "uc_link_content" UNIQUE ("title", "profile_id")
+    CONSTRAINT "uc_profile_contents" UNIQUE ("title", "profile_id")
 );
 
-CREATE TABLE "meeting_content" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
-    "title" varchar NOT NULL,
-    "display_title" VARCHAR not null,
-    "description" varchar NOT NULL,
-    "url" varchar NOT NULL,
-    "profile_id" uuid NOT NULL,
-    "call_to_action_id" uuid not null,
-    "order" int not null default 0,
-    CONSTRAINT "uc_meeting_content" UNIQUE ("title", "profile_id")
-);
-
-CREATE TABLE "embedded_content"(
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "title" VARCHAR NOT NULL,
-    "content_url" VARCHAR not NULL,
-    "link_url" VARCHAR NOT NULL,
-    "is_video" BOOLEAN NOT NULL DEFAULT TRUE,
-    "profile_id" uuid NOT NULL,
-    "call_to_action_id" uuid not null,
-    "order" int not null default 0,
-    CONSTRAINT "uc_embedded_video_content" UNIQUE("title")
-);
 
 
 
@@ -89,20 +69,9 @@ ALTER TABLE "profile_socials"
 ALTER TABLE "profile_socials"
     ADD FOREIGN KEY ("socials_id") REFERENCES "socials" ("id");
     
-ALTER TABLE "link_content"
+ALTER TABLE "profile_contents"
     ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");
 
-ALTER TABLE "link_content"
+ALTER TABLE "profile_contents"
     ADD FOREIGN KEY ("call_to_action_id") REFERENCES "call_to_action" ("id");
 
-ALTER TABLE "meeting_content"
-    ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");
-
-ALTER TABLE "meeting_content"
-    ADD FOREIGN KEY ("call_to_action_id") REFERENCES "call_to_action" ("id");
-
-ALTER TABLE "embedded_content"
-    ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");
-
-ALTER TABLE "embedded_content"
-    ADD FOREIGN KEY ("call_to_action_id") REFERENCES "call_to_action" ("id");

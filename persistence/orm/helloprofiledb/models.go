@@ -57,16 +57,6 @@ type EmailVerification struct {
 	CreatedAt time.Time      `json:"created_at"`
 }
 
-type EmbeddedContent struct {
-	ID         uuid.UUID `json:"id"`
-	Title      string    `json:"title"`
-	ContentUrl string    `json:"content_url"`
-	LinkUrl    string    `json:"link_url"`
-	IsVideo    bool      `json:"is_video"`
-	ProfileID  uuid.UUID `json:"profile_id"`
-	Order      int32     `json:"order"`
-}
-
 type IdentityProvider struct {
 	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
@@ -83,28 +73,6 @@ type Language struct {
 type LanguageProficiency struct {
 	ID          uuid.UUID      `json:"id"`
 	Proficiency sql.NullString `json:"proficiency"`
-}
-
-type LinkContent struct {
-	ID             uuid.UUID `json:"id"`
-	Title          string    `json:"title"`
-	DisplayTitle   string    `json:"display_title"`
-	Description    string    `json:"description"`
-	Url            string    `json:"url"`
-	ProfileID      uuid.UUID `json:"profile_id"`
-	CallToActionID uuid.UUID `json:"call_to_action_id"`
-	Order          int32     `json:"order"`
-}
-
-type MeetingContent struct {
-	ID             uuid.UUID `json:"id"`
-	Title          string    `json:"title"`
-	DisplayTitle   string    `json:"display_title"`
-	Description    string    `json:"description"`
-	Url            string    `json:"url"`
-	ProfileID      uuid.UUID `json:"profile_id"`
-	CallToActionID uuid.UUID `json:"call_to_action_id"`
-	Order          int32     `json:"order"`
 }
 
 type Otp struct {
@@ -134,6 +102,18 @@ type Profile struct {
 	Website        sql.NullString `json:"website"`
 	IsDefault      bool           `json:"is_default"`
 	Color          sql.NullInt32  `json:"color"`
+}
+
+type ProfileContent struct {
+	ID             uuid.UUID `json:"id"`
+	Title          string    `json:"title"`
+	DisplayTitle   string    `json:"display_title"`
+	Description    string    `json:"description"`
+	Url            string    `json:"url"`
+	ProfileID      uuid.UUID `json:"profile_id"`
+	CallToActionID uuid.UUID `json:"call_to_action_id"`
+	ContentID      uuid.UUID `json:"content_id"`
+	Order          int32     `json:"order"`
 }
 
 type ProfileSocial struct {

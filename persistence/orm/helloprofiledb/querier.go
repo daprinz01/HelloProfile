@@ -14,6 +14,9 @@ type Querier interface {
 	AddContactCategory(ctx context.Context, name string) (ContactCategory, error)
 	AddContacts(ctx context.Context, arg AddContactsParams) (Contact, error)
 	AddProfile(ctx context.Context, arg AddProfileParams) (Profile, error)
+	AddProfileContent(ctx context.Context, arg AddProfileContentParams) (ProfileContent, error)
+	AddProfileSocial(ctx context.Context, arg AddProfileSocialParams) (ProfileSocial, error)
+	AddSocial(ctx context.Context, arg AddSocialParams) (Social, error)
 	AddUserLanguage(ctx context.Context, arg AddUserLanguageParams) (UserLanguage, error)
 	AddUserProvider(ctx context.Context, arg AddUserProviderParams) (UserProvider, error)
 	AddUserRole(ctx context.Context, arg AddUserRoleParams) (UserRole, error)
@@ -40,9 +43,12 @@ type Querier interface {
 	DeleteLanguageProficiency(ctx context.Context, proficiency sql.NullString) error
 	DeleteOtp(ctx context.Context, arg DeleteOtpParams) error
 	DeleteProfile(ctx context.Context, id uuid.UUID) error
+	DeleteProfileContent(ctx context.Context, id uuid.UUID) error
+	DeleteProfileSocial(ctx context.Context, id uuid.UUID) error
 	DeleteProviders(ctx context.Context, arg DeleteProvidersParams) error
 	DeleteRefreshToken(ctx context.Context, token string) error
 	DeleteRoles(ctx context.Context, name string) error
+	DeleteSocial(ctx context.Context, id uuid.UUID) error
 	DeleteState(ctx context.Context, name string) error
 	DeleteTimezone(ctx context.Context, name string) error
 	DeleteUser(ctx context.Context, email string) error
@@ -69,11 +75,16 @@ type Querier interface {
 	GetOtp(ctx context.Context, arg GetOtpParams) (Otp, error)
 	GetPrimaryAddress(ctx context.Context, userID uuid.NullUUID) (Address, error)
 	GetProfile(ctx context.Context, id uuid.UUID) (Profile, error)
+	GetProfileContent(ctx context.Context, id uuid.UUID) (ProfileContent, error)
+	GetProfileContents(ctx context.Context, profileID uuid.UUID) ([]ProfileContent, error)
+	GetProfileSocials(ctx context.Context, profileID uuid.UUID) ([]GetProfileSocialsRow, error)
 	GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile, error)
 	GetRefreshToken(ctx context.Context, token string) (RefreshToken, error)
 	GetRefreshTokens(ctx context.Context) ([]RefreshToken, error)
 	GetRole(ctx context.Context, name string) (Role, error)
 	GetRoles(ctx context.Context) ([]Role, error)
+	GetSocial(ctx context.Context, id uuid.UUID) (Social, error)
+	GetSocials(ctx context.Context) ([]Social, error)
 	GetState(ctx context.Context, name string) (State, error)
 	GetStates(ctx context.Context) ([]State, error)
 	GetStatesByCountry(ctx context.Context, name string) ([]State, error)
@@ -97,9 +108,12 @@ type Querier interface {
 	UpdateLanguage(ctx context.Context, arg UpdateLanguageParams) (Language, error)
 	UpdateLanguageProficiency(ctx context.Context, arg UpdateLanguageProficiencyParams) (LanguageProficiency, error)
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error
+	UpdateProfileContent(ctx context.Context, arg UpdateProfileContentParams) error
+	UpdateProfileSocial(ctx context.Context, arg UpdateProfileSocialParams) error
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (RefreshToken, error)
 	UpdateResolvedLogin(ctx context.Context, userID uuid.UUID) error
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)
+	UpdateSocial(ctx context.Context, arg UpdateSocialParams) error
 	UpdateState(ctx context.Context, arg UpdateStateParams) error
 	UpdateTimezone(ctx context.Context, arg UpdateTimezoneParams) (Timezone, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)

@@ -248,7 +248,7 @@ CREATE TABLE "call_to_action" (
 
 
 
-CREATE TABLE "link_content" (
+CREATE TABLE "profile_contents" (
     "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     "title" varchar NOT NULL,
     "display_title" VARCHAR not null,
@@ -256,29 +256,7 @@ CREATE TABLE "link_content" (
     "url" varchar NOT NULL,
     "profile_id" uuid NOT NULL,
     "call_to_action_id" uuid not null,
+    "content_id" uuid not null,
     "order" int not null default 0,
     CONSTRAINT "uc_link_content" UNIQUE ("title", "profile_id")
-);
-
-CREATE TABLE "meeting_content" (
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
-    "title" varchar NOT NULL,
-    "display_title" VARCHAR not null,
-    "description" varchar NOT NULL,
-    "url" varchar NOT NULL,
-    "profile_id" uuid NOT NULL,
-    "call_to_action_id" uuid not null,
-    "order" int not null default 0,
-    CONSTRAINT "uc_link_content" UNIQUE ("title", "profile_id")
-);
-
-CREATE TABLE "embedded_content"(
-    "id" uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4(),
-    "title" VARCHAR NOT NULL,
-    "content_url" VARCHAR not NULL,
-    "link_url" VARCHAR NOT NULL,
-    "is_video" BOOLEAN NOT NULL DEFAULT TRUE,
-    "profile_id" uuid NOT NULL,
-    "order" int not null default 0,
-    CONSTRAINT "uc_embedded_video_content" UNIQUE("title")
 );

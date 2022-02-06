@@ -30,3 +30,7 @@ type Role struct {
 	Role        string `json:"role,omitempty"`
 	Description string `json:"description,omitempty"`
 }
+
+// Socials keeps the social accounts a user has added to their profile
+type Socials struct {
+}
