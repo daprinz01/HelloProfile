@@ -60,6 +60,33 @@ func (q *Queries) DeleteProfileContent(ctx context.Context, id uuid.UUID) error 
 	return err
 }
 
+const getAllContentTypes = `-- name: GetAllContentTypes :many
+select id, type, image_url from content
+`
+
+func (q *Queries) GetAllContentTypes(ctx context.Context) ([]Content, error) {
+	rows, err := q.query(ctx, q.getAllContentTypesStmt, getAllContentTypes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Content
+	for rows.Next() {
+		var i Content
+		if err := rows.Scan(&i.ID, &i.Type, &i.ImageUrl); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getProfileContent = `-- name: GetProfileContent :one
 select id, title, display_title, description, url, profile_id, call_to_action_id, content_id, "order" from profile_contents where id=$1 limit 1
 `

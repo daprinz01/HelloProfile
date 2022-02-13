@@ -166,11 +166,20 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAllContactsStmt, err = db.PrepareContext(ctx, getAllContacts); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllContacts: %w", err)
 	}
+	if q.getAllContentTypesStmt, err = db.PrepareContext(ctx, getAllContentTypes); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAllContentTypes: %w", err)
+	}
 	if q.getAllOtpStmt, err = db.PrepareContext(ctx, getAllOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllOtp: %w", err)
 	}
 	if q.getAllProfilesStmt, err = db.PrepareContext(ctx, getAllProfiles); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllProfiles: %w", err)
+	}
+	if q.getCallToActionStmt, err = db.PrepareContext(ctx, getCallToAction); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCallToAction: %w", err)
+	}
+	if q.getCallToActionsStmt, err = db.PrepareContext(ctx, getCallToActions); err != nil {
+		return nil, fmt.Errorf("error preparing query GetCallToActions: %w", err)
 	}
 	if q.getContactCategoryStmt, err = db.PrepareContext(ctx, getContactCategory); err != nil {
 		return nil, fmt.Errorf("error preparing query GetContactCategory: %w", err)
@@ -600,6 +609,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAllContactsStmt: %w", cerr)
 		}
 	}
+	if q.getAllContentTypesStmt != nil {
+		if cerr := q.getAllContentTypesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAllContentTypesStmt: %w", cerr)
+		}
+	}
 	if q.getAllOtpStmt != nil {
 		if cerr := q.getAllOtpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAllOtpStmt: %w", cerr)
@@ -608,6 +622,16 @@ func (q *Queries) Close() error {
 	if q.getAllProfilesStmt != nil {
 		if cerr := q.getAllProfilesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getAllProfilesStmt: %w", cerr)
+		}
+	}
+	if q.getCallToActionStmt != nil {
+		if cerr := q.getCallToActionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCallToActionStmt: %w", cerr)
+		}
+	}
+	if q.getCallToActionsStmt != nil {
+		if cerr := q.getCallToActionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getCallToActionsStmt: %w", cerr)
 		}
 	}
 	if q.getContactCategoryStmt != nil {
@@ -1002,8 +1026,11 @@ type Queries struct {
 	getAllAddressesStmt           *sql.Stmt
 	getAllContactCategoriesStmt   *sql.Stmt
 	getAllContactsStmt            *sql.Stmt
+	getAllContentTypesStmt        *sql.Stmt
 	getAllOtpStmt                 *sql.Stmt
 	getAllProfilesStmt            *sql.Stmt
+	getCallToActionStmt           *sql.Stmt
+	getCallToActionsStmt          *sql.Stmt
 	getContactCategoryStmt        *sql.Stmt
 	getContactsStmt               *sql.Stmt
 	getCountriesStmt              *sql.Stmt
@@ -1119,8 +1146,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getAllAddressesStmt:           q.getAllAddressesStmt,
 		getAllContactCategoriesStmt:   q.getAllContactCategoriesStmt,
 		getAllContactsStmt:            q.getAllContactsStmt,
+		getAllContentTypesStmt:        q.getAllContentTypesStmt,
 		getAllOtpStmt:                 q.getAllOtpStmt,
 		getAllProfilesStmt:            q.getAllProfilesStmt,
+		getCallToActionStmt:           q.getCallToActionStmt,
+		getCallToActionsStmt:          q.getCallToActionsStmt,
 		getContactCategoryStmt:        q.getContactCategoryStmt,
 		getContactsStmt:               q.getContactsStmt,
 		getCountriesStmt:              q.getCountriesStmt,

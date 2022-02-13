@@ -1,5 +1,7 @@
 package models
 
+import "github.com/google/uuid"
+
 //UserLanguage is used to retrieve the language information of a user
 type UserLanguage struct {
 	Language    string `json:"language,omitempty"`
@@ -33,4 +35,24 @@ type Role struct {
 
 // Socials keeps the social accounts a user has added to their profile
 type Socials struct {
+	Username    string `json:"username"`
+	Name        string `json:"name"`
+	Placeholder string `json:"placeholder"`
+	ImageUrl    string `json:"image_url"`
+	Order       int32  `json:"order"`
+}
+
+type CallToAction struct {
+	ID          uuid.UUID `json:"id"`
+	Type        string    `json:"type"`
+	DisplayName string    `json:"displayName"`
+}
+
+type Content struct {
+	ID           uuid.UUID    `json:"id"`
+	Title        string       `json:"title"`
+	Description  string       `json:"description"`
+	Url          string       `json:"url"`
+	Order        int32        `json:"order"`
+	CallToAction CallToAction `json:"callToAction"`
 }

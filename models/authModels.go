@@ -59,10 +59,18 @@ type Profile struct {
 	ImageUrl       string    `json:"imageUrl,omitempty"`
 	Phone          string    `json:"phone,omitempty"`
 	Email          string    `json:"email,omitempty"`
-	Address        Address   `json:"address,omitempty"`
 	Website        string    `json:"website,omitempty"`
 	IsDefault      bool      `json:"isDefault,omitempty"`
 	Color          int32     `json:"color,omitempty"`
+	Address        Address   `json:"address,omitempty"`
+	Socials        []Socials `json:"socials,omitempty"`
+	Links          []Content `json:"links,omitempty"`
+	Articles       []Content `json:"articles,omitempty"`
+	Videos         []Content `json:"videos,omitempty"`
+	Audios         []Content `json:"audios,omitempty"`
+	Forms          []Content `json:"forms,omitempty"`
+	Meetings       []Content `json:"meetings,omitempty"`
+	Events         []Content `json:"events,omitempty"`
 }
 
 type Address struct {
