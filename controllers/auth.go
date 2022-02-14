@@ -73,8 +73,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 		log.WithFields(fields).Info("Storing refresh token in separate thread...")
 		profiles := make(chan []models.Profile)
 		go env.getProfiles(user.ID, profiles, fields)
-		primaryAddress := make(chan models.Address)
-		go env.getPrimaryAddress(user.ID, primaryAddress, fields)
 		// store refresh token add later
 		go func() {
 			dbRefreshToken, err := env.HelloProfileDb.CreateRefreshToken(context.Background(), helloprofiledb.CreateRefreshTokenParams{
@@ -120,7 +118,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 				Lastname:                  user.Lastname.String,
 				Username:                  user.Username.String,
 				Phone:                     user.Phone.String,
-				Address:                   <-primaryAddress,
 				Profiles:                  <-profiles,
 			},
 		}
@@ -169,7 +166,6 @@ func (env *Env) Login(c echo.Context) (err error) {
 			lockoutUpdate, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 				Username_2:                user.Username,
 				IsLockedOut:               true,
-				CreatedAt:                 user.CreatedAt,
 				Email:                     user.Email,
 				Firstname:                 user.Firstname,
 				ImageUrl:                  user.ProfilePicture,
@@ -868,7 +864,6 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 			Username_2:                user.Username,
 			IsLockedOut:               false,
-			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
 			Firstname:                 user.Firstname,
 			ImageUrl:                  user.ProfilePicture,

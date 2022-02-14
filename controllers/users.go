@@ -80,8 +80,6 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 	log.WithFields(fields).Info(fmt.Sprintf("User %s exists...", user.Username.String))
 	profiles := make(chan []models.Profile)
 	go env.getProfiles(user.ID, profiles, fields)
-	primaryAddress := make(chan models.Address)
-	go env.getPrimaryAddress(user.ID, primaryAddress, fields)
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
@@ -97,7 +95,6 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 			Lastname:                  user.Lastname.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
-			Address:                   <-primaryAddress,
 			Profiles:                  <-profiles,
 		},
 	}
@@ -125,8 +122,6 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 	for index, user := range users {
 		profiles := make(chan []models.Profile)
 		go env.getProfiles(user.ID, profiles, fields)
-		primaryAddress := make(chan models.Address)
-		go env.getPrimaryAddress(user.ID, primaryAddress, fields)
 		tempUser := models.UserDetail{
 			CreatedAt:                 user.CreatedAt,
 			Email:                     user.Email,
@@ -139,7 +134,6 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 			Lastname:                  user.Lastname.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
-			Address:                   <-primaryAddress,
 			Profiles:                  <-profiles,
 		}
 		userResponse[index] = tempUser
@@ -186,7 +180,7 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		// Check all the user parameters passed and consolidate with existing user record
 
 		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
-			CreatedAt:                 user.CreatedAt,
+
 			Email:                     user.Email,
 			Firstname:                 sql.NullString{String: getValue(request.Firstname, user.Firstname.String), Valid: true},
 			ImageUrl:                  sql.NullString{String: getValue(request.ProfilePicture, user.ProfilePicture.String), Valid: true},
@@ -206,19 +200,7 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 
 		}
 		log.WithFields(fields).Info("Successfully updated user details")
-		log.WithFields(fields).Info("Updating User Timezone")
-		if request.TimezoneName != "" {
-			_, err := env.HelloProfileDb.UpdateUserTimezone(context.Background(), helloprofiledb.UpdateUserTimezoneParams{
-				Username:   sql.NullString{String: user.Email, Valid: true},
-				Name:       request.TimezoneName,
-				Username_2: sql.NullString{String: user.Email, Valid: true},
-			})
-			if err != nil {
-				log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured updating timezone information: %s", err))
 
-			}
-			log.WithFields(fields).Info("Successfully updated user details")
-		}
 	}()
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,

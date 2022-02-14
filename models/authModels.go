@@ -4,7 +4,6 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
 )
 
 // LoginRequest is used to contruct the login request
@@ -44,41 +43,7 @@ type UserDetail struct {
 	LanguageName              string    `json:"languageName,omitempty"`
 	TimezoneName              string    `json:"timezoneName,omitempty"`
 	Zone                      string    `json:"zone,omitempty"`
-	Address                   Address   `json:"primaryAddress,omitempty"`
 	Profiles                  []Profile `json:"profiles,omitempty"`
-}
-type Profile struct {
-	ID             uuid.UUID `json:"id,omitempty"`
-	Status         bool      `json:"status,omitempty"`
-	ProfileName    string    `json:"profileName,omitempty"`
-	Fullname       string    `json:"fullname,omitempty"`
-	Title          string    `json:"title,omitempty"`
-	Bio            string    `json:"bio,omitempty"`
-	Company        string    `json:"company,omitempty"`
-	CompanyAddress string    `json:"companyAddress,omitempty"`
-	ImageUrl       string    `json:"imageUrl,omitempty"`
-	Phone          string    `json:"phone,omitempty"`
-	Email          string    `json:"email,omitempty"`
-	Website        string    `json:"website,omitempty"`
-	IsDefault      bool      `json:"isDefault,omitempty"`
-	Color          int32     `json:"color,omitempty"`
-	Address        Address   `json:"address,omitempty"`
-	Socials        []Socials `json:"socials,omitempty"`
-	Links          []Content `json:"links,omitempty"`
-	Articles       []Content `json:"articles,omitempty"`
-	Videos         []Content `json:"videos,omitempty"`
-	Audios         []Content `json:"audios,omitempty"`
-	Forms          []Content `json:"forms,omitempty"`
-	Meetings       []Content `json:"meetings,omitempty"`
-	Events         []Content `json:"events,omitempty"`
-}
-
-type Address struct {
-	ID      uuid.UUID `json:"id,omitempty"`
-	Street  string    `json:"street,omitempty"`
-	City    string    `json:"city,omitempty"`
-	State   string    `json:"state,omitempty"`
-	Country string    `json:"country,omitempty"`
 }
 
 // RefreshResponse is used to send success message for a successful refresh of auth token

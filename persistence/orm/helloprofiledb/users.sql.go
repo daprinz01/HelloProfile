@@ -7,82 +7,7 @@ import (
 	"context"
 	"database/sql"
 	"time"
-
-	"github.com/google/uuid"
 )
-
-const addUserLanguage = `-- name: AddUserLanguage :one
-INSERT INTO user_languages (user_id, language_id, proficiency)
-  VALUES ((
-      SELECT
-        a.id
-      FROM
-        users a
-      WHERE
-        a.username = $1
-        OR a.email = $1
-      LIMIT 1),
-    (
-      SELECT
-        b.id
-      FROM
-        languages b
-      WHERE
-        b.name = $2), $3)
-RETURNING
-  id, user_id, language_id, proficiency
-`
-
-type AddUserLanguageParams struct {
-	Username    sql.NullString `json:"username"`
-	Name        string         `json:"name"`
-	Proficiency sql.NullString `json:"proficiency"`
-}
-
-func (q *Queries) AddUserLanguage(ctx context.Context, arg AddUserLanguageParams) (UserLanguage, error) {
-	row := q.queryRow(ctx, q.addUserLanguageStmt, addUserLanguage, arg.Username, arg.Name, arg.Proficiency)
-	var i UserLanguage
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.LanguageID,
-		&i.Proficiency,
-	)
-	return i, err
-}
-
-const addUserProvider = `-- name: AddUserProvider :one
-INSERT INTO user_providers (user_id, identity_provider_id)
-  VALUES ((
-      SELECT
-        a.id
-      FROM
-        users a
-      WHERE
-        a.username = $1
-        OR a.email = $1),
-      (
-        SELECT
-          b.id
-        FROM
-          identity_providers b
-        WHERE
-          b.name = $2))
-  RETURNING
-    id, user_id, identity_provider_id
-`
-
-type AddUserProviderParams struct {
-	Username sql.NullString `json:"username"`
-	Name     string         `json:"name"`
-}
-
-func (q *Queries) AddUserProvider(ctx context.Context, arg AddUserProviderParams) (UserProvider, error) {
-	row := q.queryRow(ctx, q.addUserProviderStmt, addUserProvider, arg.Username, arg.Name)
-	var i UserProvider
-	err := row.Scan(&i.ID, &i.UserID, &i.IdentityProviderID)
-	return i, err
-}
 
 const addUserRole = `-- name: AddUserRole :one
 INSERT INTO user_roles (user_id, role_id)
@@ -118,44 +43,11 @@ func (q *Queries) AddUserRole(ctx context.Context, arg AddUserRoleParams) (UserR
 	return i, err
 }
 
-const addUserTimezone = `-- name: AddUserTimezone :one
-INSERT INTO user_timezones (user_id, timezone_id)
-  VALUES ((
-      SELECT
-        a.id
-      FROM
-        users a
-      WHERE
-        a.username = $1
-        OR a.email = $1),
-      (
-        SELECT
-          b.id
-        FROM
-          timezones b
-        WHERE
-          b.name = $2))
-  RETURNING
-    id, user_id, timezone_id
-`
-
-type AddUserTimezoneParams struct {
-	Username sql.NullString `json:"username"`
-	Name     string         `json:"name"`
-}
-
-func (q *Queries) AddUserTimezone(ctx context.Context, arg AddUserTimezoneParams) (UserTimezone, error) {
-	row := q.queryRow(ctx, q.addUserTimezoneStmt, addUserTimezone, arg.Username, arg.Name)
-	var i UserTimezone
-	err := row.Scan(&i.ID, &i.UserID, &i.TimezoneID)
-	return i, err
-}
-
 const createUser = `-- name: CreateUser :one
 INSERT INTO users ("firstname", "lastname", "username", "email", "phone", "is_email_confirmed", "password", "is_password_system_generated", "created_at", "is_locked_out", "image_url", "is_active")
   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING
-  id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, created_at, is_locked_out, image_url, is_active
+  id, firstname, lastname, username, email, phone, country, city, is_email_confirmed, password, is_password_system_generated, created_at, is_locked_out, image_url, is_active
 `
 
 type CreateUserParams struct {
@@ -196,6 +88,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Username,
 		&i.Email,
 		&i.Phone,
+		&i.Country,
+		&i.City,
 		&i.IsEmailConfirmed,
 		&i.Password,
 		&i.IsPasswordSystemGenerated,
@@ -207,40 +101,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	return i, err
 }
 
-const deleteProviders = `-- name: DeleteProviders :exec
-DELETE FROM user_providers a
-WHERE a.user_id = (
-    SELECT
-      b.id
-    FROM
-      users b
-    WHERE
-      b.username = $1
-      OR b.email = $1)
-  AND a.identity_provider_id = (
-    SELECT
-      c.id
-    FROM
-      identity_providers c
-    WHERE
-      c.name = $2)
-`
-
-type DeleteProvidersParams struct {
-	Username sql.NullString `json:"username"`
-	Name     string         `json:"name"`
-}
-
-func (q *Queries) DeleteProviders(ctx context.Context, arg DeleteProvidersParams) error {
-	_, err := q.exec(ctx, q.deleteProvidersStmt, deleteProviders, arg.Username, arg.Name)
-	return err
-}
-
 const deleteUser = `-- name: DeleteUser :exec
-UPDATE
-  users
-SET
-  is_active = FALSE
+Delete from users CASCADE
 WHERE
   email = $1
   OR username = $1
@@ -251,38 +113,9 @@ func (q *Queries) DeleteUser(ctx context.Context, email string) error {
 	return err
 }
 
-const deleteUserLanguage = `-- name: DeleteUserLanguage :exec
-DELETE FROM user_languages a
-WHERE a.user_id = (
-    SELECT
-      b.id
-    FROM
-      users b
-    WHERE
-      b.username = $1
-      OR b.email = $1)
-  AND a.language_id = (
-    SELECT
-      c.id
-    FROM
-      languages c
-    WHERE
-      c.name = $2)
-`
-
-type DeleteUserLanguageParams struct {
-	Username sql.NullString `json:"username"`
-	Name     string         `json:"name"`
-}
-
-func (q *Queries) DeleteUserLanguage(ctx context.Context, arg DeleteUserLanguageParams) error {
-	_, err := q.exec(ctx, q.deleteUserLanguageStmt, deleteUserLanguage, arg.Username, arg.Name)
-	return err
-}
-
 const getUser = `-- name: GetUser :one
 SELECT
-  id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, created_at, is_locked_out, profile_picture, is_active, timezone_name, zone
+  id, firstname, lastname, email, phone, username, password, country, city, profile_picture, is_email_confirmed, is_locked_out, is_password_system_generated, created_at, is_active, role_name
 FROM
   user_details
 WHERE
@@ -298,113 +131,21 @@ func (q *Queries) GetUser(ctx context.Context, username sql.NullString) (UserDet
 		&i.ID,
 		&i.Firstname,
 		&i.Lastname,
-		&i.Username,
 		&i.Email,
 		&i.Phone,
-		&i.IsEmailConfirmed,
+		&i.Username,
 		&i.Password,
+		&i.Country,
+		&i.City,
+		&i.ProfilePicture,
+		&i.IsEmailConfirmed,
+		&i.IsLockedOut,
 		&i.IsPasswordSystemGenerated,
 		&i.CreatedAt,
-		&i.IsLockedOut,
-		&i.ProfilePicture,
 		&i.IsActive,
-		&i.TimezoneName,
-		&i.Zone,
+		&i.RoleName,
 	)
 	return i, err
-}
-
-const getUserLanguages = `-- name: GetUserLanguages :many
-SELECT
-  a.id,
-  a.name,
-  d.proficiency
-FROM
-  languages a
-  INNER JOIN user_languages d ON a.id = d.language_id
-  INNER JOIN users e ON e.id = d.user_id
-  INNER JOIN users f ON f.username = $1
-    OR f.email = $1
-`
-
-type GetUserLanguagesRow struct {
-	ID          uuid.UUID      `json:"id"`
-	Name        string         `json:"name"`
-	Proficiency sql.NullString `json:"proficiency"`
-}
-
-func (q *Queries) GetUserLanguages(ctx context.Context, username sql.NullString) ([]GetUserLanguagesRow, error) {
-	rows, err := q.query(ctx, q.getUserLanguagesStmt, getUserLanguages, username)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetUserLanguagesRow
-	for rows.Next() {
-		var i GetUserLanguagesRow
-		if err := rows.Scan(&i.ID, &i.Name, &i.Proficiency); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getUserProviders = `-- name: GetUserProviders :many
-SELECT
-  id, name, client_id, client_secret, image_url
-FROM
-  identity_providers a
-WHERE
-  a.id = (
-    SELECT
-      b.identity_provider_id
-    FROM
-      user_providers b
-    WHERE
-      b.user_id = (
-        SELECT
-          c.id
-        FROM
-          users c
-        WHERE
-          c.username = $1
-          OR c.email = $1))
-`
-
-func (q *Queries) GetUserProviders(ctx context.Context, username sql.NullString) ([]IdentityProvider, error) {
-	rows, err := q.query(ctx, q.getUserProvidersStmt, getUserProviders, username)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []IdentityProvider
-	for rows.Next() {
-		var i IdentityProvider
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.ClientID,
-			&i.ClientSecret,
-			&i.ImageUrl,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const getUserRoles = `-- name: GetUserRoles :many
@@ -447,54 +188,9 @@ func (q *Queries) GetUserRoles(ctx context.Context, username sql.NullString) ([]
 	return items, nil
 }
 
-const getUserTimezones = `-- name: GetUserTimezones :many
-SELECT
-  id, name, zone
-FROM
-  timezones a
-WHERE
-  a.id = (
-    SELECT
-      b.timezone_id
-    FROM
-      user_timezones b
-    WHERE
-      b.user_id = (
-        SELECT
-          c.id
-        FROM
-          users c
-        WHERE
-          c.username = $1
-          OR c.email = $1))
-`
-
-func (q *Queries) GetUserTimezones(ctx context.Context, username sql.NullString) ([]Timezone, error) {
-	rows, err := q.query(ctx, q.getUserTimezonesStmt, getUserTimezones, username)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Timezone
-	for rows.Next() {
-		var i Timezone
-		if err := rows.Scan(&i.ID, &i.Name, &i.Zone); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getUsers = `-- name: GetUsers :many
 SELECT
-  id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, created_at, is_locked_out, profile_picture, is_active, timezone_name, zone
+  id, firstname, lastname, email, phone, username, password, country, city, profile_picture, is_email_confirmed, is_locked_out, is_password_system_generated, created_at, is_active, role_name
 FROM
   user_details
 `
@@ -512,18 +208,19 @@ func (q *Queries) GetUsers(ctx context.Context) ([]UserDetail, error) {
 			&i.ID,
 			&i.Firstname,
 			&i.Lastname,
-			&i.Username,
 			&i.Email,
 			&i.Phone,
-			&i.IsEmailConfirmed,
+			&i.Username,
 			&i.Password,
+			&i.Country,
+			&i.City,
+			&i.ProfilePicture,
+			&i.IsEmailConfirmed,
+			&i.IsLockedOut,
 			&i.IsPasswordSystemGenerated,
 			&i.CreatedAt,
-			&i.IsLockedOut,
-			&i.ProfilePicture,
 			&i.IsActive,
-			&i.TimezoneName,
-			&i.Zone,
+			&i.RoleName,
 		); err != nil {
 			return nil, err
 		}
@@ -549,17 +246,17 @@ SET
   "is_email_confirmed" = $5,
   "password" = $6,
   "is_password_system_generated" = $7,
-  "created_at" = $8,
-  "is_locked_out" = $9,
-  "image_url" = $10,
-  "is_active" = $11,
-  "phone" = $12
+  "is_locked_out" = $8,
+  "image_url" = $9,
+  "is_active" = $10,
+  "phone" = $11,
+  "country" = $12,
+  "city" = $13
 WHERE
-  "username" = $13
-  OR "email" = $13
-  or id=$13
+  "username" = $14
+  OR "email" = $14
 RETURNING
-  id, firstname, lastname, username, email, phone, is_email_confirmed, password, is_password_system_generated, created_at, is_locked_out, image_url, is_active
+  id, firstname, lastname, username, email, phone, country, city, is_email_confirmed, password, is_password_system_generated, created_at, is_locked_out, image_url, is_active
 `
 
 type UpdateUserParams struct {
@@ -570,11 +267,12 @@ type UpdateUserParams struct {
 	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
 	Password                  sql.NullString `json:"password"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
-	CreatedAt                 time.Time      `json:"created_at"`
 	IsLockedOut               bool           `json:"is_locked_out"`
 	ImageUrl                  sql.NullString `json:"image_url"`
 	IsActive                  bool           `json:"is_active"`
 	Phone                     sql.NullString `json:"phone"`
+	Country                   sql.NullString `json:"country"`
+	City                      sql.NullString `json:"city"`
 	Username_2                sql.NullString `json:"username_2"`
 }
 
@@ -587,11 +285,12 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.IsEmailConfirmed,
 		arg.Password,
 		arg.IsPasswordSystemGenerated,
-		arg.CreatedAt,
 		arg.IsLockedOut,
 		arg.ImageUrl,
 		arg.IsActive,
 		arg.Phone,
+		arg.Country,
+		arg.City,
 		arg.Username_2,
 	)
 	var i User
@@ -602,6 +301,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Username,
 		&i.Email,
 		&i.Phone,
+		&i.Country,
+		&i.City,
 		&i.IsEmailConfirmed,
 		&i.Password,
 		&i.IsPasswordSystemGenerated,
@@ -610,124 +311,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.ImageUrl,
 		&i.IsActive,
 	)
-	return i, err
-}
-
-const updateUserLanguage = `-- name: UpdateUserLanguage :one
-UPDATE
-  user_languages
-SET
-  user_id = (
-    SELECT
-      a.id
-    FROM
-      users a
-    WHERE
-      a.username = $1
-      OR a.email = $1
-    LIMIT 1),
-language_id = (
-  SELECT
-    b.id
-  FROM
-    languages b
-  WHERE
-    b.name = $2)
-WHERE
-  user_id = (
-    SELECT
-      c.id
-    FROM
-      users c
-    WHERE
-      c.username = $3
-      OR c.email = $3
-    LIMIT 1)
-AND language_id = (
-  SELECT
-    d.id
-  FROM
-    languages d
-  WHERE
-    d.name = $4)
-RETURNING
-  id, user_id, language_id, proficiency
-`
-
-type UpdateUserLanguageParams struct {
-	Username   sql.NullString `json:"username"`
-	Name       string         `json:"name"`
-	Username_2 sql.NullString `json:"username_2"`
-	Name_2     string         `json:"name_2"`
-}
-
-func (q *Queries) UpdateUserLanguage(ctx context.Context, arg UpdateUserLanguageParams) (UserLanguage, error) {
-	row := q.queryRow(ctx, q.updateUserLanguageStmt, updateUserLanguage,
-		arg.Username,
-		arg.Name,
-		arg.Username_2,
-		arg.Name_2,
-	)
-	var i UserLanguage
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.LanguageID,
-		&i.Proficiency,
-	)
-	return i, err
-}
-
-const updateUserProvider = `-- name: UpdateUserProvider :one
-UPDATE
-  user_providers
-SET
-  user_id = (
-    SELECT
-      id
-    FROM
-      users a
-    WHERE
-      a.username = $1
-      OR a.email = $1
-    LIMIT 1),
-identity_provider_id = (
-  SELECT
-    b.id
-  FROM
-    identity_providers b
-  WHERE
-    b.name = $2)
-WHERE
-  user_id = (
-    SELECT
-      c.id
-    FROM
-      users c
-    WHERE
-      c.username = $1
-      OR c.email = $1
-    LIMIT 1)
-AND identity_provider_id = (
-  SELECT
-    d.id
-  FROM
-    identity_providers d
-  WHERE
-    d.name = $2)
-RETURNING
-  id, user_id, identity_provider_id
-`
-
-type UpdateUserProviderParams struct {
-	Username sql.NullString `json:"username"`
-	Name     string         `json:"name"`
-}
-
-func (q *Queries) UpdateUserProvider(ctx context.Context, arg UpdateUserProviderParams) (UserProvider, error) {
-	row := q.queryRow(ctx, q.updateUserProviderStmt, updateUserProvider, arg.Username, arg.Name)
-	var i UserProvider
-	err := row.Scan(&i.ID, &i.UserID, &i.IdentityProviderID)
 	return i, err
 }
 
@@ -788,52 +371,5 @@ func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) 
 	)
 	var i UserRole
 	err := row.Scan(&i.ID, &i.UserID, &i.RoleID)
-	return i, err
-}
-
-const updateUserTimezone = `-- name: UpdateUserTimezone :one
-UPDATE
-  user_timezones
-SET
-  user_id = (
-    SELECT
-      a.id
-    FROM
-      users a
-    WHERE
-      a.username = $1
-      OR a.email = $1
-    LIMIT 1),
-timezone_id = (
-  SELECT
-    b.id
-  FROM
-    timezones b
-  WHERE
-    b.name = $2)
-WHERE
-  user_id = (
-    SELECT
-      c.id
-    FROM
-      users c
-    WHERE
-      c.username = $3
-      OR c.email = $3
-    LIMIT 1)
-RETURNING
-  id, user_id, timezone_id
-`
-
-type UpdateUserTimezoneParams struct {
-	Username   sql.NullString `json:"username"`
-	Name       string         `json:"name"`
-	Username_2 sql.NullString `json:"username_2"`
-}
-
-func (q *Queries) UpdateUserTimezone(ctx context.Context, arg UpdateUserTimezoneParams) (UserTimezone, error) {
-	row := q.queryRow(ctx, q.updateUserTimezoneStmt, updateUserTimezone, arg.Username, arg.Name, arg.Username_2)
-	var i UserTimezone
-	err := row.Scan(&i.ID, &i.UserID, &i.TimezoneID)
 	return i, err
 }

@@ -5,7 +5,6 @@ package helloprofiledb
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -13,42 +12,28 @@ import (
 const addProfile = `-- name: AddProfile :one
 insert into profiles(
     user_id,
-    status,
+    "status",
     profile_name,
-    fullname,
-    title,
-    bio,
-    company,
-    company_address,
-    image_url,
-    phone,
-    email,
-    address_id,
-    website,
-    is_default,
-    color
+    basic_block_id,
+    contact_block_id,
+    page_color,
+    font,
+    is_default
 ) VALUES(
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+    $1, $2, $3, $4, $5, $6, $7, $8
 )
-returning id, user_id, status, profile_name, fullname, title, bio, company, company_address, image_url, phone, email, address_id, website, is_default, color
+returning id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default
 `
 
 type AddProfileParams struct {
-	UserID         uuid.UUID      `json:"user_id"`
-	Status         bool           `json:"status"`
-	ProfileName    string         `json:"profile_name"`
-	Fullname       string         `json:"fullname"`
-	Title          string         `json:"title"`
-	Bio            string         `json:"bio"`
-	Company        string         `json:"company"`
-	CompanyAddress string         `json:"company_address"`
-	ImageUrl       sql.NullString `json:"image_url"`
-	Phone          string         `json:"phone"`
-	Email          string         `json:"email"`
-	AddressID      uuid.NullUUID  `json:"address_id"`
-	Website        sql.NullString `json:"website"`
-	IsDefault      bool           `json:"is_default"`
-	Color          sql.NullInt32  `json:"color"`
+	UserID         uuid.UUID     `json:"user_id"`
+	Status         bool          `json:"status"`
+	ProfileName    string        `json:"profile_name"`
+	BasicBlockID   uuid.NullUUID `json:"basic_block_id"`
+	ContactBlockID uuid.NullUUID `json:"contact_block_id"`
+	PageColor      string        `json:"page_color"`
+	Font           string        `json:"font"`
+	IsDefault      bool          `json:"is_default"`
 }
 
 func (q *Queries) AddProfile(ctx context.Context, arg AddProfileParams) (Profile, error) {
@@ -56,37 +41,23 @@ func (q *Queries) AddProfile(ctx context.Context, arg AddProfileParams) (Profile
 		arg.UserID,
 		arg.Status,
 		arg.ProfileName,
-		arg.Fullname,
-		arg.Title,
-		arg.Bio,
-		arg.Company,
-		arg.CompanyAddress,
-		arg.ImageUrl,
-		arg.Phone,
-		arg.Email,
-		arg.AddressID,
-		arg.Website,
+		arg.BasicBlockID,
+		arg.ContactBlockID,
+		arg.PageColor,
+		arg.Font,
 		arg.IsDefault,
-		arg.Color,
 	)
 	var i Profile
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
+		&i.BasicBlockID,
+		&i.ContactBlockID,
 		&i.Status,
 		&i.ProfileName,
-		&i.Fullname,
-		&i.Title,
-		&i.Bio,
-		&i.Company,
-		&i.CompanyAddress,
-		&i.ImageUrl,
-		&i.Phone,
-		&i.Email,
-		&i.AddressID,
-		&i.Website,
+		&i.PageColor,
+		&i.Font,
 		&i.IsDefault,
-		&i.Color,
 	)
 	return i, err
 }
@@ -101,7 +72,7 @@ func (q *Queries) DeleteProfile(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAllProfiles = `-- name: GetAllProfiles :many
-select id, user_id, status, profile_name, fullname, title, bio, company, company_address, image_url, phone, email, address_id, website, is_default, color from profiles
+select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default from profiles
 `
 
 func (q *Queries) GetAllProfiles(ctx context.Context) ([]Profile, error) {
@@ -116,20 +87,13 @@ func (q *Queries) GetAllProfiles(ctx context.Context) ([]Profile, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
+			&i.BasicBlockID,
+			&i.ContactBlockID,
 			&i.Status,
 			&i.ProfileName,
-			&i.Fullname,
-			&i.Title,
-			&i.Bio,
-			&i.Company,
-			&i.CompanyAddress,
-			&i.ImageUrl,
-			&i.Phone,
-			&i.Email,
-			&i.AddressID,
-			&i.Website,
+			&i.PageColor,
+			&i.Font,
 			&i.IsDefault,
-			&i.Color,
 		); err != nil {
 			return nil, err
 		}
@@ -145,7 +109,7 @@ func (q *Queries) GetAllProfiles(ctx context.Context) ([]Profile, error) {
 }
 
 const getProfile = `-- name: GetProfile :one
-select id, user_id, status, profile_name, fullname, title, bio, company, company_address, image_url, phone, email, address_id, website, is_default, color from profiles where id=$1 limit 1
+select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default from profiles where id=$1 limit 1
 `
 
 func (q *Queries) GetProfile(ctx context.Context, id uuid.UUID) (Profile, error) {
@@ -154,26 +118,19 @@ func (q *Queries) GetProfile(ctx context.Context, id uuid.UUID) (Profile, error)
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
+		&i.BasicBlockID,
+		&i.ContactBlockID,
 		&i.Status,
 		&i.ProfileName,
-		&i.Fullname,
-		&i.Title,
-		&i.Bio,
-		&i.Company,
-		&i.CompanyAddress,
-		&i.ImageUrl,
-		&i.Phone,
-		&i.Email,
-		&i.AddressID,
-		&i.Website,
+		&i.PageColor,
+		&i.Font,
 		&i.IsDefault,
-		&i.Color,
 	)
 	return i, err
 }
 
 const getProfiles = `-- name: GetProfiles :many
-select id, user_id, status, profile_name, fullname, title, bio, company, company_address, image_url, phone, email, address_id, website, is_default, color from profiles where user_id=$1
+select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default from profiles where user_id=$1
 `
 
 func (q *Queries) GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile, error) {
@@ -188,20 +145,13 @@ func (q *Queries) GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile,
 		if err := rows.Scan(
 			&i.ID,
 			&i.UserID,
+			&i.BasicBlockID,
+			&i.ContactBlockID,
 			&i.Status,
 			&i.ProfileName,
-			&i.Fullname,
-			&i.Title,
-			&i.Bio,
-			&i.Company,
-			&i.CompanyAddress,
-			&i.ImageUrl,
-			&i.Phone,
-			&i.Email,
-			&i.AddressID,
-			&i.Website,
+			&i.PageColor,
+			&i.Font,
 			&i.IsDefault,
-			&i.Color,
 		); err != nil {
 			return nil, err
 		}
@@ -216,58 +166,51 @@ func (q *Queries) GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile,
 	return items, nil
 }
 
+const isProfileExist = `-- name: IsProfileExist :one
+select exists(select 1 from profiles where id=$1) AS "exists"
+`
+
+func (q *Queries) IsProfileExist(ctx context.Context, id uuid.UUID) (bool, error) {
+	row := q.queryRow(ctx, q.isProfileExistStmt, isProfileExist, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const updateProfile = `-- name: UpdateProfile :exec
 update profiles set
-    status = $1,
-    profile_name = $2,
-    fullname = $3,
-    title = $4,
-    bio = $5,
-    company = $6,
-    company_address = $7,
-    image_url = $8,
-    phone = $9,
-    email = $10,
-    address_id = $11,
-    website = $12,
-    is_default = $13,
-    color = $14 where id=$15
+   user_id = $1,
+    "status" = $2,
+    profile_name = $3,
+    basic_block_id = $4,
+    contact_block_id = $5,
+    page_color = $6,
+    font = $7,
+    is_default= $8 where id=$9
 `
 
 type UpdateProfileParams struct {
-	Status         bool           `json:"status"`
-	ProfileName    string         `json:"profile_name"`
-	Fullname       string         `json:"fullname"`
-	Title          string         `json:"title"`
-	Bio            string         `json:"bio"`
-	Company        string         `json:"company"`
-	CompanyAddress string         `json:"company_address"`
-	ImageUrl       sql.NullString `json:"image_url"`
-	Phone          string         `json:"phone"`
-	Email          string         `json:"email"`
-	AddressID      uuid.NullUUID  `json:"address_id"`
-	Website        sql.NullString `json:"website"`
-	IsDefault      bool           `json:"is_default"`
-	Color          sql.NullInt32  `json:"color"`
-	ID             uuid.UUID      `json:"id"`
+	UserID         uuid.UUID     `json:"user_id"`
+	Status         bool          `json:"status"`
+	ProfileName    string        `json:"profile_name"`
+	BasicBlockID   uuid.NullUUID `json:"basic_block_id"`
+	ContactBlockID uuid.NullUUID `json:"contact_block_id"`
+	PageColor      string        `json:"page_color"`
+	Font           string        `json:"font"`
+	IsDefault      bool          `json:"is_default"`
+	ID             uuid.UUID     `json:"id"`
 }
 
 func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) error {
 	_, err := q.exec(ctx, q.updateProfileStmt, updateProfile,
+		arg.UserID,
 		arg.Status,
 		arg.ProfileName,
-		arg.Fullname,
-		arg.Title,
-		arg.Bio,
-		arg.Company,
-		arg.CompanyAddress,
-		arg.ImageUrl,
-		arg.Phone,
-		arg.Email,
-		arg.AddressID,
-		arg.Website,
+		arg.BasicBlockID,
+		arg.ContactBlockID,
+		arg.PageColor,
+		arg.Font,
 		arg.IsDefault,
-		arg.Color,
 		arg.ID,
 	)
 	return err

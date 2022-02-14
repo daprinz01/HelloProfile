@@ -22,8 +22,11 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
-	if q.addAddressStmt, err = db.PrepareContext(ctx, addAddress); err != nil {
-		return nil, fmt.Errorf("error preparing query AddAddress: %w", err)
+	if q.addBasicBlockStmt, err = db.PrepareContext(ctx, addBasicBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query AddBasicBlock: %w", err)
+	}
+	if q.addContactBlockStmt, err = db.PrepareContext(ctx, addContactBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query AddContactBlock: %w", err)
 	}
 	if q.addContactCategoryStmt, err = db.PrepareContext(ctx, addContactCategory); err != nil {
 		return nil, fmt.Errorf("error preparing query AddContactCategory: %w", err)
@@ -43,32 +46,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.addSocialStmt, err = db.PrepareContext(ctx, addSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query AddSocial: %w", err)
 	}
-	if q.addUserLanguageStmt, err = db.PrepareContext(ctx, addUserLanguage); err != nil {
-		return nil, fmt.Errorf("error preparing query AddUserLanguage: %w", err)
-	}
-	if q.addUserProviderStmt, err = db.PrepareContext(ctx, addUserProvider); err != nil {
-		return nil, fmt.Errorf("error preparing query AddUserProvider: %w", err)
-	}
 	if q.addUserRoleStmt, err = db.PrepareContext(ctx, addUserRole); err != nil {
 		return nil, fmt.Errorf("error preparing query AddUserRole: %w", err)
 	}
-	if q.addUserTimezoneStmt, err = db.PrepareContext(ctx, addUserTimezone); err != nil {
-		return nil, fmt.Errorf("error preparing query AddUserTimezone: %w", err)
-	}
-	if q.createCountryStmt, err = db.PrepareContext(ctx, createCountry); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateCountry: %w", err)
-	}
 	if q.createEmailVerificationStmt, err = db.PrepareContext(ctx, createEmailVerification); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateEmailVerification: %w", err)
-	}
-	if q.createIdentityProviderStmt, err = db.PrepareContext(ctx, createIdentityProvider); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateIdentityProvider: %w", err)
-	}
-	if q.createLanguageStmt, err = db.PrepareContext(ctx, createLanguage); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateLanguage: %w", err)
-	}
-	if q.createLanguageProficiencyStmt, err = db.PrepareContext(ctx, createLanguageProficiency); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateLanguageProficiency: %w", err)
 	}
 	if q.createOtpStmt, err = db.PrepareContext(ctx, createOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateOtp: %w", err)
@@ -79,41 +61,26 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createRoleStmt, err = db.PrepareContext(ctx, createRole); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateRole: %w", err)
 	}
-	if q.createStateStmt, err = db.PrepareContext(ctx, createState); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateState: %w", err)
-	}
-	if q.createTimezoneStmt, err = db.PrepareContext(ctx, createTimezone); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateTimezone: %w", err)
-	}
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
 	}
 	if q.createUserLoginStmt, err = db.PrepareContext(ctx, createUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUserLogin: %w", err)
 	}
-	if q.deleteAddressStmt, err = db.PrepareContext(ctx, deleteAddress); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteAddress: %w", err)
+	if q.deleteBasicBlockStmt, err = db.PrepareContext(ctx, deleteBasicBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteBasicBlock: %w", err)
 	}
 	if q.deleteContactStmt, err = db.PrepareContext(ctx, deleteContact); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteContact: %w", err)
 	}
+	if q.deleteContactBlockStmt, err = db.PrepareContext(ctx, deleteContactBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteContactBlock: %w", err)
+	}
 	if q.deleteContactCategoryStmt, err = db.PrepareContext(ctx, deleteContactCategory); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteContactCategory: %w", err)
 	}
-	if q.deleteCountryStmt, err = db.PrepareContext(ctx, deleteCountry); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteCountry: %w", err)
-	}
 	if q.deleteEmailVerificationStmt, err = db.PrepareContext(ctx, deleteEmailVerification); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteEmailVerification: %w", err)
-	}
-	if q.deleteIdentityProviderStmt, err = db.PrepareContext(ctx, deleteIdentityProvider); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteIdentityProvider: %w", err)
-	}
-	if q.deleteLanguageStmt, err = db.PrepareContext(ctx, deleteLanguage); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteLanguage: %w", err)
-	}
-	if q.deleteLanguageProficiencyStmt, err = db.PrepareContext(ctx, deleteLanguageProficiency); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteLanguageProficiency: %w", err)
 	}
 	if q.deleteOtpStmt, err = db.PrepareContext(ctx, deleteOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteOtp: %w", err)
@@ -127,9 +94,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteProfileSocialStmt, err = db.PrepareContext(ctx, deleteProfileSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteProfileSocial: %w", err)
 	}
-	if q.deleteProvidersStmt, err = db.PrepareContext(ctx, deleteProviders); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteProviders: %w", err)
-	}
 	if q.deleteRefreshTokenStmt, err = db.PrepareContext(ctx, deleteRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteRefreshToken: %w", err)
 	}
@@ -139,26 +103,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteSocialStmt, err = db.PrepareContext(ctx, deleteSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSocial: %w", err)
 	}
-	if q.deleteStateStmt, err = db.PrepareContext(ctx, deleteState); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteState: %w", err)
-	}
-	if q.deleteTimezoneStmt, err = db.PrepareContext(ctx, deleteTimezone); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteTimezone: %w", err)
-	}
 	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
 	}
-	if q.deleteUserLanguageStmt, err = db.PrepareContext(ctx, deleteUserLanguage); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteUserLanguage: %w", err)
-	}
 	if q.deleteUserLoginStmt, err = db.PrepareContext(ctx, deleteUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUserLogin: %w", err)
-	}
-	if q.getAddressStmt, err = db.PrepareContext(ctx, getAddress); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAddress: %w", err)
-	}
-	if q.getAllAddressesStmt, err = db.PrepareContext(ctx, getAllAddresses); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAllAddresses: %w", err)
 	}
 	if q.getAllContactCategoriesStmt, err = db.PrepareContext(ctx, getAllContactCategories); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllContactCategories: %w", err)
@@ -175,11 +124,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAllProfilesStmt, err = db.PrepareContext(ctx, getAllProfiles); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAllProfiles: %w", err)
 	}
+	if q.getBasicBlockStmt, err = db.PrepareContext(ctx, getBasicBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query GetBasicBlock: %w", err)
+	}
 	if q.getCallToActionStmt, err = db.PrepareContext(ctx, getCallToAction); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCallToAction: %w", err)
 	}
 	if q.getCallToActionsStmt, err = db.PrepareContext(ctx, getCallToActions); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCallToActions: %w", err)
+	}
+	if q.getContactBlockStmt, err = db.PrepareContext(ctx, getContactBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query GetContactBlock: %w", err)
 	}
 	if q.getContactCategoryStmt, err = db.PrepareContext(ctx, getContactCategory); err != nil {
 		return nil, fmt.Errorf("error preparing query GetContactCategory: %w", err)
@@ -187,41 +142,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getContactsStmt, err = db.PrepareContext(ctx, getContacts); err != nil {
 		return nil, fmt.Errorf("error preparing query GetContacts: %w", err)
 	}
-	if q.getCountriesStmt, err = db.PrepareContext(ctx, getCountries); err != nil {
-		return nil, fmt.Errorf("error preparing query GetCountries: %w", err)
-	}
-	if q.getCountryStmt, err = db.PrepareContext(ctx, getCountry); err != nil {
-		return nil, fmt.Errorf("error preparing query GetCountry: %w", err)
-	}
 	if q.getEmailVerificationStmt, err = db.PrepareContext(ctx, getEmailVerification); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEmailVerification: %w", err)
 	}
 	if q.getEmailVerificationsStmt, err = db.PrepareContext(ctx, getEmailVerifications); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEmailVerifications: %w", err)
 	}
-	if q.getIdentityProviderStmt, err = db.PrepareContext(ctx, getIdentityProvider); err != nil {
-		return nil, fmt.Errorf("error preparing query GetIdentityProvider: %w", err)
-	}
-	if q.getIdentityProvidersStmt, err = db.PrepareContext(ctx, getIdentityProviders); err != nil {
-		return nil, fmt.Errorf("error preparing query GetIdentityProviders: %w", err)
-	}
-	if q.getLanguageStmt, err = db.PrepareContext(ctx, getLanguage); err != nil {
-		return nil, fmt.Errorf("error preparing query GetLanguage: %w", err)
-	}
-	if q.getLanguageProficienciesStmt, err = db.PrepareContext(ctx, getLanguageProficiencies); err != nil {
-		return nil, fmt.Errorf("error preparing query GetLanguageProficiencies: %w", err)
-	}
-	if q.getLanguageProficiencyStmt, err = db.PrepareContext(ctx, getLanguageProficiency); err != nil {
-		return nil, fmt.Errorf("error preparing query GetLanguageProficiency: %w", err)
-	}
-	if q.getLanguagesStmt, err = db.PrepareContext(ctx, getLanguages); err != nil {
-		return nil, fmt.Errorf("error preparing query GetLanguages: %w", err)
-	}
 	if q.getOtpStmt, err = db.PrepareContext(ctx, getOtp); err != nil {
 		return nil, fmt.Errorf("error preparing query GetOtp: %w", err)
-	}
-	if q.getPrimaryAddressStmt, err = db.PrepareContext(ctx, getPrimaryAddress); err != nil {
-		return nil, fmt.Errorf("error preparing query GetPrimaryAddress: %w", err)
 	}
 	if q.getProfileStmt, err = db.PrepareContext(ctx, getProfile); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfile: %w", err)
@@ -256,32 +184,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getSocialsStmt, err = db.PrepareContext(ctx, getSocials); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSocials: %w", err)
 	}
-	if q.getStateStmt, err = db.PrepareContext(ctx, getState); err != nil {
-		return nil, fmt.Errorf("error preparing query GetState: %w", err)
-	}
-	if q.getStatesStmt, err = db.PrepareContext(ctx, getStates); err != nil {
-		return nil, fmt.Errorf("error preparing query GetStates: %w", err)
-	}
-	if q.getStatesByCountryStmt, err = db.PrepareContext(ctx, getStatesByCountry); err != nil {
-		return nil, fmt.Errorf("error preparing query GetStatesByCountry: %w", err)
-	}
-	if q.getTimezoneStmt, err = db.PrepareContext(ctx, getTimezone); err != nil {
-		return nil, fmt.Errorf("error preparing query GetTimezone: %w", err)
-	}
-	if q.getTimezonesStmt, err = db.PrepareContext(ctx, getTimezones); err != nil {
-		return nil, fmt.Errorf("error preparing query GetTimezones: %w", err)
-	}
 	if q.getUnResoledLoginsStmt, err = db.PrepareContext(ctx, getUnResoledLogins); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUnResoledLogins: %w", err)
 	}
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
-	}
-	if q.getUserAddressesStmt, err = db.PrepareContext(ctx, getUserAddresses); err != nil {
-		return nil, fmt.Errorf("error preparing query GetUserAddresses: %w", err)
-	}
-	if q.getUserLanguagesStmt, err = db.PrepareContext(ctx, getUserLanguages); err != nil {
-		return nil, fmt.Errorf("error preparing query GetUserLanguages: %w", err)
 	}
 	if q.getUserLoginStmt, err = db.PrepareContext(ctx, getUserLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserLogin: %w", err)
@@ -289,38 +196,26 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUserLoginsStmt, err = db.PrepareContext(ctx, getUserLogins); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserLogins: %w", err)
 	}
-	if q.getUserProvidersStmt, err = db.PrepareContext(ctx, getUserProviders); err != nil {
-		return nil, fmt.Errorf("error preparing query GetUserProviders: %w", err)
-	}
 	if q.getUserRolesStmt, err = db.PrepareContext(ctx, getUserRoles); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserRoles: %w", err)
-	}
-	if q.getUserTimezonesStmt, err = db.PrepareContext(ctx, getUserTimezones); err != nil {
-		return nil, fmt.Errorf("error preparing query GetUserTimezones: %w", err)
 	}
 	if q.getUsersStmt, err = db.PrepareContext(ctx, getUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUsers: %w", err)
 	}
-	if q.updateAddressStmt, err = db.PrepareContext(ctx, updateAddress); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateAddress: %w", err)
+	if q.isProfileExistStmt, err = db.PrepareContext(ctx, isProfileExist); err != nil {
+		return nil, fmt.Errorf("error preparing query IsProfileExist: %w", err)
+	}
+	if q.updateBasicBlockStmt, err = db.PrepareContext(ctx, updateBasicBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateBasicBlock: %w", err)
 	}
 	if q.updateContactStmt, err = db.PrepareContext(ctx, updateContact); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateContact: %w", err)
 	}
+	if q.updateContactBlockStmt, err = db.PrepareContext(ctx, updateContactBlock); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateContactBlock: %w", err)
+	}
 	if q.updateContactCategoryStmt, err = db.PrepareContext(ctx, updateContactCategory); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateContactCategory: %w", err)
-	}
-	if q.updateCountryStmt, err = db.PrepareContext(ctx, updateCountry); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateCountry: %w", err)
-	}
-	if q.updateIdentityProviderStmt, err = db.PrepareContext(ctx, updateIdentityProvider); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateIdentityProvider: %w", err)
-	}
-	if q.updateLanguageStmt, err = db.PrepareContext(ctx, updateLanguage); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateLanguage: %w", err)
-	}
-	if q.updateLanguageProficiencyStmt, err = db.PrepareContext(ctx, updateLanguageProficiency); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateLanguageProficiency: %w", err)
 	}
 	if q.updateProfileStmt, err = db.PrepareContext(ctx, updateProfile); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateProfile: %w", err)
@@ -343,35 +238,25 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateSocialStmt, err = db.PrepareContext(ctx, updateSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateSocial: %w", err)
 	}
-	if q.updateStateStmt, err = db.PrepareContext(ctx, updateState); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateState: %w", err)
-	}
-	if q.updateTimezoneStmt, err = db.PrepareContext(ctx, updateTimezone); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateTimezone: %w", err)
-	}
 	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
 	}
-	if q.updateUserLanguageStmt, err = db.PrepareContext(ctx, updateUserLanguage); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUserLanguage: %w", err)
-	}
-	if q.updateUserProviderStmt, err = db.PrepareContext(ctx, updateUserProvider); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUserProvider: %w", err)
-	}
 	if q.updateUserRoleStmt, err = db.PrepareContext(ctx, updateUserRole); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUserRole: %w", err)
-	}
-	if q.updateUserTimezoneStmt, err = db.PrepareContext(ctx, updateUserTimezone); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUserTimezone: %w", err)
 	}
 	return &q, nil
 }
 
 func (q *Queries) Close() error {
 	var err error
-	if q.addAddressStmt != nil {
-		if cerr := q.addAddressStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing addAddressStmt: %w", cerr)
+	if q.addBasicBlockStmt != nil {
+		if cerr := q.addBasicBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addBasicBlockStmt: %w", cerr)
+		}
+	}
+	if q.addContactBlockStmt != nil {
+		if cerr := q.addContactBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addContactBlockStmt: %w", cerr)
 		}
 	}
 	if q.addContactCategoryStmt != nil {
@@ -404,49 +289,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing addSocialStmt: %w", cerr)
 		}
 	}
-	if q.addUserLanguageStmt != nil {
-		if cerr := q.addUserLanguageStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing addUserLanguageStmt: %w", cerr)
-		}
-	}
-	if q.addUserProviderStmt != nil {
-		if cerr := q.addUserProviderStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing addUserProviderStmt: %w", cerr)
-		}
-	}
 	if q.addUserRoleStmt != nil {
 		if cerr := q.addUserRoleStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing addUserRoleStmt: %w", cerr)
 		}
 	}
-	if q.addUserTimezoneStmt != nil {
-		if cerr := q.addUserTimezoneStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing addUserTimezoneStmt: %w", cerr)
-		}
-	}
-	if q.createCountryStmt != nil {
-		if cerr := q.createCountryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createCountryStmt: %w", cerr)
-		}
-	}
 	if q.createEmailVerificationStmt != nil {
 		if cerr := q.createEmailVerificationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createEmailVerificationStmt: %w", cerr)
-		}
-	}
-	if q.createIdentityProviderStmt != nil {
-		if cerr := q.createIdentityProviderStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createIdentityProviderStmt: %w", cerr)
-		}
-	}
-	if q.createLanguageStmt != nil {
-		if cerr := q.createLanguageStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createLanguageStmt: %w", cerr)
-		}
-	}
-	if q.createLanguageProficiencyStmt != nil {
-		if cerr := q.createLanguageProficiencyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createLanguageProficiencyStmt: %w", cerr)
 		}
 	}
 	if q.createOtpStmt != nil {
@@ -464,16 +314,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createRoleStmt: %w", cerr)
 		}
 	}
-	if q.createStateStmt != nil {
-		if cerr := q.createStateStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createStateStmt: %w", cerr)
-		}
-	}
-	if q.createTimezoneStmt != nil {
-		if cerr := q.createTimezoneStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createTimezoneStmt: %w", cerr)
-		}
-	}
 	if q.createUserStmt != nil {
 		if cerr := q.createUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
@@ -484,9 +324,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createUserLoginStmt: %w", cerr)
 		}
 	}
-	if q.deleteAddressStmt != nil {
-		if cerr := q.deleteAddressStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteAddressStmt: %w", cerr)
+	if q.deleteBasicBlockStmt != nil {
+		if cerr := q.deleteBasicBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteBasicBlockStmt: %w", cerr)
 		}
 	}
 	if q.deleteContactStmt != nil {
@@ -494,34 +334,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteContactStmt: %w", cerr)
 		}
 	}
+	if q.deleteContactBlockStmt != nil {
+		if cerr := q.deleteContactBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteContactBlockStmt: %w", cerr)
+		}
+	}
 	if q.deleteContactCategoryStmt != nil {
 		if cerr := q.deleteContactCategoryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteContactCategoryStmt: %w", cerr)
 		}
 	}
-	if q.deleteCountryStmt != nil {
-		if cerr := q.deleteCountryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteCountryStmt: %w", cerr)
-		}
-	}
 	if q.deleteEmailVerificationStmt != nil {
 		if cerr := q.deleteEmailVerificationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteEmailVerificationStmt: %w", cerr)
-		}
-	}
-	if q.deleteIdentityProviderStmt != nil {
-		if cerr := q.deleteIdentityProviderStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteIdentityProviderStmt: %w", cerr)
-		}
-	}
-	if q.deleteLanguageStmt != nil {
-		if cerr := q.deleteLanguageStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteLanguageStmt: %w", cerr)
-		}
-	}
-	if q.deleteLanguageProficiencyStmt != nil {
-		if cerr := q.deleteLanguageProficiencyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteLanguageProficiencyStmt: %w", cerr)
 		}
 	}
 	if q.deleteOtpStmt != nil {
@@ -544,11 +369,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteProfileSocialStmt: %w", cerr)
 		}
 	}
-	if q.deleteProvidersStmt != nil {
-		if cerr := q.deleteProvidersStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteProvidersStmt: %w", cerr)
-		}
-	}
 	if q.deleteRefreshTokenStmt != nil {
 		if cerr := q.deleteRefreshTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteRefreshTokenStmt: %w", cerr)
@@ -564,39 +384,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteSocialStmt: %w", cerr)
 		}
 	}
-	if q.deleteStateStmt != nil {
-		if cerr := q.deleteStateStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteStateStmt: %w", cerr)
-		}
-	}
-	if q.deleteTimezoneStmt != nil {
-		if cerr := q.deleteTimezoneStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteTimezoneStmt: %w", cerr)
-		}
-	}
 	if q.deleteUserStmt != nil {
 		if cerr := q.deleteUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUserStmt: %w", cerr)
 		}
 	}
-	if q.deleteUserLanguageStmt != nil {
-		if cerr := q.deleteUserLanguageStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteUserLanguageStmt: %w", cerr)
-		}
-	}
 	if q.deleteUserLoginStmt != nil {
 		if cerr := q.deleteUserLoginStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUserLoginStmt: %w", cerr)
-		}
-	}
-	if q.getAddressStmt != nil {
-		if cerr := q.getAddressStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAddressStmt: %w", cerr)
-		}
-	}
-	if q.getAllAddressesStmt != nil {
-		if cerr := q.getAllAddressesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAllAddressesStmt: %w", cerr)
 		}
 	}
 	if q.getAllContactCategoriesStmt != nil {
@@ -624,6 +419,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAllProfilesStmt: %w", cerr)
 		}
 	}
+	if q.getBasicBlockStmt != nil {
+		if cerr := q.getBasicBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getBasicBlockStmt: %w", cerr)
+		}
+	}
 	if q.getCallToActionStmt != nil {
 		if cerr := q.getCallToActionStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getCallToActionStmt: %w", cerr)
@@ -632,6 +432,11 @@ func (q *Queries) Close() error {
 	if q.getCallToActionsStmt != nil {
 		if cerr := q.getCallToActionsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getCallToActionsStmt: %w", cerr)
+		}
+	}
+	if q.getContactBlockStmt != nil {
+		if cerr := q.getContactBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getContactBlockStmt: %w", cerr)
 		}
 	}
 	if q.getContactCategoryStmt != nil {
@@ -644,16 +449,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getContactsStmt: %w", cerr)
 		}
 	}
-	if q.getCountriesStmt != nil {
-		if cerr := q.getCountriesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getCountriesStmt: %w", cerr)
-		}
-	}
-	if q.getCountryStmt != nil {
-		if cerr := q.getCountryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getCountryStmt: %w", cerr)
-		}
-	}
 	if q.getEmailVerificationStmt != nil {
 		if cerr := q.getEmailVerificationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getEmailVerificationStmt: %w", cerr)
@@ -664,44 +459,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getEmailVerificationsStmt: %w", cerr)
 		}
 	}
-	if q.getIdentityProviderStmt != nil {
-		if cerr := q.getIdentityProviderStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getIdentityProviderStmt: %w", cerr)
-		}
-	}
-	if q.getIdentityProvidersStmt != nil {
-		if cerr := q.getIdentityProvidersStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getIdentityProvidersStmt: %w", cerr)
-		}
-	}
-	if q.getLanguageStmt != nil {
-		if cerr := q.getLanguageStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getLanguageStmt: %w", cerr)
-		}
-	}
-	if q.getLanguageProficienciesStmt != nil {
-		if cerr := q.getLanguageProficienciesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getLanguageProficienciesStmt: %w", cerr)
-		}
-	}
-	if q.getLanguageProficiencyStmt != nil {
-		if cerr := q.getLanguageProficiencyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getLanguageProficiencyStmt: %w", cerr)
-		}
-	}
-	if q.getLanguagesStmt != nil {
-		if cerr := q.getLanguagesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getLanguagesStmt: %w", cerr)
-		}
-	}
 	if q.getOtpStmt != nil {
 		if cerr := q.getOtpStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getOtpStmt: %w", cerr)
-		}
-	}
-	if q.getPrimaryAddressStmt != nil {
-		if cerr := q.getPrimaryAddressStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getPrimaryAddressStmt: %w", cerr)
 		}
 	}
 	if q.getProfileStmt != nil {
@@ -759,31 +519,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getSocialsStmt: %w", cerr)
 		}
 	}
-	if q.getStateStmt != nil {
-		if cerr := q.getStateStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getStateStmt: %w", cerr)
-		}
-	}
-	if q.getStatesStmt != nil {
-		if cerr := q.getStatesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getStatesStmt: %w", cerr)
-		}
-	}
-	if q.getStatesByCountryStmt != nil {
-		if cerr := q.getStatesByCountryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getStatesByCountryStmt: %w", cerr)
-		}
-	}
-	if q.getTimezoneStmt != nil {
-		if cerr := q.getTimezoneStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getTimezoneStmt: %w", cerr)
-		}
-	}
-	if q.getTimezonesStmt != nil {
-		if cerr := q.getTimezonesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getTimezonesStmt: %w", cerr)
-		}
-	}
 	if q.getUnResoledLoginsStmt != nil {
 		if cerr := q.getUnResoledLoginsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUnResoledLoginsStmt: %w", cerr)
@@ -792,16 +527,6 @@ func (q *Queries) Close() error {
 	if q.getUserStmt != nil {
 		if cerr := q.getUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
-		}
-	}
-	if q.getUserAddressesStmt != nil {
-		if cerr := q.getUserAddressesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getUserAddressesStmt: %w", cerr)
-		}
-	}
-	if q.getUserLanguagesStmt != nil {
-		if cerr := q.getUserLanguagesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getUserLanguagesStmt: %w", cerr)
 		}
 	}
 	if q.getUserLoginStmt != nil {
@@ -814,19 +539,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUserLoginsStmt: %w", cerr)
 		}
 	}
-	if q.getUserProvidersStmt != nil {
-		if cerr := q.getUserProvidersStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getUserProvidersStmt: %w", cerr)
-		}
-	}
 	if q.getUserRolesStmt != nil {
 		if cerr := q.getUserRolesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getUserRolesStmt: %w", cerr)
-		}
-	}
-	if q.getUserTimezonesStmt != nil {
-		if cerr := q.getUserTimezonesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getUserTimezonesStmt: %w", cerr)
 		}
 	}
 	if q.getUsersStmt != nil {
@@ -834,9 +549,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUsersStmt: %w", cerr)
 		}
 	}
-	if q.updateAddressStmt != nil {
-		if cerr := q.updateAddressStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateAddressStmt: %w", cerr)
+	if q.isProfileExistStmt != nil {
+		if cerr := q.isProfileExistStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing isProfileExistStmt: %w", cerr)
+		}
+	}
+	if q.updateBasicBlockStmt != nil {
+		if cerr := q.updateBasicBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateBasicBlockStmt: %w", cerr)
 		}
 	}
 	if q.updateContactStmt != nil {
@@ -844,29 +564,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateContactStmt: %w", cerr)
 		}
 	}
+	if q.updateContactBlockStmt != nil {
+		if cerr := q.updateContactBlockStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateContactBlockStmt: %w", cerr)
+		}
+	}
 	if q.updateContactCategoryStmt != nil {
 		if cerr := q.updateContactCategoryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateContactCategoryStmt: %w", cerr)
-		}
-	}
-	if q.updateCountryStmt != nil {
-		if cerr := q.updateCountryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateCountryStmt: %w", cerr)
-		}
-	}
-	if q.updateIdentityProviderStmt != nil {
-		if cerr := q.updateIdentityProviderStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateIdentityProviderStmt: %w", cerr)
-		}
-	}
-	if q.updateLanguageStmt != nil {
-		if cerr := q.updateLanguageStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateLanguageStmt: %w", cerr)
-		}
-	}
-	if q.updateLanguageProficiencyStmt != nil {
-		if cerr := q.updateLanguageProficiencyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateLanguageProficiencyStmt: %w", cerr)
 		}
 	}
 	if q.updateProfileStmt != nil {
@@ -904,39 +609,14 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateSocialStmt: %w", cerr)
 		}
 	}
-	if q.updateStateStmt != nil {
-		if cerr := q.updateStateStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateStateStmt: %w", cerr)
-		}
-	}
-	if q.updateTimezoneStmt != nil {
-		if cerr := q.updateTimezoneStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateTimezoneStmt: %w", cerr)
-		}
-	}
 	if q.updateUserStmt != nil {
 		if cerr := q.updateUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateUserStmt: %w", cerr)
 		}
 	}
-	if q.updateUserLanguageStmt != nil {
-		if cerr := q.updateUserLanguageStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserLanguageStmt: %w", cerr)
-		}
-	}
-	if q.updateUserProviderStmt != nil {
-		if cerr := q.updateUserProviderStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserProviderStmt: %w", cerr)
-		}
-	}
 	if q.updateUserRoleStmt != nil {
 		if cerr := q.updateUserRoleStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateUserRoleStmt: %w", cerr)
-		}
-	}
-	if q.updateUserTimezoneStmt != nil {
-		if cerr := q.updateUserTimezoneStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserTimezoneStmt: %w", cerr)
 		}
 	}
 	return err
@@ -976,241 +656,161 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                            DBTX
-	tx                            *sql.Tx
-	addAddressStmt                *sql.Stmt
-	addContactCategoryStmt        *sql.Stmt
-	addContactsStmt               *sql.Stmt
-	addProfileStmt                *sql.Stmt
-	addProfileContentStmt         *sql.Stmt
-	addProfileSocialStmt          *sql.Stmt
-	addSocialStmt                 *sql.Stmt
-	addUserLanguageStmt           *sql.Stmt
-	addUserProviderStmt           *sql.Stmt
-	addUserRoleStmt               *sql.Stmt
-	addUserTimezoneStmt           *sql.Stmt
-	createCountryStmt             *sql.Stmt
-	createEmailVerificationStmt   *sql.Stmt
-	createIdentityProviderStmt    *sql.Stmt
-	createLanguageStmt            *sql.Stmt
-	createLanguageProficiencyStmt *sql.Stmt
-	createOtpStmt                 *sql.Stmt
-	createRefreshTokenStmt        *sql.Stmt
-	createRoleStmt                *sql.Stmt
-	createStateStmt               *sql.Stmt
-	createTimezoneStmt            *sql.Stmt
-	createUserStmt                *sql.Stmt
-	createUserLoginStmt           *sql.Stmt
-	deleteAddressStmt             *sql.Stmt
-	deleteContactStmt             *sql.Stmt
-	deleteContactCategoryStmt     *sql.Stmt
-	deleteCountryStmt             *sql.Stmt
-	deleteEmailVerificationStmt   *sql.Stmt
-	deleteIdentityProviderStmt    *sql.Stmt
-	deleteLanguageStmt            *sql.Stmt
-	deleteLanguageProficiencyStmt *sql.Stmt
-	deleteOtpStmt                 *sql.Stmt
-	deleteProfileStmt             *sql.Stmt
-	deleteProfileContentStmt      *sql.Stmt
-	deleteProfileSocialStmt       *sql.Stmt
-	deleteProvidersStmt           *sql.Stmt
-	deleteRefreshTokenStmt        *sql.Stmt
-	deleteRolesStmt               *sql.Stmt
-	deleteSocialStmt              *sql.Stmt
-	deleteStateStmt               *sql.Stmt
-	deleteTimezoneStmt            *sql.Stmt
-	deleteUserStmt                *sql.Stmt
-	deleteUserLanguageStmt        *sql.Stmt
-	deleteUserLoginStmt           *sql.Stmt
-	getAddressStmt                *sql.Stmt
-	getAllAddressesStmt           *sql.Stmt
-	getAllContactCategoriesStmt   *sql.Stmt
-	getAllContactsStmt            *sql.Stmt
-	getAllContentTypesStmt        *sql.Stmt
-	getAllOtpStmt                 *sql.Stmt
-	getAllProfilesStmt            *sql.Stmt
-	getCallToActionStmt           *sql.Stmt
-	getCallToActionsStmt          *sql.Stmt
-	getContactCategoryStmt        *sql.Stmt
-	getContactsStmt               *sql.Stmt
-	getCountriesStmt              *sql.Stmt
-	getCountryStmt                *sql.Stmt
-	getEmailVerificationStmt      *sql.Stmt
-	getEmailVerificationsStmt     *sql.Stmt
-	getIdentityProviderStmt       *sql.Stmt
-	getIdentityProvidersStmt      *sql.Stmt
-	getLanguageStmt               *sql.Stmt
-	getLanguageProficienciesStmt  *sql.Stmt
-	getLanguageProficiencyStmt    *sql.Stmt
-	getLanguagesStmt              *sql.Stmt
-	getOtpStmt                    *sql.Stmt
-	getPrimaryAddressStmt         *sql.Stmt
-	getProfileStmt                *sql.Stmt
-	getProfileContentStmt         *sql.Stmt
-	getProfileContentsStmt        *sql.Stmt
-	getProfileSocialsStmt         *sql.Stmt
-	getProfilesStmt               *sql.Stmt
-	getRefreshTokenStmt           *sql.Stmt
-	getRefreshTokensStmt          *sql.Stmt
-	getRoleStmt                   *sql.Stmt
-	getRolesStmt                  *sql.Stmt
-	getSocialStmt                 *sql.Stmt
-	getSocialsStmt                *sql.Stmt
-	getStateStmt                  *sql.Stmt
-	getStatesStmt                 *sql.Stmt
-	getStatesByCountryStmt        *sql.Stmt
-	getTimezoneStmt               *sql.Stmt
-	getTimezonesStmt              *sql.Stmt
-	getUnResoledLoginsStmt        *sql.Stmt
-	getUserStmt                   *sql.Stmt
-	getUserAddressesStmt          *sql.Stmt
-	getUserLanguagesStmt          *sql.Stmt
-	getUserLoginStmt              *sql.Stmt
-	getUserLoginsStmt             *sql.Stmt
-	getUserProvidersStmt          *sql.Stmt
-	getUserRolesStmt              *sql.Stmt
-	getUserTimezonesStmt          *sql.Stmt
-	getUsersStmt                  *sql.Stmt
-	updateAddressStmt             *sql.Stmt
-	updateContactStmt             *sql.Stmt
-	updateContactCategoryStmt     *sql.Stmt
-	updateCountryStmt             *sql.Stmt
-	updateIdentityProviderStmt    *sql.Stmt
-	updateLanguageStmt            *sql.Stmt
-	updateLanguageProficiencyStmt *sql.Stmt
-	updateProfileStmt             *sql.Stmt
-	updateProfileContentStmt      *sql.Stmt
-	updateProfileSocialStmt       *sql.Stmt
-	updateRefreshTokenStmt        *sql.Stmt
-	updateResolvedLoginStmt       *sql.Stmt
-	updateRoleStmt                *sql.Stmt
-	updateSocialStmt              *sql.Stmt
-	updateStateStmt               *sql.Stmt
-	updateTimezoneStmt            *sql.Stmt
-	updateUserStmt                *sql.Stmt
-	updateUserLanguageStmt        *sql.Stmt
-	updateUserProviderStmt        *sql.Stmt
-	updateUserRoleStmt            *sql.Stmt
-	updateUserTimezoneStmt        *sql.Stmt
+	db                          DBTX
+	tx                          *sql.Tx
+	addBasicBlockStmt           *sql.Stmt
+	addContactBlockStmt         *sql.Stmt
+	addContactCategoryStmt      *sql.Stmt
+	addContactsStmt             *sql.Stmt
+	addProfileStmt              *sql.Stmt
+	addProfileContentStmt       *sql.Stmt
+	addProfileSocialStmt        *sql.Stmt
+	addSocialStmt               *sql.Stmt
+	addUserRoleStmt             *sql.Stmt
+	createEmailVerificationStmt *sql.Stmt
+	createOtpStmt               *sql.Stmt
+	createRefreshTokenStmt      *sql.Stmt
+	createRoleStmt              *sql.Stmt
+	createUserStmt              *sql.Stmt
+	createUserLoginStmt         *sql.Stmt
+	deleteBasicBlockStmt        *sql.Stmt
+	deleteContactStmt           *sql.Stmt
+	deleteContactBlockStmt      *sql.Stmt
+	deleteContactCategoryStmt   *sql.Stmt
+	deleteEmailVerificationStmt *sql.Stmt
+	deleteOtpStmt               *sql.Stmt
+	deleteProfileStmt           *sql.Stmt
+	deleteProfileContentStmt    *sql.Stmt
+	deleteProfileSocialStmt     *sql.Stmt
+	deleteRefreshTokenStmt      *sql.Stmt
+	deleteRolesStmt             *sql.Stmt
+	deleteSocialStmt            *sql.Stmt
+	deleteUserStmt              *sql.Stmt
+	deleteUserLoginStmt         *sql.Stmt
+	getAllContactCategoriesStmt *sql.Stmt
+	getAllContactsStmt          *sql.Stmt
+	getAllContentTypesStmt      *sql.Stmt
+	getAllOtpStmt               *sql.Stmt
+	getAllProfilesStmt          *sql.Stmt
+	getBasicBlockStmt           *sql.Stmt
+	getCallToActionStmt         *sql.Stmt
+	getCallToActionsStmt        *sql.Stmt
+	getContactBlockStmt         *sql.Stmt
+	getContactCategoryStmt      *sql.Stmt
+	getContactsStmt             *sql.Stmt
+	getEmailVerificationStmt    *sql.Stmt
+	getEmailVerificationsStmt   *sql.Stmt
+	getOtpStmt                  *sql.Stmt
+	getProfileStmt              *sql.Stmt
+	getProfileContentStmt       *sql.Stmt
+	getProfileContentsStmt      *sql.Stmt
+	getProfileSocialsStmt       *sql.Stmt
+	getProfilesStmt             *sql.Stmt
+	getRefreshTokenStmt         *sql.Stmt
+	getRefreshTokensStmt        *sql.Stmt
+	getRoleStmt                 *sql.Stmt
+	getRolesStmt                *sql.Stmt
+	getSocialStmt               *sql.Stmt
+	getSocialsStmt              *sql.Stmt
+	getUnResoledLoginsStmt      *sql.Stmt
+	getUserStmt                 *sql.Stmt
+	getUserLoginStmt            *sql.Stmt
+	getUserLoginsStmt           *sql.Stmt
+	getUserRolesStmt            *sql.Stmt
+	getUsersStmt                *sql.Stmt
+	isProfileExistStmt          *sql.Stmt
+	updateBasicBlockStmt        *sql.Stmt
+	updateContactStmt           *sql.Stmt
+	updateContactBlockStmt      *sql.Stmt
+	updateContactCategoryStmt   *sql.Stmt
+	updateProfileStmt           *sql.Stmt
+	updateProfileContentStmt    *sql.Stmt
+	updateProfileSocialStmt     *sql.Stmt
+	updateRefreshTokenStmt      *sql.Stmt
+	updateResolvedLoginStmt     *sql.Stmt
+	updateRoleStmt              *sql.Stmt
+	updateSocialStmt            *sql.Stmt
+	updateUserStmt              *sql.Stmt
+	updateUserRoleStmt          *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                            tx,
-		tx:                            tx,
-		addAddressStmt:                q.addAddressStmt,
-		addContactCategoryStmt:        q.addContactCategoryStmt,
-		addContactsStmt:               q.addContactsStmt,
-		addProfileStmt:                q.addProfileStmt,
-		addProfileContentStmt:         q.addProfileContentStmt,
-		addProfileSocialStmt:          q.addProfileSocialStmt,
-		addSocialStmt:                 q.addSocialStmt,
-		addUserLanguageStmt:           q.addUserLanguageStmt,
-		addUserProviderStmt:           q.addUserProviderStmt,
-		addUserRoleStmt:               q.addUserRoleStmt,
-		addUserTimezoneStmt:           q.addUserTimezoneStmt,
-		createCountryStmt:             q.createCountryStmt,
-		createEmailVerificationStmt:   q.createEmailVerificationStmt,
-		createIdentityProviderStmt:    q.createIdentityProviderStmt,
-		createLanguageStmt:            q.createLanguageStmt,
-		createLanguageProficiencyStmt: q.createLanguageProficiencyStmt,
-		createOtpStmt:                 q.createOtpStmt,
-		createRefreshTokenStmt:        q.createRefreshTokenStmt,
-		createRoleStmt:                q.createRoleStmt,
-		createStateStmt:               q.createStateStmt,
-		createTimezoneStmt:            q.createTimezoneStmt,
-		createUserStmt:                q.createUserStmt,
-		createUserLoginStmt:           q.createUserLoginStmt,
-		deleteAddressStmt:             q.deleteAddressStmt,
-		deleteContactStmt:             q.deleteContactStmt,
-		deleteContactCategoryStmt:     q.deleteContactCategoryStmt,
-		deleteCountryStmt:             q.deleteCountryStmt,
-		deleteEmailVerificationStmt:   q.deleteEmailVerificationStmt,
-		deleteIdentityProviderStmt:    q.deleteIdentityProviderStmt,
-		deleteLanguageStmt:            q.deleteLanguageStmt,
-		deleteLanguageProficiencyStmt: q.deleteLanguageProficiencyStmt,
-		deleteOtpStmt:                 q.deleteOtpStmt,
-		deleteProfileStmt:             q.deleteProfileStmt,
-		deleteProfileContentStmt:      q.deleteProfileContentStmt,
-		deleteProfileSocialStmt:       q.deleteProfileSocialStmt,
-		deleteProvidersStmt:           q.deleteProvidersStmt,
-		deleteRefreshTokenStmt:        q.deleteRefreshTokenStmt,
-		deleteRolesStmt:               q.deleteRolesStmt,
-		deleteSocialStmt:              q.deleteSocialStmt,
-		deleteStateStmt:               q.deleteStateStmt,
-		deleteTimezoneStmt:            q.deleteTimezoneStmt,
-		deleteUserStmt:                q.deleteUserStmt,
-		deleteUserLanguageStmt:        q.deleteUserLanguageStmt,
-		deleteUserLoginStmt:           q.deleteUserLoginStmt,
-		getAddressStmt:                q.getAddressStmt,
-		getAllAddressesStmt:           q.getAllAddressesStmt,
-		getAllContactCategoriesStmt:   q.getAllContactCategoriesStmt,
-		getAllContactsStmt:            q.getAllContactsStmt,
-		getAllContentTypesStmt:        q.getAllContentTypesStmt,
-		getAllOtpStmt:                 q.getAllOtpStmt,
-		getAllProfilesStmt:            q.getAllProfilesStmt,
-		getCallToActionStmt:           q.getCallToActionStmt,
-		getCallToActionsStmt:          q.getCallToActionsStmt,
-		getContactCategoryStmt:        q.getContactCategoryStmt,
-		getContactsStmt:               q.getContactsStmt,
-		getCountriesStmt:              q.getCountriesStmt,
-		getCountryStmt:                q.getCountryStmt,
-		getEmailVerificationStmt:      q.getEmailVerificationStmt,
-		getEmailVerificationsStmt:     q.getEmailVerificationsStmt,
-		getIdentityProviderStmt:       q.getIdentityProviderStmt,
-		getIdentityProvidersStmt:      q.getIdentityProvidersStmt,
-		getLanguageStmt:               q.getLanguageStmt,
-		getLanguageProficienciesStmt:  q.getLanguageProficienciesStmt,
-		getLanguageProficiencyStmt:    q.getLanguageProficiencyStmt,
-		getLanguagesStmt:              q.getLanguagesStmt,
-		getOtpStmt:                    q.getOtpStmt,
-		getPrimaryAddressStmt:         q.getPrimaryAddressStmt,
-		getProfileStmt:                q.getProfileStmt,
-		getProfileContentStmt:         q.getProfileContentStmt,
-		getProfileContentsStmt:        q.getProfileContentsStmt,
-		getProfileSocialsStmt:         q.getProfileSocialsStmt,
-		getProfilesStmt:               q.getProfilesStmt,
-		getRefreshTokenStmt:           q.getRefreshTokenStmt,
-		getRefreshTokensStmt:          q.getRefreshTokensStmt,
-		getRoleStmt:                   q.getRoleStmt,
-		getRolesStmt:                  q.getRolesStmt,
-		getSocialStmt:                 q.getSocialStmt,
-		getSocialsStmt:                q.getSocialsStmt,
-		getStateStmt:                  q.getStateStmt,
-		getStatesStmt:                 q.getStatesStmt,
-		getStatesByCountryStmt:        q.getStatesByCountryStmt,
-		getTimezoneStmt:               q.getTimezoneStmt,
-		getTimezonesStmt:              q.getTimezonesStmt,
-		getUnResoledLoginsStmt:        q.getUnResoledLoginsStmt,
-		getUserStmt:                   q.getUserStmt,
-		getUserAddressesStmt:          q.getUserAddressesStmt,
-		getUserLanguagesStmt:          q.getUserLanguagesStmt,
-		getUserLoginStmt:              q.getUserLoginStmt,
-		getUserLoginsStmt:             q.getUserLoginsStmt,
-		getUserProvidersStmt:          q.getUserProvidersStmt,
-		getUserRolesStmt:              q.getUserRolesStmt,
-		getUserTimezonesStmt:          q.getUserTimezonesStmt,
-		getUsersStmt:                  q.getUsersStmt,
-		updateAddressStmt:             q.updateAddressStmt,
-		updateContactStmt:             q.updateContactStmt,
-		updateContactCategoryStmt:     q.updateContactCategoryStmt,
-		updateCountryStmt:             q.updateCountryStmt,
-		updateIdentityProviderStmt:    q.updateIdentityProviderStmt,
-		updateLanguageStmt:            q.updateLanguageStmt,
-		updateLanguageProficiencyStmt: q.updateLanguageProficiencyStmt,
-		updateProfileStmt:             q.updateProfileStmt,
-		updateProfileContentStmt:      q.updateProfileContentStmt,
-		updateProfileSocialStmt:       q.updateProfileSocialStmt,
-		updateRefreshTokenStmt:        q.updateRefreshTokenStmt,
-		updateResolvedLoginStmt:       q.updateResolvedLoginStmt,
-		updateRoleStmt:                q.updateRoleStmt,
-		updateSocialStmt:              q.updateSocialStmt,
-		updateStateStmt:               q.updateStateStmt,
-		updateTimezoneStmt:            q.updateTimezoneStmt,
-		updateUserStmt:                q.updateUserStmt,
-		updateUserLanguageStmt:        q.updateUserLanguageStmt,
-		updateUserProviderStmt:        q.updateUserProviderStmt,
-		updateUserRoleStmt:            q.updateUserRoleStmt,
-		updateUserTimezoneStmt:        q.updateUserTimezoneStmt,
+		db:                          tx,
+		tx:                          tx,
+		addBasicBlockStmt:           q.addBasicBlockStmt,
+		addContactBlockStmt:         q.addContactBlockStmt,
+		addContactCategoryStmt:      q.addContactCategoryStmt,
+		addContactsStmt:             q.addContactsStmt,
+		addProfileStmt:              q.addProfileStmt,
+		addProfileContentStmt:       q.addProfileContentStmt,
+		addProfileSocialStmt:        q.addProfileSocialStmt,
+		addSocialStmt:               q.addSocialStmt,
+		addUserRoleStmt:             q.addUserRoleStmt,
+		createEmailVerificationStmt: q.createEmailVerificationStmt,
+		createOtpStmt:               q.createOtpStmt,
+		createRefreshTokenStmt:      q.createRefreshTokenStmt,
+		createRoleStmt:              q.createRoleStmt,
+		createUserStmt:              q.createUserStmt,
+		createUserLoginStmt:         q.createUserLoginStmt,
+		deleteBasicBlockStmt:        q.deleteBasicBlockStmt,
+		deleteContactStmt:           q.deleteContactStmt,
+		deleteContactBlockStmt:      q.deleteContactBlockStmt,
+		deleteContactCategoryStmt:   q.deleteContactCategoryStmt,
+		deleteEmailVerificationStmt: q.deleteEmailVerificationStmt,
+		deleteOtpStmt:               q.deleteOtpStmt,
+		deleteProfileStmt:           q.deleteProfileStmt,
+		deleteProfileContentStmt:    q.deleteProfileContentStmt,
+		deleteProfileSocialStmt:     q.deleteProfileSocialStmt,
+		deleteRefreshTokenStmt:      q.deleteRefreshTokenStmt,
+		deleteRolesStmt:             q.deleteRolesStmt,
+		deleteSocialStmt:            q.deleteSocialStmt,
+		deleteUserStmt:              q.deleteUserStmt,
+		deleteUserLoginStmt:         q.deleteUserLoginStmt,
+		getAllContactCategoriesStmt: q.getAllContactCategoriesStmt,
+		getAllContactsStmt:          q.getAllContactsStmt,
+		getAllContentTypesStmt:      q.getAllContentTypesStmt,
+		getAllOtpStmt:               q.getAllOtpStmt,
+		getAllProfilesStmt:          q.getAllProfilesStmt,
+		getBasicBlockStmt:           q.getBasicBlockStmt,
+		getCallToActionStmt:         q.getCallToActionStmt,
+		getCallToActionsStmt:        q.getCallToActionsStmt,
+		getContactBlockStmt:         q.getContactBlockStmt,
+		getContactCategoryStmt:      q.getContactCategoryStmt,
+		getContactsStmt:             q.getContactsStmt,
+		getEmailVerificationStmt:    q.getEmailVerificationStmt,
+		getEmailVerificationsStmt:   q.getEmailVerificationsStmt,
+		getOtpStmt:                  q.getOtpStmt,
+		getProfileStmt:              q.getProfileStmt,
+		getProfileContentStmt:       q.getProfileContentStmt,
+		getProfileContentsStmt:      q.getProfileContentsStmt,
+		getProfileSocialsStmt:       q.getProfileSocialsStmt,
+		getProfilesStmt:             q.getProfilesStmt,
+		getRefreshTokenStmt:         q.getRefreshTokenStmt,
+		getRefreshTokensStmt:        q.getRefreshTokensStmt,
+		getRoleStmt:                 q.getRoleStmt,
+		getRolesStmt:                q.getRolesStmt,
+		getSocialStmt:               q.getSocialStmt,
+		getSocialsStmt:              q.getSocialsStmt,
+		getUnResoledLoginsStmt:      q.getUnResoledLoginsStmt,
+		getUserStmt:                 q.getUserStmt,
+		getUserLoginStmt:            q.getUserLoginStmt,
+		getUserLoginsStmt:           q.getUserLoginsStmt,
+		getUserRolesStmt:            q.getUserRolesStmt,
+		getUsersStmt:                q.getUsersStmt,
+		isProfileExistStmt:          q.isProfileExistStmt,
+		updateBasicBlockStmt:        q.updateBasicBlockStmt,
+		updateContactStmt:           q.updateContactStmt,
+		updateContactBlockStmt:      q.updateContactBlockStmt,
+		updateContactCategoryStmt:   q.updateContactCategoryStmt,
+		updateProfileStmt:           q.updateProfileStmt,
+		updateProfileContentStmt:    q.updateProfileContentStmt,
+		updateProfileSocialStmt:     q.updateProfileSocialStmt,
+		updateRefreshTokenStmt:      q.updateRefreshTokenStmt,
+		updateResolvedLoginStmt:     q.updateResolvedLoginStmt,
+		updateRoleStmt:              q.updateRoleStmt,
+		updateSocialStmt:            q.updateSocialStmt,
+		updateUserStmt:              q.updateUserStmt,
+		updateUserRoleStmt:          q.updateUserRoleStmt,
 	}
 }

@@ -172,50 +172,14 @@ func main() {
 	apiAuth.PUT("/user", env.UpdateUser)
 	apiAuth.DELETE("/user/:username", env.DeleteUser)
 
-	// User Language operations
-	// apiNoAuth.GET("/user/language/:username", env.GetUserLanguages)
-	// apiAuth.POST("/user/language/:username/:language/:proficiency", env.AddUserLanguage)
-	// apiAuth.DELETE("/user/language/:username/:language", env.DeleteUserLanguages)
+	//Profile operations
+	apiAuth.GET("/profile", env.GetProfiles)
+	apiAuth.POST("/profile/:email", env.AddProfile)
+	apiAuth.PUT("/profile", env.UpdateProfile)
 
 	// User Role operations
 	apiAuth.PUT("/user/role/:newRole/:oldRole/:username", env.UpdateUserRole)
 	apiAuth.POST("/user/role/:role/:username", env.AddUserToRole)
-
-	// Language operations
-	// apiNoAuth.GET("/language/:language", env.GetLanguage)
-	// apiNoAuth.GET("/language", env.GetLanguages)
-	// apiAdminAuth.POST("/language/:language", env.AddLanguage)
-	// apiAdminAuth.PUT("/language/:language/:newLanguage", env.UpdateLanguage)
-	// apiAdminAuth.DELETE("/language/:language", env.DeleteLanguage)
-
-	// Language proficiency operations
-	// apiNoAuth.GET("/proficiency/:proficiency", env.GetLanguageProficiency)
-	// apiNoAuth.GET("/proficiency", env.GetLanguageProficiencies)
-	// apiAdminAuth.POST("/proficiency/:proficiency", env.AddLanguageProficiency)
-	// apiAdminAuth.PUT("/proficiency/:proficiency/:newProficiency", env.UpdateLanguageProficiency)
-	// apiAdminAuth.DELETE("/proficiency/:proficiency", env.DeleteLanguageProficiency)
-
-	// Timezone Operations
-	// apiNoAuth.GET("/timezone/:timezone", env.GetTimezone)
-	// apiNoAuth.GET("/timezone", env.GetTimezones)
-	// apiAdminAuth.POST("/timezone", env.AddTimezone)
-	// apiAdminAuth.PUT("/timezone/:timezone", env.UpdateTimezone)
-	// apiAdminAuth.DELETE("/timezone/:timezone", env.DeleteTimezone)
-
-	// Countries Operations
-	apiNoAuth.GET("/country/:country", env.GetCountry)
-	apiNoAuth.GET("/country", env.GetCountries)
-	apiAdminAuth.POST("/country", env.AddCountry)
-	apiAdminAuth.PUT("/country/:country", env.UpdateCountry)
-	apiAdminAuth.DELETE("/country/:country", env.DeleteCountry)
-
-	// States Operations
-	apiNoAuth.GET("/state/:state", env.GetState)
-	apiNoAuth.GET("/state", env.GetStates)
-	apiAdminAuth.POST("/state/:state/:country", env.AddState)
-	apiAdminAuth.PUT("/state/:state", env.UpdateState)
-	apiAdminAuth.DELETE("/state/:state", env.DeleteState)
-	apiNoAuth.GET("/state/country/:country", env.GetStatesByCountry)
 
 	// Roles Operations
 	apiAdminAuth.GET("/role/:role", env.GetRole)
@@ -223,6 +187,32 @@ func main() {
 	apiAdminAuth.POST("/role", env.AddRole)
 	apiAdminAuth.PUT("/role/:role", env.UpdateRole)
 	apiAdminAuth.DELETE("/role/:role", env.DeleteRole)
+
+	// Basic block operations
+	apiAuth.POST("/blocks/basic/:profileId", env.AddBasicBlock)
+	apiAuth.PUT("/blocks/basic", env.UpdateBasicBlock)
+	apiAuth.DELETE("/blocks/basic/:id", env.DeleteBasicBlock)
+
+	// Contact block operations
+	apiAuth.POST("/blocks/contact/:profileId", env.AddContactBlock)
+	apiAuth.PUT("/blocks/contact", env.UpdateContactBlock)
+	apiAuth.DELETE("/blocks/contact/:id", env.DeleteContactBlock)
+
+	// Call to action operations
+	apiAuth.GET("/callToAction", env.GetCallToActions)
+
+	// Content types operations
+	apiAuth.GET("/content/types", env.GetContents)
+
+	// Socials operations
+	apiAuth.POST("/blocks/socials/:profileId", env.AddSocialsBlock)
+	apiAuth.PUT("/blocks/socials", env.UpdateSocialsBlock)
+	apiAuth.DELETE("/blocks/socials/:id", env.DeleteSocialBlock)
+
+	// Content operations
+	apiAuth.POST("/blocks/content/:profileId", env.AddContentBlock)
+	apiAuth.PUT("/blocks/content", env.UpdateContentBlock)
+	apiAuth.DELETE("/blocks/content/:id", env.DeleteContentBlock)
 
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")

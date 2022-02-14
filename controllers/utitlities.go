@@ -6,49 +6,13 @@ import (
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
+	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 )
 
-func (env *Env) getPrimaryAddress(userID uuid.UUID, primaryAddress chan models.Address, fields log.Fields) {
-	address, err := env.HelloProfileDb.GetPrimaryAddress(context.Background(), uuid.NullUUID{UUID: userID, Valid: true})
-	if err != nil {
-		log.WithFields(fields).Error(`No address found for user`)
-		primaryAddress <- models.Address{}
-	} else {
-		primaryAddress <- models.Address{
-			ID:      address.ID,
-			Street:  address.Street,
-			City:    address.City,
-			State:   address.State.String,
-			Country: address.Country.String,
-		}
-	}
-}
-func (env *Env) getUserAddresses(userID uuid.UUID, addresses chan []models.Address, fields log.Fields) {
-	log.WithFields(fields).Info(`Getting the primary address for the user`)
-	var addressList []models.Address
-	dbAddresses, err := env.HelloProfileDb.GetUserAddresses(context.Background(), uuid.NullUUID{UUID: userID, Valid: true})
-	if err != nil {
-		log.WithFields(fields).WithError(err).Error(`Error occured fetching address for user`)
-		addresses <- addressList
-	}
-
-	for _, value := range dbAddresses {
-		address := models.Address{
-			ID:      value.ID,
-			Street:  value.Street,
-			City:    value.City,
-			State:   value.State.String,
-			Country: value.Country.String,
-		}
-		addressList = append(addressList, address)
-	}
-	addresses <- addressList
-}
-
 func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fields log.Fields) {
-	addresses := make(chan []models.Address)
+
 	socials := make(chan []models.Socials)
 	linkContents := make(chan []models.Content)
 	articleContents := make(chan []models.Content)
@@ -57,11 +21,10 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 	meetingContents := make(chan []models.Content)
 	eventsContents := make(chan []models.Content)
 	formContents := make(chan []models.Content)
-	go env.getUserAddresses(userID, addresses, fields)
+	basicBlock := make(chan models.Basic)
+	contactBlock := make(chan models.ContactBlock)
 
-	userAddress := <-addresses
-
-	go func(userAddresses []models.Address) {
+	go func() {
 		log.WithFields(fields).Info(`Fetching profiles for user...`)
 		var profileList []models.Profile
 		dbProfiles, err := env.HelloProfileDb.GetProfiles(context.Background(), userID)
@@ -70,42 +33,31 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 			profiles <- profileList
 		}
 		for _, value := range dbProfiles {
-			address := new(models.Address)
-			for _, addressValue := range userAddresses {
-				if addressValue.ID == value.AddressID.UUID {
-					address = &addressValue
-				}
-			}
+			go env.getBasicBlock(value.BasicBlockID.UUID, basicBlock, fields)
+			go env.getContactBlock(value.ContactBlockID.UUID, contactBlock, fields)
 			go env.getSocails(value.ID, socials, fields)
 			go env.getContents(value.ID, linkContents, articleContents, videoContents, audioContents, meetingContents, eventsContents, formContents, fields)
 			profileList = append(profileList, models.Profile{
-				ID:             value.ID,
-				Status:         value.Status,
-				ProfileName:    value.ProfileName,
-				Fullname:       value.Fullname,
-				Title:          value.Title,
-				Bio:            value.Bio,
-				Company:        value.Company,
-				CompanyAddress: value.CompanyAddress,
-				ImageUrl:       value.ImageUrl.String,
-				Phone:          value.Phone,
-				Email:          value.Email,
-				Website:        value.Website.String,
-				IsDefault:      value.IsDefault,
-				Color:          value.Color.Int32,
-				Address:        *address,
-				Socials:        <-socials,
-				Links:          <-linkContents,
-				Articles:       <-articleContents,
-				Videos:         <-videoContents,
-				Audios:         <-audioContents,
-				Forms:          <-formContents,
-				Meetings:       <-meetingContents,
-				Events:         <-eventsContents,
+				ID:           value.ID,
+				Status:       value.Status,
+				ProfileName:  value.ProfileName,
+				PageColor:    value.PageColor,
+				Font:         value.Font,
+				IsDefault:    value.IsDefault,
+				Basic:        <-basicBlock,
+				ContactBlock: <-contactBlock,
+				Socials:      <-socials,
+				Links:        <-linkContents,
+				Articles:     <-articleContents,
+				Videos:       <-videoContents,
+				Audios:       <-audioContents,
+				Forms:        <-formContents,
+				Meetings:     <-meetingContents,
+				Events:       <-eventsContents,
 			})
 		}
 		profiles <- profileList
-	}(userAddress)
+	}()
 }
 
 // saveLogin is used to log a login request that failed with incorrect password or was successful
@@ -128,6 +80,7 @@ func (env *Env) getSocails(profileID uuid.UUID, socials chan []models.Socials, f
 	if err != nil {
 		log.WithFields(fields).WithError(err).Error(`Error occured fetching socials for user profile`)
 		socials <- socialsList
+		return
 	}
 
 	for _, value := range dbSocials {
@@ -238,4 +191,33 @@ func (env *Env) sortContents(contentResult []helloprofiledb.ProfileContent, call
 		}
 	}
 	contentChannel <- contentList
+}
+
+func (env *Env) getBasicBlock(id uuid.UUID, basicBlock chan models.Basic, fields log.Fields) {
+	log.WithFields(fields).Info(`Getting the basic block for the user profile %v`, id)
+	basic := new(models.Basic)
+	dbBasic, err := env.HelloProfileDb.GetBasicBlock(context.Background(), id)
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(`Error occured fetching basic block for user profile %v`, id)
+		basicBlock <- *basic
+		return
+	}
+	automapper.MapLoose(dbBasic, basic)
+	basic.CoverColour = dbBasic.CoverColour.String
+	basic.CoverPhotoUrl = dbBasic.CoverPhotoUrl.String
+	basic.ProfilePhotoUrl = dbBasic.ProfilePhotoUrl.String
+	basicBlock <- *basic
+}
+
+func (env *Env) getContactBlock(id uuid.UUID, contactBlock chan models.ContactBlock, fields log.Fields) {
+	log.WithFields(fields).Info(`Getting the contact block for the user profile %v`, id)
+	contact := new(models.ContactBlock)
+	dbContact, err := env.HelloProfileDb.GetContactBlock(context.Background(), id)
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(`Error occured fetching contact block for user profile %v`, id)
+		contactBlock <- *contact
+		return
+	}
+	automapper.MapLoose(dbContact, contact)
+	contactBlock <- *contact
 }

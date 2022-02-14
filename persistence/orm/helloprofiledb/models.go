@@ -9,14 +9,14 @@ import (
 	"github.com/google/uuid"
 )
 
-type Address struct {
-	ID               uuid.UUID      `json:"id"`
-	UserID           uuid.NullUUID  `json:"user_id"`
-	Street           string         `json:"street"`
-	City             string         `json:"city"`
-	State            sql.NullString `json:"state"`
-	Country          sql.NullString `json:"country"`
-	Isprimaryaddress sql.NullBool   `json:"isprimaryaddress"`
+type BasicBlock struct {
+	ID              uuid.UUID      `json:"id"`
+	ProfilePhotoUrl sql.NullString `json:"profile_photo_url"`
+	CoverPhotoUrl   sql.NullString `json:"cover_photo_url"`
+	CoverColour     sql.NullString `json:"cover_colour"`
+	Fullname        string         `json:"fullname"`
+	Title           string         `json:"title"`
+	Bio             string         `json:"bio"`
 }
 
 type CallToAction struct {
@@ -32,6 +32,14 @@ type Contact struct {
 	ContactCategoryID uuid.UUID `json:"contact_category_id"`
 }
 
+type ContactBlock struct {
+	ID      uuid.UUID `json:"id"`
+	Phone   string    `json:"phone"`
+	Email   string    `json:"email"`
+	Address string    `json:"address"`
+	Website string    `json:"website"`
+}
+
 type ContactCategory struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
@@ -43,36 +51,11 @@ type Content struct {
 	ImageUrl string    `json:"image_url"`
 }
 
-type Country struct {
-	ID           uuid.UUID      `json:"id"`
-	Name         string         `json:"name"`
-	FlagImageUrl sql.NullString `json:"flag_image_url"`
-	CountryCode  sql.NullString `json:"country_code"`
-}
-
 type EmailVerification struct {
 	ID        uuid.UUID      `json:"id"`
 	Email     sql.NullString `json:"email"`
 	Otp       string         `json:"otp"`
 	CreatedAt time.Time      `json:"created_at"`
-}
-
-type IdentityProvider struct {
-	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
-	ClientID     string    `json:"client_id"`
-	ClientSecret string    `json:"client_secret"`
-	ImageUrl     string    `json:"image_url"`
-}
-
-type Language struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-}
-
-type LanguageProficiency struct {
-	ID          uuid.UUID      `json:"id"`
-	Proficiency sql.NullString `json:"proficiency"`
 }
 
 type Otp struct {
@@ -86,22 +69,15 @@ type Otp struct {
 }
 
 type Profile struct {
-	ID             uuid.UUID      `json:"id"`
-	UserID         uuid.UUID      `json:"user_id"`
-	Status         bool           `json:"status"`
-	ProfileName    string         `json:"profile_name"`
-	Fullname       string         `json:"fullname"`
-	Title          string         `json:"title"`
-	Bio            string         `json:"bio"`
-	Company        string         `json:"company"`
-	CompanyAddress string         `json:"company_address"`
-	ImageUrl       sql.NullString `json:"image_url"`
-	Phone          string         `json:"phone"`
-	Email          string         `json:"email"`
-	AddressID      uuid.NullUUID  `json:"address_id"`
-	Website        sql.NullString `json:"website"`
-	IsDefault      bool           `json:"is_default"`
-	Color          sql.NullInt32  `json:"color"`
+	ID             uuid.UUID     `json:"id"`
+	UserID         uuid.UUID     `json:"user_id"`
+	BasicBlockID   uuid.NullUUID `json:"basic_block_id"`
+	ContactBlockID uuid.NullUUID `json:"contact_block_id"`
+	Status         bool          `json:"status"`
+	ProfileName    string        `json:"profile_name"`
+	PageColor      string        `json:"page_color"`
+	Font           string        `json:"font"`
+	IsDefault      bool          `json:"is_default"`
 }
 
 type ProfileContent struct {
@@ -124,15 +100,6 @@ type ProfileSocial struct {
 	Order     int32     `json:"order"`
 }
 
-type Recent struct {
-	ID         uuid.UUID `json:"id"`
-	ProfileID  uuid.UUID `json:"profile_id"`
-	Title      string    `json:"title"`
-	Highlights string    `json:"highlights"`
-	Year       int32     `json:"year"`
-	Link       string    `json:"link"`
-}
-
 type RefreshToken struct {
 	ID        uuid.UUID `json:"id"`
 	UserID    uuid.UUID `json:"user_id"`
@@ -153,18 +120,6 @@ type Social struct {
 	ImageUrl    string    `json:"image_url"`
 }
 
-type State struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	CountryID uuid.UUID `json:"country_id"`
-}
-
-type Timezone struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-	Zone string    `json:"zone"`
-}
-
 type User struct {
 	ID                        uuid.UUID      `json:"id"`
 	Firstname                 sql.NullString `json:"firstname"`
@@ -172,6 +127,8 @@ type User struct {
 	Username                  sql.NullString `json:"username"`
 	Email                     string         `json:"email"`
 	Phone                     sql.NullString `json:"phone"`
+	Country                   sql.NullString `json:"country"`
+	City                      sql.NullString `json:"city"`
 	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
 	Password                  sql.NullString `json:"password"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
@@ -185,25 +142,19 @@ type UserDetail struct {
 	ID                        uuid.UUID      `json:"id"`
 	Firstname                 sql.NullString `json:"firstname"`
 	Lastname                  sql.NullString `json:"lastname"`
-	Username                  sql.NullString `json:"username"`
 	Email                     string         `json:"email"`
 	Phone                     sql.NullString `json:"phone"`
-	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
+	Username                  sql.NullString `json:"username"`
 	Password                  sql.NullString `json:"password"`
+	Country                   sql.NullString `json:"country"`
+	City                      sql.NullString `json:"city"`
+	ProfilePicture            sql.NullString `json:"profile_picture"`
+	IsEmailConfirmed          bool           `json:"is_email_confirmed"`
+	IsLockedOut               bool           `json:"is_locked_out"`
 	IsPasswordSystemGenerated bool           `json:"is_password_system_generated"`
 	CreatedAt                 time.Time      `json:"created_at"`
-	IsLockedOut               bool           `json:"is_locked_out"`
-	ProfilePicture            sql.NullString `json:"profile_picture"`
 	IsActive                  bool           `json:"is_active"`
-	TimezoneName              sql.NullString `json:"timezone_name"`
-	Zone                      sql.NullString `json:"zone"`
-}
-
-type UserLanguage struct {
-	ID          uuid.UUID      `json:"id"`
-	UserID      uuid.UUID      `json:"user_id"`
-	LanguageID  uuid.UUID      `json:"language_id"`
-	Proficiency sql.NullString `json:"proficiency"`
+	RoleName                  sql.NullString `json:"role_name"`
 }
 
 type UserLogin struct {
@@ -220,20 +171,8 @@ type UserLogin struct {
 	Resolved            bool           `json:"resolved"`
 }
 
-type UserProvider struct {
-	ID                 uuid.UUID `json:"id"`
-	UserID             uuid.UUID `json:"user_id"`
-	IdentityProviderID uuid.UUID `json:"identity_provider_id"`
-}
-
 type UserRole struct {
-	ID     uuid.UUID `json:"id"`
-	UserID uuid.UUID `json:"user_id"`
-	RoleID uuid.UUID `json:"role_id"`
-}
-
-type UserTimezone struct {
-	ID         uuid.UUID `json:"id"`
-	UserID     uuid.UUID `json:"user_id"`
-	TimezoneID uuid.UUID `json:"timezone_id"`
+	ID     uuid.UUID     `json:"id"`
+	UserID uuid.NullUUID `json:"user_id"`
+	RoleID uuid.NullUUID `json:"role_id"`
 }

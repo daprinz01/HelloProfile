@@ -7,44 +7,34 @@ select * from profiles where user_id=$1;
 -- name: GetProfile :one
 select * from profiles where id=$1 limit 1;
 
+-- name: IsProfileExist :one
+select exists(select 1 from profiles where id=$1) AS "exists";
+
 -- name: AddProfile :one
 insert into profiles(
     user_id,
-    status,
+    "status",
     profile_name,
-    fullname,
-    title,
-    bio,
-    company,
-    company_address,
-    image_url,
-    phone,
-    email,
-    address_id,
-    website,
-    is_default,
-    color
+    basic_block_id,
+    contact_block_id,
+    page_color,
+    font,
+    is_default
 ) VALUES(
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+    $1, $2, $3, $4, $5, $6, $7, $8
 )
 returning *;
 
 -- name: UpdateProfile :exec
 update profiles set
-    status = $1,
-    profile_name = $2,
-    fullname = $3,
-    title = $4,
-    bio = $5,
-    company = $6,
-    company_address = $7,
-    image_url = $8,
-    phone = $9,
-    email = $10,
-    address_id = $11,
-    website = $12,
-    is_default = $13,
-    color = $14 where id=$15;
+   user_id = $1,
+    "status" = $2,
+    profile_name = $3,
+    basic_block_id = $4,
+    contact_block_id = $5,
+    page_color = $6,
+    font = $7,
+    is_default= $8 where id=$9;
 
 -- name: DeleteProfile :exec
 delete from profiles where id=$1;
