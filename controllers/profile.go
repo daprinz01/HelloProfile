@@ -24,7 +24,7 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 	if c.QueryParam("email") != "" {
 		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: c.QueryParam("email"), Valid: true})
 		if err != nil {
-			errorResponse.Errorcode = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 			errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found")
 			c.JSON(http.StatusNotFound, errorResponse)
@@ -34,7 +34,7 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 		env.getProfiles(user.ID, profiles, fields)
 		if len(profiles) <= 0 {
 			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
-			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_CODE
+			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found")
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
@@ -74,7 +74,17 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 		}
 		log.WithFields(fields).Info("Successfully retrieved states...")
 		profilesResponse := make([]models.Profile, len(profiles))
-		automapper.MapLoose(profiles, profilesResponse)
+		for index, value := range profiles {
+			profile := models.Profile{
+				Status:      value.Status,
+				ID:          value.ID,
+				ProfileName: value.ProfileName,
+				IsDefault:   value.IsDefault,
+				PageColor:   value.PageColor,
+				Font:        value.Font,
+			}
+			profilesResponse[index] = profile
+		}
 		response := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
@@ -104,7 +114,7 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 		}
 		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: c.Param("email"), Valid: true})
 		if err != nil {
-			errorResponse.Errorcode = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 			errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found while trying to add profile")
 			c.JSON(http.StatusBadRequest, errorResponse)

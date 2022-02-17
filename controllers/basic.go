@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 	"helloprofile.com/util"
@@ -51,7 +50,9 @@ func (env *Env) AddBasicBlock(c echo.Context) (err error) {
 
 		log.WithFields(fields).Info(fmt.Sprintf("Basic block to add to profile %s : %v", profileId, request))
 		dbBasic := new(helloprofiledb.AddBasicBlockParams)
-		automapper.MapLoose(request, dbBasic)
+		dbBasic.Bio = request.Bio
+		dbBasic.Fullname = request.Fullname
+		dbBasic.Title = request.Title
 		dbBasic.CoverColour = sql.NullString{String: request.CoverColour, Valid: true}
 		dbBasic.CoverPhotoUrl = sql.NullString{String: request.CoverPhotoUrl, Valid: true}
 		dbBasic.ProfilePhotoUrl = sql.NullString{String: request.ProfilePhotoUrl, Valid: true}
@@ -98,7 +99,9 @@ func (env *Env) UpdateBasicBlock(c echo.Context) (err error) {
 		return err
 	}
 	dbBasic := new(helloprofiledb.UpdateBasicBlockParams)
-	automapper.MapLoose(request, dbBasic)
+	dbBasic.Bio = request.Bio
+	dbBasic.Fullname = request.Fullname
+	dbBasic.Title = request.Title
 	dbBasic.CoverColour = sql.NullString{String: request.CoverColour, Valid: true}
 	dbBasic.CoverPhotoUrl = sql.NullString{String: request.CoverPhotoUrl, Valid: true}
 	dbBasic.ProfilePhotoUrl = sql.NullString{String: request.ProfilePhotoUrl, Valid: true}

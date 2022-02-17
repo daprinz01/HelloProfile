@@ -39,7 +39,7 @@ type Profile struct {
 	Status       bool         `json:"status,omitempty"`
 	ProfileName  string       `json:"profileName,omitempty"`
 	IsDefault    bool         `json:"isDefault,omitempty"`
-	PageColor    string       `json:"page_color,omitempty"`
+	PageColor    string       `json:"pageColor,omitempty"`
 	Font         string       `json:"font,omitempty"`
 	Basic        Basic        `json:"basic,omitempty"`
 	ContactBlock ContactBlock `json:"contact,omitempty"`
@@ -58,48 +58,48 @@ type Socials struct {
 	Username    string    `json:"username,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	Placeholder string    `json:"placeholder,omitempty"`
-	ImageUrl    string    `json:"image_url,omitempty"`
+	ImageUrl    string    `json:"imageUrl,omitempty"`
 	Order       int32     `json:"order,omitempty"`
 	SocialsID   uuid.UUID `json:"socialsID,omitempty"`
 	ProfileID   uuid.UUID `json:"profileID,omitempty"`
 }
 
 type CallToAction struct {
-	ID          uuid.UUID `json:"id"`
-	Type        string    `json:"type"`
-	DisplayName string    `json:"displayName"`
+	ID          uuid.UUID `json:"id,omitempty"`
+	Type        string    `json:"type,omitempty"`
+	DisplayName string    `json:"displayName,omitempty"`
 }
 
 type Content struct {
-	ID             uuid.UUID    `json:"id"`
-	Title          string       `json:"title"`
-	Description    string       `json:"description"`
-	Url            string       `json:"url"`
-	Order          int32        `json:"order"`
-	CallToAction   CallToAction `json:"callToAction"`
-	CallToActionID uuid.UUID    `json:"callToActionId"`
-	ContentID      uuid.UUID    `json:"contentId"`
+	ID             uuid.UUID    `json:"id,omitempty"`
+	Title          string       `json:"title,omitempty"`
+	Description    string       `json:"description,omitempty"`
+	Url            string       `json:"url,omitempty"`
+	Order          int32        `json:"order,omitempty"`
+	CallToAction   CallToAction `json:"callToAction,omitempty"`
+	CallToActionID uuid.UUID    `json:"callToActionId,omitempty"`
+	ContentID      uuid.UUID    `json:"contentId,omitempty"`
 }
 
 type ContentType struct {
-	ID       uuid.UUID `json:"id"`
-	Type     string    `json:"type"`
-	ImageUrl string    `json:"imageUrl"`
+	ID       uuid.UUID `json:"id,omitempty"`
+	Type     string    `json:"type,omitempty"`
+	ImageUrl string    `json:"imageUrl,omitempty"`
 }
 
 type Basic struct {
-	ID              uuid.UUID `json:"id"`
-	ProfilePhotoUrl string    `json:"profile_photo_url"`
-	CoverPhotoUrl   string    `json:"cover_photo_url"`
-	CoverColour     string    `json:"cover_colour"`
-	Fullname        string    `json:"fullname"`
-	Title           string    `json:"title"`
-	Bio             string    `json:"bio"`
+	ID              uuid.UUID `json:"id,omitempty"`
+	ProfilePhotoUrl string    `json:"profilePhotoUrl,omitempty"`
+	CoverPhotoUrl   string    `json:"coverPhotoUrl,omitempty"`
+	CoverColour     string    `json:"coverColour,omitempty"`
+	Fullname        string    `json:"fullname,omitempty"`
+	Title           string    `json:"title,omitempty"`
+	Bio             string    `json:"bio,omitempty"`
 }
 type ContactBlock struct {
-	ID      uuid.UUID `json:"id"`
-	Phone   string    `json:"phone"`
-	Email   string    `json:"email"`
-	Address string    `json:"address"`
-	Website string    `json:"website"`
+	ID      uuid.UUID `json:"id,omitempty"`
+	Phone   string    `json:"phone,omitempty"`
+	Email   string    `json:"email,omitempty"`
+	Address string    `json:"address,omitempty"`
+	Website string    `json:"website,omitempty"`
 }
