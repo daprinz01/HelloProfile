@@ -226,6 +226,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateProfileSocialStmt, err = db.PrepareContext(ctx, updateProfileSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateProfileSocial: %w", err)
 	}
+	if q.updateProfileWithBasicBlockIdStmt, err = db.PrepareContext(ctx, updateProfileWithBasicBlockId); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateProfileWithBasicBlockId: %w", err)
+	}
+	if q.updateProfileWithContactBlockIdStmt, err = db.PrepareContext(ctx, updateProfileWithContactBlockId); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateProfileWithContactBlockId: %w", err)
+	}
 	if q.updateRefreshTokenStmt, err = db.PrepareContext(ctx, updateRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateRefreshToken: %w", err)
 	}
@@ -589,6 +595,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateProfileSocialStmt: %w", cerr)
 		}
 	}
+	if q.updateProfileWithBasicBlockIdStmt != nil {
+		if cerr := q.updateProfileWithBasicBlockIdStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateProfileWithBasicBlockIdStmt: %w", cerr)
+		}
+	}
+	if q.updateProfileWithContactBlockIdStmt != nil {
+		if cerr := q.updateProfileWithContactBlockIdStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateProfileWithContactBlockIdStmt: %w", cerr)
+		}
+	}
 	if q.updateRefreshTokenStmt != nil {
 		if cerr := q.updateRefreshTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateRefreshTokenStmt: %w", cerr)
@@ -656,161 +672,165 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                          DBTX
-	tx                          *sql.Tx
-	addBasicBlockStmt           *sql.Stmt
-	addContactBlockStmt         *sql.Stmt
-	addContactCategoryStmt      *sql.Stmt
-	addContactsStmt             *sql.Stmt
-	addProfileStmt              *sql.Stmt
-	addProfileContentStmt       *sql.Stmt
-	addProfileSocialStmt        *sql.Stmt
-	addSocialStmt               *sql.Stmt
-	addUserRoleStmt             *sql.Stmt
-	createEmailVerificationStmt *sql.Stmt
-	createOtpStmt               *sql.Stmt
-	createRefreshTokenStmt      *sql.Stmt
-	createRoleStmt              *sql.Stmt
-	createUserStmt              *sql.Stmt
-	createUserLoginStmt         *sql.Stmt
-	deleteBasicBlockStmt        *sql.Stmt
-	deleteContactStmt           *sql.Stmt
-	deleteContactBlockStmt      *sql.Stmt
-	deleteContactCategoryStmt   *sql.Stmt
-	deleteEmailVerificationStmt *sql.Stmt
-	deleteOtpStmt               *sql.Stmt
-	deleteProfileStmt           *sql.Stmt
-	deleteProfileContentStmt    *sql.Stmt
-	deleteProfileSocialStmt     *sql.Stmt
-	deleteRefreshTokenStmt      *sql.Stmt
-	deleteRolesStmt             *sql.Stmt
-	deleteSocialStmt            *sql.Stmt
-	deleteUserStmt              *sql.Stmt
-	deleteUserLoginStmt         *sql.Stmt
-	getAllContactCategoriesStmt *sql.Stmt
-	getAllContactsStmt          *sql.Stmt
-	getAllContentTypesStmt      *sql.Stmt
-	getAllOtpStmt               *sql.Stmt
-	getAllProfilesStmt          *sql.Stmt
-	getBasicBlockStmt           *sql.Stmt
-	getCallToActionStmt         *sql.Stmt
-	getCallToActionsStmt        *sql.Stmt
-	getContactBlockStmt         *sql.Stmt
-	getContactCategoryStmt      *sql.Stmt
-	getContactsStmt             *sql.Stmt
-	getEmailVerificationStmt    *sql.Stmt
-	getEmailVerificationsStmt   *sql.Stmt
-	getOtpStmt                  *sql.Stmt
-	getProfileStmt              *sql.Stmt
-	getProfileContentStmt       *sql.Stmt
-	getProfileContentsStmt      *sql.Stmt
-	getProfileSocialsStmt       *sql.Stmt
-	getProfilesStmt             *sql.Stmt
-	getRefreshTokenStmt         *sql.Stmt
-	getRefreshTokensStmt        *sql.Stmt
-	getRoleStmt                 *sql.Stmt
-	getRolesStmt                *sql.Stmt
-	getSocialStmt               *sql.Stmt
-	getSocialsStmt              *sql.Stmt
-	getUnResoledLoginsStmt      *sql.Stmt
-	getUserStmt                 *sql.Stmt
-	getUserLoginStmt            *sql.Stmt
-	getUserLoginsStmt           *sql.Stmt
-	getUserRolesStmt            *sql.Stmt
-	getUsersStmt                *sql.Stmt
-	isProfileExistStmt          *sql.Stmt
-	updateBasicBlockStmt        *sql.Stmt
-	updateContactStmt           *sql.Stmt
-	updateContactBlockStmt      *sql.Stmt
-	updateContactCategoryStmt   *sql.Stmt
-	updateProfileStmt           *sql.Stmt
-	updateProfileContentStmt    *sql.Stmt
-	updateProfileSocialStmt     *sql.Stmt
-	updateRefreshTokenStmt      *sql.Stmt
-	updateResolvedLoginStmt     *sql.Stmt
-	updateRoleStmt              *sql.Stmt
-	updateSocialStmt            *sql.Stmt
-	updateUserStmt              *sql.Stmt
-	updateUserRoleStmt          *sql.Stmt
+	db                                  DBTX
+	tx                                  *sql.Tx
+	addBasicBlockStmt                   *sql.Stmt
+	addContactBlockStmt                 *sql.Stmt
+	addContactCategoryStmt              *sql.Stmt
+	addContactsStmt                     *sql.Stmt
+	addProfileStmt                      *sql.Stmt
+	addProfileContentStmt               *sql.Stmt
+	addProfileSocialStmt                *sql.Stmt
+	addSocialStmt                       *sql.Stmt
+	addUserRoleStmt                     *sql.Stmt
+	createEmailVerificationStmt         *sql.Stmt
+	createOtpStmt                       *sql.Stmt
+	createRefreshTokenStmt              *sql.Stmt
+	createRoleStmt                      *sql.Stmt
+	createUserStmt                      *sql.Stmt
+	createUserLoginStmt                 *sql.Stmt
+	deleteBasicBlockStmt                *sql.Stmt
+	deleteContactStmt                   *sql.Stmt
+	deleteContactBlockStmt              *sql.Stmt
+	deleteContactCategoryStmt           *sql.Stmt
+	deleteEmailVerificationStmt         *sql.Stmt
+	deleteOtpStmt                       *sql.Stmt
+	deleteProfileStmt                   *sql.Stmt
+	deleteProfileContentStmt            *sql.Stmt
+	deleteProfileSocialStmt             *sql.Stmt
+	deleteRefreshTokenStmt              *sql.Stmt
+	deleteRolesStmt                     *sql.Stmt
+	deleteSocialStmt                    *sql.Stmt
+	deleteUserStmt                      *sql.Stmt
+	deleteUserLoginStmt                 *sql.Stmt
+	getAllContactCategoriesStmt         *sql.Stmt
+	getAllContactsStmt                  *sql.Stmt
+	getAllContentTypesStmt              *sql.Stmt
+	getAllOtpStmt                       *sql.Stmt
+	getAllProfilesStmt                  *sql.Stmt
+	getBasicBlockStmt                   *sql.Stmt
+	getCallToActionStmt                 *sql.Stmt
+	getCallToActionsStmt                *sql.Stmt
+	getContactBlockStmt                 *sql.Stmt
+	getContactCategoryStmt              *sql.Stmt
+	getContactsStmt                     *sql.Stmt
+	getEmailVerificationStmt            *sql.Stmt
+	getEmailVerificationsStmt           *sql.Stmt
+	getOtpStmt                          *sql.Stmt
+	getProfileStmt                      *sql.Stmt
+	getProfileContentStmt               *sql.Stmt
+	getProfileContentsStmt              *sql.Stmt
+	getProfileSocialsStmt               *sql.Stmt
+	getProfilesStmt                     *sql.Stmt
+	getRefreshTokenStmt                 *sql.Stmt
+	getRefreshTokensStmt                *sql.Stmt
+	getRoleStmt                         *sql.Stmt
+	getRolesStmt                        *sql.Stmt
+	getSocialStmt                       *sql.Stmt
+	getSocialsStmt                      *sql.Stmt
+	getUnResoledLoginsStmt              *sql.Stmt
+	getUserStmt                         *sql.Stmt
+	getUserLoginStmt                    *sql.Stmt
+	getUserLoginsStmt                   *sql.Stmt
+	getUserRolesStmt                    *sql.Stmt
+	getUsersStmt                        *sql.Stmt
+	isProfileExistStmt                  *sql.Stmt
+	updateBasicBlockStmt                *sql.Stmt
+	updateContactStmt                   *sql.Stmt
+	updateContactBlockStmt              *sql.Stmt
+	updateContactCategoryStmt           *sql.Stmt
+	updateProfileStmt                   *sql.Stmt
+	updateProfileContentStmt            *sql.Stmt
+	updateProfileSocialStmt             *sql.Stmt
+	updateProfileWithBasicBlockIdStmt   *sql.Stmt
+	updateProfileWithContactBlockIdStmt *sql.Stmt
+	updateRefreshTokenStmt              *sql.Stmt
+	updateResolvedLoginStmt             *sql.Stmt
+	updateRoleStmt                      *sql.Stmt
+	updateSocialStmt                    *sql.Stmt
+	updateUserStmt                      *sql.Stmt
+	updateUserRoleStmt                  *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                          tx,
-		tx:                          tx,
-		addBasicBlockStmt:           q.addBasicBlockStmt,
-		addContactBlockStmt:         q.addContactBlockStmt,
-		addContactCategoryStmt:      q.addContactCategoryStmt,
-		addContactsStmt:             q.addContactsStmt,
-		addProfileStmt:              q.addProfileStmt,
-		addProfileContentStmt:       q.addProfileContentStmt,
-		addProfileSocialStmt:        q.addProfileSocialStmt,
-		addSocialStmt:               q.addSocialStmt,
-		addUserRoleStmt:             q.addUserRoleStmt,
-		createEmailVerificationStmt: q.createEmailVerificationStmt,
-		createOtpStmt:               q.createOtpStmt,
-		createRefreshTokenStmt:      q.createRefreshTokenStmt,
-		createRoleStmt:              q.createRoleStmt,
-		createUserStmt:              q.createUserStmt,
-		createUserLoginStmt:         q.createUserLoginStmt,
-		deleteBasicBlockStmt:        q.deleteBasicBlockStmt,
-		deleteContactStmt:           q.deleteContactStmt,
-		deleteContactBlockStmt:      q.deleteContactBlockStmt,
-		deleteContactCategoryStmt:   q.deleteContactCategoryStmt,
-		deleteEmailVerificationStmt: q.deleteEmailVerificationStmt,
-		deleteOtpStmt:               q.deleteOtpStmt,
-		deleteProfileStmt:           q.deleteProfileStmt,
-		deleteProfileContentStmt:    q.deleteProfileContentStmt,
-		deleteProfileSocialStmt:     q.deleteProfileSocialStmt,
-		deleteRefreshTokenStmt:      q.deleteRefreshTokenStmt,
-		deleteRolesStmt:             q.deleteRolesStmt,
-		deleteSocialStmt:            q.deleteSocialStmt,
-		deleteUserStmt:              q.deleteUserStmt,
-		deleteUserLoginStmt:         q.deleteUserLoginStmt,
-		getAllContactCategoriesStmt: q.getAllContactCategoriesStmt,
-		getAllContactsStmt:          q.getAllContactsStmt,
-		getAllContentTypesStmt:      q.getAllContentTypesStmt,
-		getAllOtpStmt:               q.getAllOtpStmt,
-		getAllProfilesStmt:          q.getAllProfilesStmt,
-		getBasicBlockStmt:           q.getBasicBlockStmt,
-		getCallToActionStmt:         q.getCallToActionStmt,
-		getCallToActionsStmt:        q.getCallToActionsStmt,
-		getContactBlockStmt:         q.getContactBlockStmt,
-		getContactCategoryStmt:      q.getContactCategoryStmt,
-		getContactsStmt:             q.getContactsStmt,
-		getEmailVerificationStmt:    q.getEmailVerificationStmt,
-		getEmailVerificationsStmt:   q.getEmailVerificationsStmt,
-		getOtpStmt:                  q.getOtpStmt,
-		getProfileStmt:              q.getProfileStmt,
-		getProfileContentStmt:       q.getProfileContentStmt,
-		getProfileContentsStmt:      q.getProfileContentsStmt,
-		getProfileSocialsStmt:       q.getProfileSocialsStmt,
-		getProfilesStmt:             q.getProfilesStmt,
-		getRefreshTokenStmt:         q.getRefreshTokenStmt,
-		getRefreshTokensStmt:        q.getRefreshTokensStmt,
-		getRoleStmt:                 q.getRoleStmt,
-		getRolesStmt:                q.getRolesStmt,
-		getSocialStmt:               q.getSocialStmt,
-		getSocialsStmt:              q.getSocialsStmt,
-		getUnResoledLoginsStmt:      q.getUnResoledLoginsStmt,
-		getUserStmt:                 q.getUserStmt,
-		getUserLoginStmt:            q.getUserLoginStmt,
-		getUserLoginsStmt:           q.getUserLoginsStmt,
-		getUserRolesStmt:            q.getUserRolesStmt,
-		getUsersStmt:                q.getUsersStmt,
-		isProfileExistStmt:          q.isProfileExistStmt,
-		updateBasicBlockStmt:        q.updateBasicBlockStmt,
-		updateContactStmt:           q.updateContactStmt,
-		updateContactBlockStmt:      q.updateContactBlockStmt,
-		updateContactCategoryStmt:   q.updateContactCategoryStmt,
-		updateProfileStmt:           q.updateProfileStmt,
-		updateProfileContentStmt:    q.updateProfileContentStmt,
-		updateProfileSocialStmt:     q.updateProfileSocialStmt,
-		updateRefreshTokenStmt:      q.updateRefreshTokenStmt,
-		updateResolvedLoginStmt:     q.updateResolvedLoginStmt,
-		updateRoleStmt:              q.updateRoleStmt,
-		updateSocialStmt:            q.updateSocialStmt,
-		updateUserStmt:              q.updateUserStmt,
-		updateUserRoleStmt:          q.updateUserRoleStmt,
+		db:                                  tx,
+		tx:                                  tx,
+		addBasicBlockStmt:                   q.addBasicBlockStmt,
+		addContactBlockStmt:                 q.addContactBlockStmt,
+		addContactCategoryStmt:              q.addContactCategoryStmt,
+		addContactsStmt:                     q.addContactsStmt,
+		addProfileStmt:                      q.addProfileStmt,
+		addProfileContentStmt:               q.addProfileContentStmt,
+		addProfileSocialStmt:                q.addProfileSocialStmt,
+		addSocialStmt:                       q.addSocialStmt,
+		addUserRoleStmt:                     q.addUserRoleStmt,
+		createEmailVerificationStmt:         q.createEmailVerificationStmt,
+		createOtpStmt:                       q.createOtpStmt,
+		createRefreshTokenStmt:              q.createRefreshTokenStmt,
+		createRoleStmt:                      q.createRoleStmt,
+		createUserStmt:                      q.createUserStmt,
+		createUserLoginStmt:                 q.createUserLoginStmt,
+		deleteBasicBlockStmt:                q.deleteBasicBlockStmt,
+		deleteContactStmt:                   q.deleteContactStmt,
+		deleteContactBlockStmt:              q.deleteContactBlockStmt,
+		deleteContactCategoryStmt:           q.deleteContactCategoryStmt,
+		deleteEmailVerificationStmt:         q.deleteEmailVerificationStmt,
+		deleteOtpStmt:                       q.deleteOtpStmt,
+		deleteProfileStmt:                   q.deleteProfileStmt,
+		deleteProfileContentStmt:            q.deleteProfileContentStmt,
+		deleteProfileSocialStmt:             q.deleteProfileSocialStmt,
+		deleteRefreshTokenStmt:              q.deleteRefreshTokenStmt,
+		deleteRolesStmt:                     q.deleteRolesStmt,
+		deleteSocialStmt:                    q.deleteSocialStmt,
+		deleteUserStmt:                      q.deleteUserStmt,
+		deleteUserLoginStmt:                 q.deleteUserLoginStmt,
+		getAllContactCategoriesStmt:         q.getAllContactCategoriesStmt,
+		getAllContactsStmt:                  q.getAllContactsStmt,
+		getAllContentTypesStmt:              q.getAllContentTypesStmt,
+		getAllOtpStmt:                       q.getAllOtpStmt,
+		getAllProfilesStmt:                  q.getAllProfilesStmt,
+		getBasicBlockStmt:                   q.getBasicBlockStmt,
+		getCallToActionStmt:                 q.getCallToActionStmt,
+		getCallToActionsStmt:                q.getCallToActionsStmt,
+		getContactBlockStmt:                 q.getContactBlockStmt,
+		getContactCategoryStmt:              q.getContactCategoryStmt,
+		getContactsStmt:                     q.getContactsStmt,
+		getEmailVerificationStmt:            q.getEmailVerificationStmt,
+		getEmailVerificationsStmt:           q.getEmailVerificationsStmt,
+		getOtpStmt:                          q.getOtpStmt,
+		getProfileStmt:                      q.getProfileStmt,
+		getProfileContentStmt:               q.getProfileContentStmt,
+		getProfileContentsStmt:              q.getProfileContentsStmt,
+		getProfileSocialsStmt:               q.getProfileSocialsStmt,
+		getProfilesStmt:                     q.getProfilesStmt,
+		getRefreshTokenStmt:                 q.getRefreshTokenStmt,
+		getRefreshTokensStmt:                q.getRefreshTokensStmt,
+		getRoleStmt:                         q.getRoleStmt,
+		getRolesStmt:                        q.getRolesStmt,
+		getSocialStmt:                       q.getSocialStmt,
+		getSocialsStmt:                      q.getSocialsStmt,
+		getUnResoledLoginsStmt:              q.getUnResoledLoginsStmt,
+		getUserStmt:                         q.getUserStmt,
+		getUserLoginStmt:                    q.getUserLoginStmt,
+		getUserLoginsStmt:                   q.getUserLoginsStmt,
+		getUserRolesStmt:                    q.getUserRolesStmt,
+		getUsersStmt:                        q.getUsersStmt,
+		isProfileExistStmt:                  q.isProfileExistStmt,
+		updateBasicBlockStmt:                q.updateBasicBlockStmt,
+		updateContactStmt:                   q.updateContactStmt,
+		updateContactBlockStmt:              q.updateContactBlockStmt,
+		updateContactCategoryStmt:           q.updateContactCategoryStmt,
+		updateProfileStmt:                   q.updateProfileStmt,
+		updateProfileContentStmt:            q.updateProfileContentStmt,
+		updateProfileSocialStmt:             q.updateProfileSocialStmt,
+		updateProfileWithBasicBlockIdStmt:   q.updateProfileWithBasicBlockIdStmt,
+		updateProfileWithContactBlockIdStmt: q.updateProfileWithContactBlockIdStmt,
+		updateRefreshTokenStmt:              q.updateRefreshTokenStmt,
+		updateResolvedLoginStmt:             q.updateResolvedLoginStmt,
+		updateRoleStmt:                      q.updateRoleStmt,
+		updateSocialStmt:                    q.updateSocialStmt,
+		updateUserStmt:                      q.updateUserStmt,
+		updateUserRoleStmt:                  q.updateUserRoleStmt,
 	}
 }

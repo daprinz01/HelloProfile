@@ -23,3 +23,6 @@ update basic_block set profile_photo_url=$1,
 
 -- name: DeleteBasicBlock :exec
 delete from basic_block where id=$1;
+
+-- name: UpdateProfileWithBasicBlockId :exec
+update profiles set basic_block_id=$1 where id=$2;

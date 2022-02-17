@@ -59,6 +59,11 @@ func (env *Env) AddContactBlock(c echo.Context) (err error) {
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
+
+		err = env.HelloProfileDb.UpdateProfileWithContactBlockId(context.Background(), helloprofiledb.UpdateProfileWithContactBlockIdParams{
+			ContactBlockID: uuid.NullUUID{UUID: dbAddContactResult.ID, Valid: true},
+			ID:             profileId,
+		})
 		log.WithFields(fields).Info("Successfully added contact block to profile %s", profileId)
 
 		response := &models.SuccessResponse{

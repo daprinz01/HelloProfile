@@ -113,3 +113,17 @@ func (q *Queries) UpdateBasicBlock(ctx context.Context, arg UpdateBasicBlockPara
 	)
 	return err
 }
+
+const updateProfileWithBasicBlockId = `-- name: UpdateProfileWithBasicBlockId :exec
+update profiles set basic_block_id=$1 where id=$2
+`
+
+type UpdateProfileWithBasicBlockIdParams struct {
+	BasicBlockID uuid.NullUUID `json:"basic_block_id"`
+	ID           uuid.UUID     `json:"id"`
+}
+
+func (q *Queries) UpdateProfileWithBasicBlockId(ctx context.Context, arg UpdateProfileWithBasicBlockIdParams) error {
+	_, err := q.exec(ctx, q.updateProfileWithBasicBlockIdStmt, updateProfileWithBasicBlockId, arg.BasicBlockID, arg.ID)
+	return err
+}

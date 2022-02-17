@@ -19,3 +19,6 @@ update contact_block set phone=$1,
 
 -- name: DeleteContactBlock :exec
 delete from contact_block where id=$1;
+
+-- name: UpdateProfileWithContactBlockId :exec
+update profiles set contact_block_id=$1 where id=$2;

@@ -96,3 +96,17 @@ func (q *Queries) UpdateContactBlock(ctx context.Context, arg UpdateContactBlock
 	)
 	return err
 }
+
+const updateProfileWithContactBlockId = `-- name: UpdateProfileWithContactBlockId :exec
+update profiles set contact_block_id=$1 where id=$2
+`
+
+type UpdateProfileWithContactBlockIdParams struct {
+	ContactBlockID uuid.NullUUID `json:"contact_block_id"`
+	ID             uuid.UUID     `json:"id"`
+}
+
+func (q *Queries) UpdateProfileWithContactBlockId(ctx context.Context, arg UpdateProfileWithContactBlockIdParams) error {
+	_, err := q.exec(ctx, q.updateProfileWithContactBlockIdStmt, updateProfileWithContactBlockId, arg.ContactBlockID, arg.ID)
+	return err
+}

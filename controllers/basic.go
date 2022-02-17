@@ -64,6 +64,10 @@ func (env *Env) AddBasicBlock(c echo.Context) (err error) {
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
+		err = env.HelloProfileDb.UpdateProfileWithBasicBlockId(context.Background(), helloprofiledb.UpdateProfileWithBasicBlockIdParams{
+			BasicBlockID: uuid.NullUUID{UUID: dbAddBasicResult.ID, Valid: true},
+			ID:           profileId,
+		})
 		log.WithFields(fields).Info("Successfully added basic block for profile %s", profileId)
 
 		response := &models.SuccessResponse{
