@@ -173,16 +173,31 @@ func (env *Env) UpdateProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbProfile := new(helloprofiledb.UpdateProfileParams)
-	dbProfile.BasicBlockID = uuid.NullUUID{UUID: request.Basic.ID, Valid: true}
-	dbProfile.ContactBlockID = uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true}
+	dbProfile, err := env.HelloProfileDb.GetProfile(context.Background(), request.ID)
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile update failed, profile does not exist")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
 	dbProfile.Font = request.Font
 	dbProfile.IsDefault = request.IsDefault
 	dbProfile.PageColor = request.PageColor
 	dbProfile.ProfileName = request.ProfileName
 	dbProfile.Status = request.Status
 	dbProfile.ID = request.ID
-	err = env.HelloProfileDb.UpdateProfile(context.Background(), *dbProfile)
+	err = env.HelloProfileDb.UpdateProfile(context.Background(), helloprofiledb.UpdateProfileParams{
+		UserID:         dbProfile.UserID,
+		Status:         request.Status,
+		ProfileName:    request.ProfileName,
+		BasicBlockID:   dbProfile.BasicBlockID,
+		ContactBlockID: dbProfile.ContactBlockID,
+		PageColor:      request.PageColor,
+		Font:           request.Font,
+		IsDefault:      request.IsDefault,
+		ID:             dbProfile.ID,
+	})
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE
 		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
