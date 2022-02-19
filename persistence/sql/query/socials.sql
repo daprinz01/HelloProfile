@@ -24,7 +24,7 @@ insert into profile_socials(username, socials_id, profile_id, "order")VALUES
 ($1, $2, $3, $4) returning *;
 
 -- name: UpdateProfileSocial :exec
-update profile_socials set username=$1, "order"=$2 where id = $1;
+update profile_socials set username=$1, "order"=$2 where id = $3;
 
 -- name: DeleteProfileSocial :exec
 delete from profile_socials where id=$1;

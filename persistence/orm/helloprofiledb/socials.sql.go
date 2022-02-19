@@ -179,16 +179,17 @@ func (q *Queries) GetSocials(ctx context.Context) ([]Social, error) {
 }
 
 const updateProfileSocial = `-- name: UpdateProfileSocial :exec
-update profile_socials set username=$1, "order"=$2 where id = $1
+update profile_socials set username=$1, "order"=$2 where id = $3
 `
 
 type UpdateProfileSocialParams struct {
-	Username string `json:"username"`
-	Order    int32  `json:"order"`
+	Username string    `json:"username"`
+	Order    int32     `json:"order"`
+	ID       uuid.UUID `json:"id"`
 }
 
 func (q *Queries) UpdateProfileSocial(ctx context.Context, arg UpdateProfileSocialParams) error {
-	_, err := q.exec(ctx, q.updateProfileSocialStmt, updateProfileSocial, arg.Username, arg.Order)
+	_, err := q.exec(ctx, q.updateProfileSocialStmt, updateProfileSocial, arg.Username, arg.Order, arg.ID)
 	return err
 }
 

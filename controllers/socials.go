@@ -96,7 +96,7 @@ func (env *Env) UpdateSocialsBlock(c echo.Context) (err error) {
 		return err
 	}
 	dbSocials := new(helloprofiledb.UpdateProfileSocialParams)
-
+	dbSocials.ID = request.ID
 	dbSocials.Order = request.Order
 	dbSocials.Username = request.Username
 	err = env.HelloProfileDb.UpdateProfileSocial(context.Background(), *dbSocials)
