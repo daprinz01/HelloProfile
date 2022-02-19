@@ -83,7 +83,7 @@ func (q *Queries) DeleteSocial(ctx context.Context, id uuid.UUID) error {
 }
 
 const getProfileSocials = `-- name: GetProfileSocials :many
-select a.username, b.name, b.placeholder, b.image_url, a."order" from profile_socials a 
+select a.username, b.name, b.placeholder, b.image_url, a."order", a.socials_id, a.profile_id, a.id from profile_socials a 
 left join socials b on a.socials_id = b.id and a.profile_id = $1
 `
 
@@ -93,6 +93,9 @@ type GetProfileSocialsRow struct {
 	Placeholder sql.NullString `json:"placeholder"`
 	ImageUrl    sql.NullString `json:"image_url"`
 	Order       int32          `json:"order"`
+	SocialsID   uuid.UUID      `json:"socials_id"`
+	ProfileID   uuid.UUID      `json:"profile_id"`
+	ID          uuid.UUID      `json:"id"`
 }
 
 func (q *Queries) GetProfileSocials(ctx context.Context, profileID uuid.UUID) ([]GetProfileSocialsRow, error) {
@@ -110,6 +113,9 @@ func (q *Queries) GetProfileSocials(ctx context.Context, profileID uuid.UUID) ([
 			&i.Placeholder,
 			&i.ImageUrl,
 			&i.Order,
+			&i.SocialsID,
+			&i.ProfileID,
+			&i.ID,
 		); err != nil {
 			return nil, err
 		}

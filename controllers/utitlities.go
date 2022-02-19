@@ -89,6 +89,9 @@ func (env *Env) getSocails(profileID uuid.UUID, socials chan []models.Socials, f
 			Placeholder: value.Placeholder.String,
 			ImageUrl:    value.ImageUrl.String,
 			Order:       value.Order,
+			SocialsID:   value.SocialsID,
+			ProfileID:   value.ProfileID,
+			ID:          value.ID,
 		}
 		socialsList = append(socialsList, social)
 	}
