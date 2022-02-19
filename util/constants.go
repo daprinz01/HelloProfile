@@ -48,6 +48,12 @@ const UNAUTHORIZED_ERROR_MESSAGE_WRONG_JWT = "Sorry we cannot proceed with your 
 const ACCOUNT_LOCKOUT_ERROR_CODE = "12"
 const ACCOUNT_LOCKOUT_ERROR_MESSAGE = "Sorry you exceeded the maximum login attempts... Kindly reset your password to continue..."
 
+const CONTACT_BLOCK_EXIST_ERROR_CODE = "13"
+const CONTACT_BLOCK_EXIST_ERROR_MESSAGE = "A contact block had been added for this profile. Kindly update your contact block or delete existing contact block in order to add a new contact block."
+
+const BASIC_BLOCK_EXIST_ERROR_CODE = "14"
+const BASIC_BLOCK_EXIST_ERROR_MESSAGE = "A basic block had been added for this profile. Kindly update your basic block or delete existing basic block in order to add a new basic block."
+
 const SQL_ERROR_CODE = "98"
 const SQL_ERROR_MESSAGE = "Error occured while running an operation. Please contact our support if error persists after 3 trials."
 

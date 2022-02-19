@@ -38,11 +38,18 @@ func (env *Env) AddContactBlock(c echo.Context) (err error) {
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
-		isProfileExist, err := env.HelloProfileDb.IsProfileExist(context.Background(), profileId)
-		if err != nil || !isProfileExist {
+		profile, err := env.HelloProfileDb.GetProfile(context.Background(), profileId)
+		if err != nil {
 			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found while trying to add contact block")
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
+		}
+		if profile.ContactBlockID.UUID != uuid.Nil {
+			errorResponse.Errorcode = util.CONTACT_BLOCK_EXIST_ERROR_CODE
+			errorResponse.ErrorMessage = util.CONTACT_BLOCK_EXIST_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Contact block already exists for profile")
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
