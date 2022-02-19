@@ -207,6 +207,7 @@ func (env *Env) getBasicBlock(id uuid.UUID, basicBlock chan models.Basic, fields
 	basic.CoverColour = dbBasic.CoverColour.String
 	basic.CoverPhotoUrl = dbBasic.CoverPhotoUrl.String
 	basic.ProfilePhotoUrl = dbBasic.ProfilePhotoUrl.String
+	basic.ID = dbBasic.ID
 	basicBlock <- *basic
 }
 
