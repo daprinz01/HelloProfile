@@ -58,12 +58,12 @@ func (env *Env) GetContents(c echo.Context) (err error) {
 		return err
 	}
 	contents := make([]models.ContentType, len(dbContentTypes))
-	for _, value := range dbContentTypes {
-		contents = append(contents, models.ContentType{
+	for index, value := range dbContentTypes {
+		contents[index] = models.ContentType{
 			ID:       value.ID,
 			Type:     value.Type,
 			ImageUrl: value.ImageUrl,
-		})
+		}
 	}
 	log.WithFields(fields).Info("Successfully fetched all content types")
 
@@ -91,13 +91,13 @@ func (env *Env) GetSocials(c echo.Context) (err error) {
 		return err
 	}
 	socials := make([]models.Socials, len(dbSocials))
-	for _, value := range dbSocials {
-		socials = append(socials, models.Socials{
+	for index, value := range dbSocials {
+		socials[index] = models.Socials{
 			ID:          value.ID,
 			Placeholder: value.Placeholder,
 			Name:        value.Name,
 			ImageUrl:    value.ImageUrl,
-		})
+		}
 	}
 	log.WithFields(fields).Info("Successfully fetched all supported socials")
 
