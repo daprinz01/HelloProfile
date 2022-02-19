@@ -25,12 +25,12 @@ func (env *Env) GetCallToActions(c echo.Context) (err error) {
 		return err
 	}
 	callToActions := make([]models.CallToAction, len(dbCallToAction))
-	for _, value := range dbCallToAction {
-		callToActions = append(callToActions, models.CallToAction{
+	for index, value := range dbCallToAction {
+		callToActions[index] = models.CallToAction{
 			ID:          value.ID,
 			Type:        value.Type,
 			DisplayName: value.DisplayName,
-		})
+		}
 	}
 	log.WithFields(fields).Info("Successfully fetched all call to actions")
 
