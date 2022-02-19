@@ -132,8 +132,8 @@ func (env *Env) DeleteContentBlock(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteContentBlock"}
 	log.WithFields(fields).Info("Delete content block request received...")
-	if c.Param("id") != "" {
-		id, err := uuid.Parse(c.Param("id"))
+	if c.Param("contentId") != "" {
+		id, err := uuid.Parse(c.Param("contentId"))
 		if err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE

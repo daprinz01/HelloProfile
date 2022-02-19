@@ -124,8 +124,8 @@ func (env *Env) DeleteSocialBlock(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteSocialBlock"}
 	log.WithFields(fields).Info("Delete social block request received...")
-	if c.Param("id") != "" {
-		id, err := uuid.Parse(c.Param("id"))
+	if c.Param("socailsId") != "" {
+		id, err := uuid.Parse(c.Param("socailsId"))
 		if err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
