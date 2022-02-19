@@ -210,12 +210,12 @@ func main() {
 	// Socials operations
 	apiAuth.POST("/blocks/socials/:profileId", env.AddSocialsBlock)
 	apiAuth.PUT("/blocks/socials", env.UpdateSocialsBlock)
-	apiAuth.DELETE("/blocks/socials/:id", env.DeleteSocialBlock)
+	apiAuth.DELETE("/blocks/socials/:socailsId", env.DeleteSocialBlock)
 
 	// Content operations
 	apiAuth.POST("/blocks/content/:profileId", env.AddContentBlock)
 	apiAuth.PUT("/blocks/content", env.UpdateContentBlock)
-	apiAuth.DELETE("/blocks/content/:id", env.DeleteContentBlock)
+	apiAuth.DELETE("/blocks/content/:contentId", env.DeleteContentBlock)
 
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")
