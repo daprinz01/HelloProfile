@@ -297,3 +297,14 @@ VALUES
 ('learn_more', 'Learn More'),
 ('book_now', 'Book Now'),
 ('sign_up', 'Sign Up');
+
+insert into socials(name, placeholder, image_url)
+values
+('Instagram', 'https://www.instagram.com/', 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Instagram_logo_2016.svg/800px-Instagram_logo_2016.svg.png'),
+('Facebook', 'https://www.facebook.com/', 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/2021_Facebook_icon.svg/800px-2021_Facebook_icon.svg.png'),
+('LinkedIn', 'https://www.linkedin.com/in/', 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/LinkedIn_logo_initials.png/800px-LinkedIn_logo_initials.png'),
+('Skype', 'Skype ID', 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Skype_logo.svg/2560px-Skype_logo.svg.png'),
+('Pinterest', 'https://www.pinterest.com/', 'https://upload.wikimedia.org/wikipedia/commons/0/08/Pinterest-logo.png'),
+('Spotify', 'Spotify username', 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png'),
+('Whatsapp', 'https://wa.me/', 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1021px-WhatsApp.svg.png' );
+

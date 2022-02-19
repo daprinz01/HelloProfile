@@ -55,6 +55,7 @@ type Profile struct {
 
 // Socials keeps the social accounts a user has added to their profile
 type Socials struct {
+	ID          uuid.UUID `json:"id,omitempty"`
 	Username    string    `json:"username,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	Placeholder string    `json:"placeholder,omitempty"`

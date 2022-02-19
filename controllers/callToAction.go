@@ -75,3 +75,37 @@ func (env *Env) GetContents(c echo.Context) (err error) {
 	c.JSON(http.StatusOK, response)
 	return err
 }
+
+func (env *Env) GetSocials(c echo.Context) (err error) {
+
+	errorResponse := new(models.Errormessage)
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "GetSocials"}
+	log.WithFields(fields).Info("Get socials request received...")
+	dbSocials, err := env.HelloProfileDb.GetSocials(context.Background())
+	if err != nil {
+		errorResponse.Errorcode = util.SQL_ERROR_CODE
+		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding fetch content types")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	socials := make([]models.Socials, len(dbSocials))
+	for _, value := range dbSocials {
+		socials = append(socials, models.Socials{
+			ID:          value.ID,
+			Placeholder: value.Placeholder,
+			Name:        value.Name,
+			ImageUrl:    value.ImageUrl,
+		})
+	}
+	log.WithFields(fields).Info("Successfully fetched all supported socials")
+
+	response := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+		ResponseDetails: socials,
+	}
+	c.JSON(http.StatusOK, response)
+	return err
+}
