@@ -168,7 +168,7 @@ func (env *Env) getContents(profileID uuid.UUID, linkContents chan []models.Cont
 func (env *Env) sortContents(contentResult []helloprofiledb.ProfileContent, callToActions []helloprofiledb.CallToAction, contentChannel chan []models.Content, contentTypeID uuid.UUID) {
 	var contentList []models.Content
 	for _, value := range contentResult {
-		if value.CallToActionID == contentTypeID {
+		if value.ContentID == contentTypeID {
 			callToAction := new(helloprofiledb.CallToAction)
 			for _, action := range callToActions {
 				if value.CallToActionID == action.ID {
