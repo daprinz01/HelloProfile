@@ -30,18 +30,19 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
 		}
-		profiles := make(chan []models.Profile)
-		env.getProfiles(user.ID, profiles, fields)
+		profilesChan := make(chan []models.Profile)
+		env.getProfiles(user.ID, profilesChan, fields)
+		profiles := <-profilesChan
 		if len(profiles) <= 0 {
 			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found")
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profiles was not found for user")
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
 		}
 		if c.QueryParam("type") == "default" {
 			profile := new(models.Profile)
-			for _, value := range <-profiles {
+			for _, value := range profiles {
 				if value.IsDefault {
 					profile = &value
 				}
