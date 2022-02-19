@@ -56,6 +56,7 @@ func (env *Env) AddContentBlock(c echo.Context) (err error) {
 		dbContent.Order = request.Order
 		dbContent.Title = request.Title
 		dbContent.Url = request.Url
+		dbContent.ProfileID = profileId
 		dbAddContentResult, err := env.HelloProfileDb.AddProfileContent(context.Background(), *dbContent)
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
