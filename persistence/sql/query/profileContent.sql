@@ -13,7 +13,7 @@ update profile_contents set title=$1, display_title=$2, "description"=$3, "url"=
 where id=$7;
 
 -- name: DeleteProfileContent :exec
-delete from profile_contents where id=$1;
+delete from profile_contents CASCADE where id=$1;
 
 -- name: GetAllContentTypes :many
 select * from content;

@@ -176,6 +176,7 @@ func main() {
 	apiAuth.GET("/profile", env.GetProfiles)
 	apiAuth.POST("/profile/:email", env.AddProfile)
 	apiAuth.PUT("/profile", env.UpdateProfile)
+	apiAuth.PUT("/profile/:profileId", env.DeleteProfile)
 
 	// User Role operations
 	apiAuth.PUT("/user/role/:newRole/:oldRole/:username", env.UpdateUserRole)

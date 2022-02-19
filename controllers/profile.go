@@ -214,3 +214,44 @@ func (env *Env) UpdateProfile(c echo.Context) (err error) {
 		return err
 	}
 }
+
+// DeleteProfile deletes a profile
+func (env *Env) DeleteProfile(c echo.Context) (err error) {
+
+	errorResponse := new(models.Errormessage)
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteSocialBlock"}
+	log.WithFields(fields).Info("Delete social block request received...")
+	if c.Param("profileId") != "" {
+		id, err := uuid.Parse(c.Param("profileId"))
+		if err != nil {
+			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Incorrect id format passed for delete profile")
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
+		}
+		err = env.HelloProfileDb.DeleteProfile(context.Background(), id)
+		if err != nil {
+			errorResponse.Errorcode = util.SQL_ERROR_CODE
+			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile deletion failed")
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
+		} else {
+			log.WithFields(fields).Info("Successfully deleted profile")
+			response := &models.SuccessResponse{
+				ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+				ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+			}
+			c.JSON(http.StatusOK, response)
+			return err
+		}
+	} else {
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Id not passed for delete profile request")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+}

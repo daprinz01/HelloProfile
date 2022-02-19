@@ -52,7 +52,7 @@ func (q *Queries) AddProfileContent(ctx context.Context, arg AddProfileContentPa
 }
 
 const deleteProfileContent = `-- name: DeleteProfileContent :exec
-delete from profile_contents where id=$1
+delete from profile_contents CASCADE where id=$1
 `
 
 func (q *Queries) DeleteProfileContent(ctx context.Context, id uuid.UUID) error {
