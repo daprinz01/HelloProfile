@@ -204,6 +204,9 @@ func main() {
 	// Content types operations
 	apiAuth.GET("/content/types", env.GetContents)
 
+	// Socials types
+	apiAuth.GET("/socials/types", env.GetSocials)
+
 	// Socials operations
 	apiAuth.POST("/blocks/socials/:profileId", env.AddSocialsBlock)
 	apiAuth.PUT("/blocks/socials", env.UpdateSocialsBlock)
