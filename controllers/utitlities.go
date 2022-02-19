@@ -188,6 +188,8 @@ func (env *Env) sortContents(contentResult []helloprofiledb.ProfileContent, call
 					Type:        callToAction.Type,
 					DisplayName: callToAction.DisplayName,
 				},
+				CallToActionID: callToAction.ID,
+				ContentID:      contentTypeID,
 			}
 			contentList = append(contentList, content)
 		}
