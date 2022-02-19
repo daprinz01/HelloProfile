@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 	"helloprofile.com/util"
@@ -50,7 +49,10 @@ func (env *Env) AddContactBlock(c echo.Context) (err error) {
 
 		log.WithFields(fields).Info(fmt.Sprintf("Contact block to add to profile %s : %v", profileId, request))
 		dbContact := new(helloprofiledb.AddContactBlockParams)
-		automapper.MapLoose(request, dbContact)
+		dbContact.Address = request.Address
+		dbContact.Email = request.Email
+		dbContact.Phone = request.Phone
+		dbContact.Website = request.Website
 		dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), *dbContact)
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
@@ -99,7 +101,11 @@ func (env *Env) UpdateContactBlock(c echo.Context) (err error) {
 		return err
 	}
 	dbContact := new(helloprofiledb.UpdateContactBlockParams)
-	automapper.MapLoose(request, dbContact)
+	dbContact.Address = request.Address
+	dbContact.Email = request.Email
+	dbContact.Phone = request.Phone
+	dbContact.Website = request.Website
+	dbContact.ID = request.ID
 	err = env.HelloProfileDb.UpdateContactBlock(context.Background(), *dbContact)
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE

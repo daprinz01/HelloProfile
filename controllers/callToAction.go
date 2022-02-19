@@ -6,7 +6,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/util"
 )
@@ -26,7 +25,13 @@ func (env *Env) GetCallToActions(c echo.Context) (err error) {
 		return err
 	}
 	callToActions := make([]models.CallToAction, len(dbCallToAction))
-	automapper.MapLoose(dbCallToAction, callToActions)
+	for _, value := range dbCallToAction {
+		callToActions = append(callToActions, models.CallToAction{
+			ID:          value.ID,
+			Type:        value.Type,
+			DisplayName: value.DisplayName,
+		})
+	}
 	log.WithFields(fields).Info("Successfully fetched all call to actions")
 
 	response := &models.SuccessResponse{
@@ -52,14 +57,20 @@ func (env *Env) GetContents(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	callToActions := make([]models.ContentType, len(dbContentTypes))
-	automapper.MapLoose(dbContentTypes, callToActions)
+	contents := make([]models.ContentType, len(dbContentTypes))
+	for _, value := range dbContentTypes {
+		contents = append(contents, models.ContentType{
+			ID:       value.ID,
+			Type:     value.Type,
+			ImageUrl: value.ImageUrl,
+		})
+	}
 	log.WithFields(fields).Info("Successfully fetched all content types")
 
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-		ResponseDetails: callToActions,
+		ResponseDetails: contents,
 	}
 	c.JSON(http.StatusOK, response)
 	return err

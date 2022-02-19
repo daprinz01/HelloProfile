@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 	"helloprofile.com/util"
@@ -50,7 +49,13 @@ func (env *Env) AddContentBlock(c echo.Context) (err error) {
 
 		log.WithFields(fields).Info(fmt.Sprintf("Content block to add to profile %s : %v", profileId, request))
 		dbContent := new(helloprofiledb.AddProfileContentParams)
-		automapper.MapLoose(request, dbContent)
+		dbContent.CallToActionID = request.CallToActionID
+		dbContent.ContentID = request.ContentID
+		dbContent.Description = request.Description
+		dbContent.DisplayTitle = request.Description
+		dbContent.Order = request.Order
+		dbContent.Title = request.Title
+		dbContent.Url = request.Url
 		dbAddContentResult, err := env.HelloProfileDb.AddProfileContent(context.Background(), *dbContent)
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
@@ -94,7 +99,13 @@ func (env *Env) UpdateContentBlock(c echo.Context) (err error) {
 		return err
 	}
 	dbContent := new(helloprofiledb.UpdateProfileContentParams)
-	automapper.MapLoose(request, dbContent)
+	dbContent.CallToActionID = request.CallToActionID
+	dbContent.Description = request.Description
+	dbContent.DisplayTitle = request.Description
+	dbContent.Order = request.Order
+	dbContent.Title = request.Title
+	dbContent.Url = request.Url
+	dbContent.ID = request.ID
 	err = env.HelloProfileDb.UpdateProfileContent(context.Background(), *dbContent)
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE

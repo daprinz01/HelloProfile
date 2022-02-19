@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 	"helloprofile.com/util"
@@ -50,7 +49,10 @@ func (env *Env) AddSocialsBlock(c echo.Context) (err error) {
 
 		log.WithFields(fields).Info(fmt.Sprintf("Socials block to add to profile %s : %v", profileId, request))
 		dbSocials := new(helloprofiledb.AddProfileSocialParams)
-		automapper.MapLoose(request, dbSocials)
+		dbSocials.Order = request.Order
+		dbSocials.ProfileID = request.ProfileID
+		dbSocials.SocialsID = request.SocialsID
+		dbSocials.Username = request.Username
 		dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), *dbSocials)
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
@@ -93,9 +95,11 @@ func (env *Env) UpdateSocialsBlock(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbBasic := new(helloprofiledb.UpdateProfileSocialParams)
-	automapper.MapLoose(request, dbBasic)
-	err = env.HelloProfileDb.UpdateProfileSocial(context.Background(), *dbBasic)
+	dbSocials := new(helloprofiledb.UpdateProfileSocialParams)
+
+	dbSocials.Order = request.Order
+	dbSocials.Username = request.Username
+	err = env.HelloProfileDb.UpdateProfileSocial(context.Background(), *dbSocials)
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE
 		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

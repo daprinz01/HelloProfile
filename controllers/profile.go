@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
-	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 	"helloprofile.com/util"
@@ -122,7 +122,13 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 		}
 		log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, request))
 		dbProfile := new(helloprofiledb.AddProfileParams)
-		automapper.MapLoose(request, dbProfile)
+		dbProfile.BasicBlockID = uuid.NullUUID{UUID: request.Basic.ID, Valid: true}
+		dbProfile.ContactBlockID = uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true}
+		dbProfile.Font = request.Font
+		dbProfile.IsDefault = request.IsDefault
+		dbProfile.PageColor = request.PageColor
+		dbProfile.ProfileName = request.ProfileName
+		dbProfile.Status = request.Status
 		dbProfile.UserID = user.ID
 		dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), *dbProfile)
 		if err != nil {
@@ -167,7 +173,14 @@ func (env *Env) UpdateProfile(c echo.Context) (err error) {
 		return err
 	}
 	dbProfile := new(helloprofiledb.UpdateProfileParams)
-	automapper.MapLoose(request, dbProfile)
+	dbProfile.BasicBlockID = uuid.NullUUID{UUID: request.Basic.ID, Valid: true}
+	dbProfile.ContactBlockID = uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true}
+	dbProfile.Font = request.Font
+	dbProfile.IsDefault = request.IsDefault
+	dbProfile.PageColor = request.PageColor
+	dbProfile.ProfileName = request.ProfileName
+	dbProfile.Status = request.Status
+	dbProfile.ID = request.ID
 	err = env.HelloProfileDb.UpdateProfile(context.Background(), *dbProfile)
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE

@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	"github.com/stroiman/go-automapper"
 	"helloprofile.com/models"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 )
@@ -202,7 +201,9 @@ func (env *Env) getBasicBlock(id uuid.UUID, basicBlock chan models.Basic, fields
 		basicBlock <- *basic
 		return
 	}
-	automapper.MapLoose(dbBasic, basic)
+	basic.Bio = dbBasic.Bio
+	basic.Fullname = dbBasic.Fullname
+	basic.Title = dbBasic.Title
 	basic.CoverColour = dbBasic.CoverColour.String
 	basic.CoverPhotoUrl = dbBasic.CoverPhotoUrl.String
 	basic.ProfilePhotoUrl = dbBasic.ProfilePhotoUrl.String
@@ -218,6 +219,10 @@ func (env *Env) getContactBlock(id uuid.UUID, contactBlock chan models.ContactBl
 		contactBlock <- *contact
 		return
 	}
-	automapper.MapLoose(dbContact, contact)
+	contact.Address = dbContact.Address
+	contact.Email = dbContact.Email
+	contact.ID = dbContact.ID
+	contact.Phone = dbContact.Phone
+	contact.Website = dbContact.Website
 	contactBlock <- *contact
 }
