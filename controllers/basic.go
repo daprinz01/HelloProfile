@@ -66,7 +66,7 @@ func (env *Env) AddBasicBlock(c echo.Context) (err error) {
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding basic block for profile %s", profileId)
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding basic block for profile ", profileId)
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
@@ -74,7 +74,7 @@ func (env *Env) AddBasicBlock(c echo.Context) (err error) {
 			BasicBlockID: uuid.NullUUID{UUID: dbAddBasicResult.ID, Valid: true},
 			ID:           profileId,
 		})
-		log.WithFields(fields).Info("Successfully added basic block for profile %s", profileId)
+		log.WithFields(fields).Info("Successfully added basic block for profile ", profileId)
 
 		response := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
@@ -140,8 +140,8 @@ func (env *Env) DeleteBasicBlock(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteBasicBlock"}
 	log.WithFields(fields).Info("Delete basic block request received...")
-	if c.Param("id") != "" {
-		id, err := uuid.Parse(c.Param("id"))
+	if c.QueryParam("id") != "" {
+		id, err := uuid.Parse(c.QueryParam("id"))
 		if err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE

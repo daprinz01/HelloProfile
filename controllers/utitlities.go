@@ -198,11 +198,11 @@ func (env *Env) sortContents(contentResult []helloprofiledb.ProfileContent, call
 }
 
 func (env *Env) getBasicBlock(id uuid.UUID, basicBlock chan models.Basic, fields log.Fields) {
-	log.WithFields(fields).Info(`Getting the basic block for the user profile %v`, id)
+	log.WithFields(fields).Info(`Getting the basic block for the user profile `, id)
 	basic := new(models.Basic)
 	dbBasic, err := env.HelloProfileDb.GetBasicBlock(context.Background(), id)
 	if err != nil {
-		log.WithFields(fields).WithError(err).Error(`Error occured fetching basic block for user profile %v`, id)
+		log.WithFields(fields).WithError(err).Error(`Error occured fetching basic block for user profile `, id)
 		basicBlock <- *basic
 		return
 	}
@@ -217,11 +217,11 @@ func (env *Env) getBasicBlock(id uuid.UUID, basicBlock chan models.Basic, fields
 }
 
 func (env *Env) getContactBlock(id uuid.UUID, contactBlock chan models.ContactBlock, fields log.Fields) {
-	log.WithFields(fields).Info(`Getting the contact block for the user profile %v`, id)
+	log.WithFields(fields).Info(`Getting the contact block for the user profile `, id)
 	contact := new(models.ContactBlock)
 	dbContact, err := env.HelloProfileDb.GetContactBlock(context.Background(), id)
 	if err != nil {
-		log.WithFields(fields).WithError(err).Error(`Error occured fetching contact block for user profile %v`, id)
+		log.WithFields(fields).WithError(err).Error(`Error occured fetching contact block for user profile `, id)
 		contactBlock <- *contact
 		return
 	}

@@ -176,7 +176,7 @@ func main() {
 	apiNoAuth.GET("/profile", env.GetProfiles)
 	apiAuth.POST("/profile/:email", env.AddProfile)
 	apiAuth.PUT("/profile", env.UpdateProfile)
-	apiAuth.PUT("/profile/:profileId", env.DeleteProfile)
+	apiAuth.PUT("/profile", env.DeleteProfile)
 
 	// User Role operations
 	apiAuth.PUT("/user/role/:newRole/:oldRole/:username", env.UpdateUserRole)
@@ -192,12 +192,12 @@ func main() {
 	// Basic block operations
 	apiAuth.POST("/blocks/basic/:profileId", env.AddBasicBlock)
 	apiAuth.PUT("/blocks/basic", env.UpdateBasicBlock)
-	apiAuth.DELETE("/blocks/basic/:id", env.DeleteBasicBlock)
+	apiAuth.DELETE("/blocks/basic", env.DeleteBasicBlock)
 
 	// Contact block operations
 	apiAuth.POST("/blocks/contact/:profileId", env.AddContactBlock)
 	apiAuth.PUT("/blocks/contact", env.UpdateContactBlock)
-	apiAuth.DELETE("/blocks/contact/:id", env.DeleteContactBlock)
+	apiAuth.DELETE("/blocks/contact", env.DeleteContactBlock)
 
 	// Call to action operations
 	apiAuth.GET("/callToAction", env.GetCallToActions)
@@ -216,7 +216,7 @@ func main() {
 	// Content operations
 	apiAuth.POST("/blocks/content/:profileId", env.AddContentBlock)
 	apiAuth.PUT("/blocks/content", env.UpdateContentBlock)
-	apiAuth.DELETE("/blocks/content/:contentId", env.DeleteContentBlock)
+	apiAuth.DELETE("/blocks/content", env.DeleteContentBlock)
 
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")

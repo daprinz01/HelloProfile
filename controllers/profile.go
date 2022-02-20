@@ -135,7 +135,7 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user %s", user.Email)
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
@@ -222,8 +222,8 @@ func (env *Env) DeleteProfile(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteSocialBlock"}
 	log.WithFields(fields).Info("Delete social block request received...")
-	if c.Param("profileId") != "" {
-		id, err := uuid.Parse(c.Param("profileId"))
+	if c.QueryParam("id") != "" {
+		id, err := uuid.Parse(c.QueryParam("id"))
 		if err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE

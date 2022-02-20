@@ -62,11 +62,11 @@ func (env *Env) AddContentBlock(c echo.Context) (err error) {
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding content block for profile %s", profileId)
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding content block for profile ", profileId)
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
-		log.WithFields(fields).Info("Successfully added content block for profile %s", profileId)
+		log.WithFields(fields).Info("Successfully added content block for profile ", profileId)
 
 		response := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
@@ -133,8 +133,8 @@ func (env *Env) DeleteContentBlock(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteContentBlock"}
 	log.WithFields(fields).Info("Delete content block request received...")
-	if c.Param("contentId") != "" {
-		id, err := uuid.Parse(c.Param("contentId"))
+	if c.QueryParam("id") != "" {
+		id, err := uuid.Parse(c.QueryParam("id"))
 		if err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE

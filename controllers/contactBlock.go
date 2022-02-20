@@ -64,7 +64,7 @@ func (env *Env) AddContactBlock(c echo.Context) (err error) {
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding contact block for profile %s", profileId)
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding contact block for profile ", profileId)
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
@@ -73,7 +73,7 @@ func (env *Env) AddContactBlock(c echo.Context) (err error) {
 			ContactBlockID: uuid.NullUUID{UUID: dbAddContactResult.ID, Valid: true},
 			ID:             profileId,
 		})
-		log.WithFields(fields).Info("Successfully added contact block to profile %s", profileId)
+		log.WithFields(fields).Info("Successfully added contact block to profile ", profileId)
 
 		response := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
@@ -138,8 +138,8 @@ func (env *Env) DeleteContactBlock(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteContactBlock"}
 	log.WithFields(fields).Info("Delete contact block request received...")
-	if c.Param("id") != "" {
-		id, err := uuid.Parse(c.Param("id"))
+	if c.QueryParam("id") != "" {
+		id, err := uuid.Parse(c.QueryParam("id"))
 		if err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
