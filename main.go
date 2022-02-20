@@ -211,7 +211,7 @@ func main() {
 	// Socials operations
 	apiAuth.POST("/blocks/socials/:profileId", env.AddSocialsBlock)
 	apiAuth.PUT("/blocks/socials", env.UpdateSocialsBlock)
-	apiAuth.DELETE("/blocks/socials/:socialsId", env.DeleteSocialBlock)
+	apiAuth.DELETE("/blocks/socials", env.DeleteSocialBlock)
 
 	// Content operations
 	apiAuth.POST("/blocks/content/:profileId", env.AddContentBlock)

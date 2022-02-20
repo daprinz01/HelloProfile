@@ -123,7 +123,7 @@ func (env *Env) DeleteSocialBlock(c echo.Context) (err error) {
 	errorResponse := new(models.Errormessage)
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteSocialBlock"}
-	id := c.Param("socialsId")
+	id := c.QueryParam("socialsId")
 	justLog := "Just checking"
 	log.WithFields(fields).Info("Delete social block request received... %s, %s", id, justLog)
 	if id != "" {
