@@ -102,8 +102,8 @@ func (env *Env) UpdateContentBlock(c echo.Context) (err error) {
 	}
 	dbContent := new(helloprofiledb.UpdateProfileContentParams)
 	dbContent.CallToActionID = request.CallToActionID
-	dbContent.Description = request.Title
-	dbContent.DisplayTitle = request.Description
+	dbContent.Description = request.Description
+	dbContent.DisplayTitle = request.Title
 	dbContent.Order = request.Order
 	dbContent.Title = strings.ToLower(request.Title)
 	dbContent.Url = request.Url
