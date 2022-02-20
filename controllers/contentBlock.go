@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -104,7 +105,7 @@ func (env *Env) UpdateContentBlock(c echo.Context) (err error) {
 	dbContent.Description = request.Title
 	dbContent.DisplayTitle = request.Description
 	dbContent.Order = request.Order
-	dbContent.Title = request.Title
+	dbContent.Title = strings.ToLower(request.Title)
 	dbContent.Url = request.Url
 	dbContent.ID = request.ID
 	err = env.HelloProfileDb.UpdateProfileContent(context.Background(), *dbContent)
