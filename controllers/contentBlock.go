@@ -52,7 +52,7 @@ func (env *Env) AddContentBlock(c echo.Context) (err error) {
 		dbContent.CallToActionID = request.CallToActionID
 		dbContent.ContentID = request.ContentID
 		dbContent.Description = request.Description
-		dbContent.DisplayTitle = request.Description
+		dbContent.DisplayTitle = request.Title
 		dbContent.Order = request.Order
 		dbContent.Title = request.Title
 		dbContent.Url = request.Url
@@ -101,7 +101,7 @@ func (env *Env) UpdateContentBlock(c echo.Context) (err error) {
 	}
 	dbContent := new(helloprofiledb.UpdateProfileContentParams)
 	dbContent.CallToActionID = request.CallToActionID
-	dbContent.Description = request.Description
+	dbContent.Description = request.Title
 	dbContent.DisplayTitle = request.Description
 	dbContent.Order = request.Order
 	dbContent.Title = request.Title
