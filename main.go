@@ -173,7 +173,7 @@ func main() {
 	apiAuth.DELETE("/user/:username", env.DeleteUser)
 
 	//Profile operations
-	apiAuth.GET("/profile", env.GetProfiles)
+	apiNoAuth.GET("/profile", env.GetProfiles)
 	apiAuth.POST("/profile/:email", env.AddProfile)
 	apiAuth.PUT("/profile", env.UpdateProfile)
 	apiAuth.PUT("/profile/:profileId", env.DeleteProfile)
