@@ -59,6 +59,55 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 	}()
 }
 
+func (env *Env) getProfile(profileID uuid.UUID, profile chan models.Profile, fields log.Fields) {
+
+	socials := make(chan []models.Socials)
+	linkContents := make(chan []models.Content)
+	articleContents := make(chan []models.Content)
+	videoContents := make(chan []models.Content)
+	audioContents := make(chan []models.Content)
+	meetingContents := make(chan []models.Content)
+	eventsContents := make(chan []models.Content)
+	formContents := make(chan []models.Content)
+	basicBlock := make(chan models.Basic)
+	contactBlock := make(chan models.ContactBlock)
+
+	go func() {
+		log.WithFields(fields).Info(`Fetching profiles for user...`)
+		var profileResult models.Profile
+		dbProfile, err := env.HelloProfileDb.GetProfile(context.Background(), profileID)
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(`Error occured while fetching profiles for user...`)
+			profile <- profileResult
+		}
+
+		go env.getBasicBlock(dbProfile.BasicBlockID.UUID, basicBlock, fields)
+		go env.getContactBlock(dbProfile.ContactBlockID.UUID, contactBlock, fields)
+		go env.getSocails(dbProfile.ID, socials, fields)
+		go env.getContents(dbProfile.ID, linkContents, articleContents, videoContents, audioContents, meetingContents, eventsContents, formContents, fields)
+		profileResult = models.Profile{
+			ID:           dbProfile.ID,
+			Status:       dbProfile.Status,
+			ProfileName:  dbProfile.ProfileName,
+			PageColor:    dbProfile.PageColor,
+			Font:         dbProfile.Font,
+			IsDefault:    dbProfile.IsDefault,
+			Basic:        <-basicBlock,
+			ContactBlock: <-contactBlock,
+			Socials:      <-socials,
+			Links:        <-linkContents,
+			Articles:     <-articleContents,
+			Videos:       <-videoContents,
+			Audios:       <-audioContents,
+			Forms:        <-formContents,
+			Meetings:     <-meetingContents,
+			Events:       <-eventsContents,
+		}
+
+		profile <- profileResult
+	}()
+}
+
 // saveLogin is used to log a login request that failed with incorrect password or was successful
 func (env *Env) saveLogin(createParams helloprofiledb.CreateUserLoginParams) error {
 	fields := log.Fields{"microservice": "helloprofile.service", "function": "saveLogin"}

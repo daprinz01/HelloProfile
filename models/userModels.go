@@ -104,3 +104,11 @@ type ContactBlock struct {
 	Address string    `json:"address,omitempty"`
 	Website string    `json:"website,omitempty"`
 }
+type AddContact struct {
+	ProfileID  uuid.UUID `json:"profileId,omitempty"`
+	CategoryID uuid.UUID `json:"categoryId,omitempty"`
+}
+type Contact struct {
+	CategoryID uuid.UUID `json:"categoryId,omitempty"`
+	Profile    Profile   `json:"profile,omitempty"`
+}

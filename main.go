@@ -218,6 +218,11 @@ func main() {
 	apiAuth.PUT("/blocks/content", env.UpdateContentBlock)
 	apiAuth.DELETE("/blocks/content", env.DeleteContentBlock)
 
+	// Contact operations
+	apiAuth.GET("/contact", env.GetContacts)
+	apiAuth.POST("/contact", env.AddContact)
+	apiAuth.DELETE("/contact", env.DeleteContact)
+
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")
 		e.Logger.Fatal(e.StartServer(srv))
