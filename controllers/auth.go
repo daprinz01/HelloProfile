@@ -518,14 +518,16 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 			// emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
 			if err != nil {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured sending otp")
-			}
-			if emailResponse.StatusCode == 200 {
-				log.WithFields(fields).Info("OTP sent successfully")
 			} else {
-				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured sending OTP")
+				if emailResponse.StatusCode == 200 {
+					log.WithFields(fields).Info("OTP sent successfully")
+				} else {
+					log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured sending OTP")
+				}
+				emailBody, _ := ioutil.ReadAll(emailResponse.Body)
+				log.WithFields(fields).Info(fmt.Sprintf("Response body from email request: %s", emailBody))
 			}
-			emailBody, _ := ioutil.ReadAll(emailResponse.Body)
-			log.WithFields(fields).Info(fmt.Sprintf("Response body from email request: %s", emailBody))
+
 		} else {
 			if user.Phone.String == "" {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Phonenumber not available")
