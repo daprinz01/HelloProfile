@@ -91,8 +91,8 @@ func (env *Env) AddContact(c echo.Context) (err error) {
 			ProfileID: request.ProfileID,
 		})
 		if err != nil {
-			errorResponse.Errorcode = util.SQL_ERROR_CODE
-			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+			errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_CODE
+			errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to add new contact for user ", user.ID)
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
