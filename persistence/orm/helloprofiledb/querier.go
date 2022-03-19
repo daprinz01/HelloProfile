@@ -72,7 +72,6 @@ type Querier interface {
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	IsProfileExist(ctx context.Context, id uuid.UUID) (bool, error)
 	UpdateBasicBlock(ctx context.Context, arg UpdateBasicBlockParams) error
-	UpdateContact(ctx context.Context, arg UpdateContactParams) error
 	UpdateContactBlock(ctx context.Context, arg UpdateContactBlockParams) error
 	UpdateContactCategory(ctx context.Context, arg UpdateContactCategoryParams) error
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error

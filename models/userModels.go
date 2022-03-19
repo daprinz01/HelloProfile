@@ -109,6 +109,5 @@ type AddContact struct {
 	CategoryID uuid.UUID `json:"categoryId,omitempty"`
 }
 type Contact struct {
-	CategoryID uuid.UUID `json:"categoryId,omitempty"`
-	Profile    Profile   `json:"profile,omitempty"`
+	Profile Profile `json:"profile,omitempty"`
 }

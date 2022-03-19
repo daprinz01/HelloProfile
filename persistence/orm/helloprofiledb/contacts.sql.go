@@ -10,27 +10,21 @@ import (
 )
 
 const addContacts = `-- name: AddContacts :one
-INSERT INTO contacts (user_id, profile_id, contact_category_id)
-    VALUES ($1, $2, $3)
+INSERT INTO contacts (user_id, profile_id)
+    VALUES ($1, $2)
 RETURNING
-    id, user_id, profile_id, contact_category_id
+    id, user_id, profile_id
 `
 
 type AddContactsParams struct {
-	UserID            uuid.UUID `json:"user_id"`
-	ProfileID         uuid.UUID `json:"profile_id"`
-	ContactCategoryID uuid.UUID `json:"contact_category_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	ProfileID uuid.UUID `json:"profile_id"`
 }
 
 func (q *Queries) AddContacts(ctx context.Context, arg AddContactsParams) (Contact, error) {
-	row := q.queryRow(ctx, q.addContactsStmt, addContacts, arg.UserID, arg.ProfileID, arg.ContactCategoryID)
+	row := q.queryRow(ctx, q.addContactsStmt, addContacts, arg.UserID, arg.ProfileID)
 	var i Contact
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.ProfileID,
-		&i.ContactCategoryID,
-	)
+	err := row.Scan(&i.ID, &i.UserID, &i.ProfileID)
 	return i, err
 }
 
@@ -50,7 +44,7 @@ func (q *Queries) DeleteContact(ctx context.Context, arg DeleteContactParams) er
 
 const getAllContacts = `-- name: GetAllContacts :many
 SELECT
-    id, user_id, profile_id, contact_category_id
+    id, user_id, profile_id
 FROM
     contacts
 `
@@ -64,12 +58,7 @@ func (q *Queries) GetAllContacts(ctx context.Context) ([]Contact, error) {
 	var items []Contact
 	for rows.Next() {
 		var i Contact
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.ProfileID,
-			&i.ContactCategoryID,
-		); err != nil {
+		if err := rows.Scan(&i.ID, &i.UserID, &i.ProfileID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -85,7 +74,7 @@ func (q *Queries) GetAllContacts(ctx context.Context) ([]Contact, error) {
 
 const getContacts = `-- name: GetContacts :many
 SELECT
-    id, user_id, profile_id, contact_category_id
+    id, user_id, profile_id
 FROM
     contacts
 WHERE
@@ -101,12 +90,7 @@ func (q *Queries) GetContacts(ctx context.Context, userID uuid.UUID) ([]Contact,
 	var items []Contact
 	for rows.Next() {
 		var i Contact
-		if err := rows.Scan(
-			&i.ID,
-			&i.UserID,
-			&i.ProfileID,
-			&i.ContactCategoryID,
-		); err != nil {
+		if err := rows.Scan(&i.ID, &i.UserID, &i.ProfileID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -118,19 +102,4 @@ func (q *Queries) GetContacts(ctx context.Context, userID uuid.UUID) ([]Contact,
 		return nil, err
 	}
 	return items, nil
-}
-
-const updateContact = `-- name: UpdateContact :exec
-update contacts set contact_category_id=$1 where user_id=$2 and profile_id=$3
-`
-
-type UpdateContactParams struct {
-	ContactCategoryID uuid.UUID `json:"contact_category_id"`
-	UserID            uuid.UUID `json:"user_id"`
-	ProfileID         uuid.UUID `json:"profile_id"`
-}
-
-func (q *Queries) UpdateContact(ctx context.Context, arg UpdateContactParams) error {
-	_, err := q.exec(ctx, q.updateContactStmt, updateContact, arg.ContactCategoryID, arg.UserID, arg.ProfileID)
-	return err
 }

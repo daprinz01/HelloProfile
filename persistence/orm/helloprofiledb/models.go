@@ -26,10 +26,9 @@ type CallToAction struct {
 }
 
 type Contact struct {
-	ID                uuid.UUID `json:"id"`
-	UserID            uuid.UUID `json:"user_id"`
-	ProfileID         uuid.UUID `json:"profile_id"`
-	ContactCategoryID uuid.UUID `json:"contact_category_id"`
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	ProfileID uuid.UUID `json:"profile_id"`
 }
 
 type ContactBlock struct {

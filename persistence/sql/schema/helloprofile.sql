@@ -74,7 +74,7 @@ CREATE TABLE contacts (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     user_id uuid NOT NULL,
     profile_id uuid NOT NULL,
-    contact_category_id uuid NOT NULL, CONSTRAINT "uc_contacts" UNIQUE (user_id, profile_id)
+    CONSTRAINT "uc_contacts" UNIQUE (user_id, profile_id)
 );
 
 CREATE OR REPLACE VIEW user_details AS

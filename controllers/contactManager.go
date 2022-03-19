@@ -36,8 +36,7 @@ func (env *Env) GetContacts(c echo.Context) (err error) {
 			profileChan := make(chan models.Profile)
 			env.getProfile(dbContact.ProfileID, profileChan, fields)
 			userContacts = append(userContacts, models.Contact{
-				Profile:    <-profileChan,
-				CategoryID: dbContact.ContactCategoryID,
+				Profile: <-profileChan,
 			})
 		}
 
@@ -81,9 +80,8 @@ func (env *Env) AddContact(c echo.Context) (err error) {
 			return err
 		}
 		addContactResponse, err := env.HelloProfileDb.AddContacts(context.Background(), helloprofiledb.AddContactsParams{
-			UserID:            user.ID,
-			ProfileID:         request.ProfileID,
-			ContactCategoryID: request.CategoryID,
+			UserID:    user.ID,
+			ProfileID: request.ProfileID,
 		})
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
