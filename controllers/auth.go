@@ -508,6 +508,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 
 			client := &http.Client{}
 			log.WithFields(fields).Info("Communication endpoint and path: ", communicationEndpoint, emailPath)
+			fmt.Println("Communication endpoint and path: ", communicationEndpoint, emailPath)
 			req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, emailPath), emailRequestReader)
 			req.Header.Add("Authorization", "Bearer persianblack")
 			req.Header.Add("Accept", "application/json")
