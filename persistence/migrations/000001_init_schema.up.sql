@@ -76,7 +76,7 @@ CREATE TABLE contacts (
     id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
     user_id uuid NOT NULL,
     profile_id uuid NOT NULL,
-    contact_category_id uuid NOT NULL, CONSTRAINT "uc_contacts" UNIQUE (user_id, profile_id)
+    CONSTRAINT "uc_contacts" UNIQUE (user_id, profile_id)
 );
 
 CREATE OR REPLACE VIEW user_details AS
@@ -228,8 +228,6 @@ ALTER TABLE "contacts"
 ALTER TABLE "contacts"
     ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");
 
-ALTER TABLE "contacts"
-    ADD FOREIGN KEY ("contact_category_id") REFERENCES "contact_categories" ("id");
 
 
 CREATE INDEX ON "users" ("id", "username", "email");
