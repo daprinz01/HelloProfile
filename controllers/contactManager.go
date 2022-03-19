@@ -39,13 +39,20 @@ func (env *Env) GetContacts(c echo.Context) (err error) {
 				Profile: <-profileChan,
 			})
 		}
-
-		response := &models.SuccessResponse{
-			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
-			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-			ResponseDetails: userContacts,
+		if len(userContacts) > 0 {
+			response := &models.SuccessResponse{
+				ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+				ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+				ResponseDetails: userContacts,
+			}
+			c.JSON(http.StatusOK, response)
+		} else {
+			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Contacts was not found for user")
+			c.JSON(http.StatusNotFound, errorResponse)
+			return err
 		}
-		c.JSON(http.StatusOK, response)
 		return err
 	} else {
 		errorResponse.Errorcode = util.UNAUTHORIZED_ERROR_CODE
