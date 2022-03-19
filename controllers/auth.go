@@ -541,7 +541,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 
 				client := &http.Client{}
 				req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, smsPath), smsRequestReader)
-				req.Header.Add("Authorization", "Bearer persianblack")
+				req.Header.Add("Client_Id", "persianblack")
 				req.Header.Add("Accept", "application/json")
 				req.Header.Add("Content-Type", "application/json")
 				smsResponse, err := client.Do(req)
@@ -627,7 +627,7 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 
 		client := &http.Client{}
 		req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, emailPath), emailRequestReader)
-		req.Header.Add("Authorization", "Bearer persianblack")
+		req.Header.Add("Client_Id", "persianblack")
 		req.Header.Add("Accept", "application/json")
 		req.Header.Add("Content-Type", "application/json")
 		emailResponse, err := client.Do(req)
