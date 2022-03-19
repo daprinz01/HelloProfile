@@ -39,7 +39,7 @@ func (env *Env) AddSocialsBlock(c echo.Context) (err error) {
 			return err
 		}
 		isProfileExist, err := env.HelloProfileDb.IsProfileExist(context.Background(), profileId)
-		if err != nil || !isProfileExist {
+		if err != nil || isProfileExist {
 			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found while trying to add socials")
@@ -50,7 +50,7 @@ func (env *Env) AddSocialsBlock(c echo.Context) (err error) {
 		log.WithFields(fields).Info(fmt.Sprintf("Socials block to add to profile %s : %v", profileId, request))
 		dbSocials := new(helloprofiledb.AddProfileSocialParams)
 		dbSocials.Order = request.Order
-		dbSocials.ProfileID = request.ProfileID
+		dbSocials.ProfileID = profileId
 		dbSocials.SocialsID = request.SocialsID
 		dbSocials.Username = request.Username
 		dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), *dbSocials)
