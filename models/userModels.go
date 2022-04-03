@@ -65,10 +65,10 @@ type Socials struct {
 	ProfileID   uuid.UUID `json:"profileID,omitempty"`
 }
 
-// Socials keeps the social accounts a user has added to their profile
-type MultipleSocials struct {
-	Socials []Socials `json:"socials,omitempty"`
-}
+// // Socials keeps the social accounts a user has added to their profile
+// type MultipleSocials struct {
+// 	Socials []Socials `json:"socials,omitempty"`
+// }
 
 type CallToAction struct {
 	ID          uuid.UUID `json:"id,omitempty"`

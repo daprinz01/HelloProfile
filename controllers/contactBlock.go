@@ -171,3 +171,8 @@ func (env *Env) DeleteContactBlock(c echo.Context) (err error) {
 		return err
 	}
 }
+
+// //
+// func (env *Env) SaveContact(c echo.Context) (err error){
+
+// }

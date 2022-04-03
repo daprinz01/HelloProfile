@@ -88,7 +88,7 @@ func (env *Env) AddMultipleSocialsBlock(c echo.Context) (err error) {
 	log.WithFields(fields).Info("Add socials request received...")
 	var socialResponse []models.Socials
 	if c.Param("profileId") != "" {
-		request := new(models.MultipleSocials)
+		request := new([]models.Socials)
 		if err = c.Bind(request); err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
@@ -114,7 +114,7 @@ func (env *Env) AddMultipleSocialsBlock(c echo.Context) (err error) {
 		}
 
 		log.WithFields(fields).Info(fmt.Sprintf("Socials block to add to profile %s : %v", profileId, request))
-		for _, social := range request.Socials {
+		for _, social := range *request {
 			dbSocials := new(helloprofiledb.AddProfileSocialParams)
 			dbSocials.Order = social.Order
 			dbSocials.ProfileID = profileId
