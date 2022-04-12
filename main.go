@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"cloud.google.com/go/storage"
 	log "github.com/sirupsen/logrus"
 	"helloprofile.com/controllers"
 	"helloprofile.com/persistence/orm/helloprofiledb"
@@ -102,7 +103,22 @@ func main() {
 		panic(err)
 	}
 	helloprofiledatabase := helloprofiledb.New(db)
-	env := &controllers.Env{HelloProfileDb: helloprofiledatabase}
+
+	//Initialise google cloud storage
+	// os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "") // FILL IN WITH YOUR FILE PATH
+	client, err := storage.NewClient(context.Background())
+	if err != nil {
+		log.WithFields(fields).Fatalf("Failed to create client: %v", err)
+	}
+
+	uploader := &controllers.ClientUploader{
+		Cl:         client,
+		BucketName: os.Getenv("GCP_BUCKET_NAME"),
+		ProjectID:  os.Getenv("GCP_BUCKET_PROJECT_ID"),
+		UploadPath: os.Getenv("GCP_UPLOAD_PATH"),
+	}
+
+	env := &controllers.Env{HelloProfileDb: helloprofiledatabase, Uploader: uploader}
 	log.WithFields(fields).Warn("Successfully connected to database!")
 	// // Create Server and Route Handlers
 	// r := mux.NewRouter()

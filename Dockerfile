@@ -35,6 +35,7 @@ DB_HOST=drona.db.elephantsql.com DB_PORT=5432 DB_USER=iuyegkoq \
   EMAIL_PATH=/api/v1/send/email OTP_VALIDITY_PERIOD=5 SMS_PATH=/api/v1/send/sms \
   GOOGLE_CLIENT_ID_WEB=954287935322-knnckb397mk1uo98av0km4cbgilrm4ke.apps.googleusercontent.com \
   GOOGLE_CLIENT_ID_IOS=954287935322-o578q1g3qa042rs91p50rb92t75on2e4.apps.googleusercontent.com \
-  GOOGLE_CLIENT_ID_ANDROID=954287935322-7nmsff5amchso29k2csvpsqrjqgkjv1l.apps.googleusercontent.com
+  GOOGLE_CLIENT_ID_ANDROID=954287935322-7nmsff5amchso29k2csvpsqrjqgkjv1l.apps.googleusercontent.com \
+  GOOGLE_APPLICATION_CREDENTIALS=https://gcp.helloprofile.io/storage GCP_BUCKET_NAME=files GCP_BUCKET_PROJECT_ID=helloprofile GCP_UPLOAD_PATH=\test
 
 CMD ["/usr/local/bin/app", "--help"]
