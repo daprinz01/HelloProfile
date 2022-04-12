@@ -497,7 +497,7 @@ func (env *Env) SendOtp(c echo.Context) (err error) {
 		if request.IsEmailPrefered {
 			emailPath := os.Getenv("EMAIL_PATH")
 			emailRequest := models.SendEmailRequest{
-				From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
+				From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "HelloProfile"},
 				To:      []models.EmailAddress{{Email: user.Email, Name: fmt.Sprintf("%s %s", user.Firstname.String, user.Lastname.String)}},
 				Subject: fmt.Sprintf(util.SEND_OTP_EMAIL_SUBJECT, request.Purpose),
 				Message: fmt.Sprintf(util.SEND_OTP_EMAIL_MESSAGE_BODY, user.Firstname.String, otp),
@@ -616,7 +616,7 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 
 		emailPath := os.Getenv("EMAIL_PATH")
 		emailRequest := models.SendEmailRequest{
-			From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "Persian Black"},
+			From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "HelloProfile"},
 			To:      []models.EmailAddress{{Email: request.Email}},
 			Subject: fmt.Sprintf(util.EMAIL_VERIFICATION_SUBJECT, strings.ToTitle(request.Application)),
 			Message: fmt.Sprintf(util.EMAIL_VERIFICATION_MESSAGE, request.VerifyPath, request.Email, otp),
