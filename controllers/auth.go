@@ -102,6 +102,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
 			}
 		}()
+		//Add saved profiles to the user
+		go env.saveProfile(user, fields)
 
 		loginResponse := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
@@ -193,6 +195,42 @@ func (env *Env) Login(c echo.Context) (err error) {
 	}
 }
 
+func (env *Env) saveProfile(user helloprofiledb.UserDetail, fields log.Fields) {
+	savedProfiles, err := env.HelloProfileDb.GetSavedProfilesByEmail(context.Background(), helloprofiledb.GetSavedProfilesByEmailParams{
+		Email:   strings.ToLower(user.Email),
+		IsAdded: false,
+	})
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error("Error occured fetching saved profiles")
+		return
+	}
+	var addedContactCount int
+	for _, savedProfile := range savedProfiles {
+		_, err := env.HelloProfileDb.AddContacts(context.Background(), helloprofiledb.AddContactsParams{
+			UserID:    user.ID,
+			ProfileID: savedProfile.ProfileID,
+		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error("Error occured while adding saved profile with ID: ", savedProfile.ID)
+			continue
+		}
+		_, err = env.HelloProfileDb.UpdateSavedProfile(context.Background(), helloprofiledb.UpdateSavedProfileParams{
+			FirstName: savedProfile.FirstName,
+			LastName:  savedProfile.LastName,
+			IsAdded:   true,
+		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error("Error occured while updating saved profile with ID: ", savedProfile.ID)
+			_ = env.HelloProfileDb.DeleteContact(context.Background(), helloprofiledb.DeleteContactParams{
+				UserID:    user.ID,
+				ProfileID: savedProfile.ProfileID,
+			})
+		}
+		addedContactCount++
+	}
+	log.WithFields(fields).WithError(err).Error("Added %d saved contacts to user: %s", addedContactCount, user.Email)
+}
+
 // Register is used to register new users
 func (env *Env) Register(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
@@ -251,6 +289,11 @@ func (env *Env) Register(c echo.Context) (err error) {
 			log.WithFields(fields).WithError(err).Error("Error occured while saving login...")
 		}
 	}()
+	//Add saved profiles to the user
+	go env.saveProfile(helloprofiledb.UserDetail{
+		ID:    user.ID,
+		Email: user.Email,
+	}, fields)
 	registerResponse := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,

@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
@@ -50,7 +51,7 @@ func (env *Env) SaveProfile(c echo.Context) (err error) {
 	savedProfile, err := env.HelloProfileDb.CreateSavedProfile(context.Background(), helloprofiledb.CreateSavedProfileParams{
 		FirstName: request.Firstname,
 		LastName:  request.Lastname,
-		Email:     request.Email,
+		Email:     strings.ToLower(request.Email),
 		ProfileID: request.ProfileId,
 	})
 	if err != nil {
