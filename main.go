@@ -240,6 +240,8 @@ func main() {
 	apiAuth.POST("/contact", env.AddContact)
 	apiAuth.DELETE("/contact", env.DeleteContact)
 
+	apiNoAuth.POST("/save", env.SaveProfile)
+
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")
 		e.Logger.Fatal(e.StartServer(srv))

@@ -54,6 +54,12 @@ const CONTACT_BLOCK_EXIST_ERROR_MESSAGE = "A contact block had been added for th
 const BASIC_BLOCK_EXIST_ERROR_CODE = "14"
 const BASIC_BLOCK_EXIST_ERROR_MESSAGE = "A basic block had been added for this profile. Kindly update your basic block or delete existing basic block in order to add a new basic block."
 
+const PROFILE_NOT_FOUND_ERROR_CODE = "15"
+const PROFILE_NOT_FOUND_ERROR_MESSAGE = "Profile was not found"
+
+const TERMS_NOT_AGREED_ERROR_CODE = "16"
+const TERMS_NOT_AGREED_ERROR_MESSAGE = "Sorry we cannot save your profile, kindly agree to our terms and condition before saving profile"
+
 const SQL_ERROR_CODE = "98"
 const SQL_ERROR_MESSAGE = "Error occured while running an operation. Please contact our support if error persists after 3 trials."
 

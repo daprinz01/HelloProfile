@@ -23,6 +23,7 @@ type Querier interface {
 	CreateOtp(ctx context.Context, arg CreateOtpParams) error
 	CreateRefreshToken(ctx context.Context, arg CreateRefreshTokenParams) (RefreshToken, error)
 	CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error)
+	CreateSavedProfile(ctx context.Context, arg CreateSavedProfileParams) (SavedProfile, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserLogin(ctx context.Context, arg CreateUserLoginParams) (UserLogin, error)
 	DeleteBasicBlock(ctx context.Context, id uuid.UUID) error
@@ -36,6 +37,7 @@ type Querier interface {
 	DeleteProfileSocial(ctx context.Context, id uuid.UUID) error
 	DeleteRefreshToken(ctx context.Context, token string) error
 	DeleteRoles(ctx context.Context, name string) error
+	DeleteSavedProfile(ctx context.Context, id uuid.UUID) error
 	DeleteSocial(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, email string) error
 	DeleteUserLogin(ctx context.Context, userID uuid.UUID) error
@@ -62,6 +64,10 @@ type Querier interface {
 	GetRefreshTokens(ctx context.Context) ([]RefreshToken, error)
 	GetRole(ctx context.Context, name string) (Role, error)
 	GetRoles(ctx context.Context) ([]Role, error)
+	GetSavedProfile(ctx context.Context, id uuid.UUID) (SavedProfile, error)
+	GetSavedProfiles(ctx context.Context) ([]SavedProfile, error)
+	GetSavedProfilesByEmail(ctx context.Context, arg GetSavedProfilesByEmailParams) ([]SavedProfile, error)
+	GetSavedProfilesByProfileId(ctx context.Context, arg GetSavedProfilesByProfileIdParams) ([]SavedProfile, error)
 	GetSocial(ctx context.Context, id uuid.UUID) (Social, error)
 	GetSocials(ctx context.Context) ([]Social, error)
 	GetUnResoledLogins(ctx context.Context, userID uuid.UUID) ([]UserLogin, error)
@@ -82,6 +88,7 @@ type Querier interface {
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (RefreshToken, error)
 	UpdateResolvedLogin(ctx context.Context, userID uuid.UUID) error
 	UpdateRole(ctx context.Context, arg UpdateRoleParams) (Role, error)
+	UpdateSavedProfile(ctx context.Context, arg UpdateSavedProfileParams) (SavedProfile, error)
 	UpdateSocial(ctx context.Context, arg UpdateSocialParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (UserRole, error)

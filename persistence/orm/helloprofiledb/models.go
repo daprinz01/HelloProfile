@@ -112,6 +112,15 @@ type Role struct {
 	Description string    `json:"description"`
 }
 
+type SavedProfile struct {
+	ID        uuid.UUID `json:"id"`
+	ProfileID uuid.UUID `json:"profile_id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Email     string    `json:"email"`
+	IsAdded   bool      `json:"is_added"`
+}
+
 type Social struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`

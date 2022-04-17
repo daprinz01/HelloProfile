@@ -116,3 +116,11 @@ type AddContact struct {
 type Contact struct {
 	Profile Profile `json:"profile,omitempty"`
 }
+
+type SaveProfileRequest struct {
+	Firstname     string    `json:"firstname,omitempty"`
+	Lastname      string    `json:"lastname,omitempty"`
+	Email         string    `json:"email,omitempty"`
+	ProfileId     uuid.UUID `json:"profileId,omitempty"`
+	IsTermsAgreed bool      `json:"isTermsAgreed,omitempty"`
+}

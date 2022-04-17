@@ -193,3 +193,13 @@ CREATE TABLE "profile_contents" (
     CONSTRAINT "uc_profile_contents" UNIQUE ("title", "profile_id")
 );
 
+create table saved_profiles(
+    id uuid PRIMARY KEY DEFAULT UUID_GENERATE_V4 (),
+    profile_id uuid not null,
+    first_name varchar not null,
+    last_name varchar not null,
+    email varchar not null,
+    is_added boolean not null default false,
+    CONSTRAINT "uc_saved_profiles" UNIQUE ("email", "profile_id")
+);
+
