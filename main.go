@@ -241,6 +241,7 @@ func main() {
 	apiAuth.DELETE("/contact", env.DeleteContact)
 
 	apiNoAuth.POST("/save", env.SaveProfile)
+	apiAuth.POST("/upload", env.UploadFile)
 
 	go func(fields log.Fields) {
 		log.WithFields(fields).Info("Starting Server...")
