@@ -23,6 +23,7 @@ RUN apk --no-cache update && \
       touch /usr/local/bin/log/helloprofile.log
       
 COPY --from=builder /opt/app/app /usr/local/bin/app
+COPY --from=builder /opt/app/gcp-storage-config.json /usr/local/bin/gcp-storage-config.json
  
 
 ENV LOG_FILE_LOCATION=/usr/local/bin/log/helloprofile.log \
@@ -36,6 +37,6 @@ DB_HOST=drona.db.elephantsql.com DB_PORT=5432 DB_USER=iuyegkoq \
   GOOGLE_CLIENT_ID_WEB=954287935322-knnckb397mk1uo98av0km4cbgilrm4ke.apps.googleusercontent.com \
   GOOGLE_CLIENT_ID_IOS=954287935322-o578q1g3qa042rs91p50rb92t75on2e4.apps.googleusercontent.com \
   GOOGLE_CLIENT_ID_ANDROID=954287935322-7nmsff5amchso29k2csvpsqrjqgkjv1l.apps.googleusercontent.com \
-  GOOGLE_APPLICATION_CREDENTIALS=https://gcp.helloprofile.io/storage GCP_BUCKET_NAME=files GCP_BUCKET_PROJECT_ID=helloprofile GCP_UPLOAD_PATH=\test
+  GOOGLE_APPLICATION_CREDENTIALS=/usr/local/bin/gcp-storage-config.json GCP_BUCKET_NAME=files GCP_BUCKET_PROJECT_ID=helloprofile GCP_UPLOAD_PATH=\test
 
 CMD ["/usr/local/bin/app", "--help"]
