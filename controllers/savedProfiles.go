@@ -41,7 +41,7 @@ func (env *Env) SaveProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	if isProfileExist {
+	if !isProfileExist {
 		errorResponse.Errorcode = util.PROFILE_NOT_FOUND_ERROR_CODE
 		errorResponse.ErrorMessage = util.PROFILE_NOT_FOUND_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found")

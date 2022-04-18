@@ -16,7 +16,7 @@ import (
 
 //UploadFile uploads a file to the configured file server and returns the url to the file
 func (env *Env) UploadFile(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "helloprofile.service", "application": "helloProfile", "method": "UploadFIle"}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "helloProfile", "method": "UploadFile"}
 	log.WithFields(fields).Info("File upload Request received")
 	errorResponse := new(models.Errormessage)
 
