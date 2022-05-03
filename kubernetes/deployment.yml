@@ -50,7 +50,6 @@ spec:
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
       securityContext: {}
-      
   strategy:
     type: RollingUpdate
     rollingUpdate:

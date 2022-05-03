@@ -13,10 +13,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - helloprofile.test.devtroy.com
+        - test.api.helloprofile.io
       secretName: helloprofile-ingress
   rules:
-    - host: helloprofile.test.devtroy.com
+    - host: test.api.helloprofile.io
       http:
         paths:
           - pathType: ImplementationSpecific
