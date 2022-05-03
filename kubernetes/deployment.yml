@@ -43,7 +43,7 @@ spec:
               memory: 10Mi
           volumeMounts:
             - name: helloprofile-logs-backend
-              mountPath: /usr/local/bin/log
+              mountPath: /var/local/bin/log
               readOnly: false
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
