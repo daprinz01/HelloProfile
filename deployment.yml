@@ -26,7 +26,7 @@ spec:
             claimName: helloprofile-logs
       containers:
         - name: helloprofile
-          image: ghcr.io/daprinz01/helloprofile:main
+          image: gcr.io/bionic-region-347614/helloprofile
           ports:
             - containerPort: 8083
               protocol: TCP
@@ -50,9 +50,7 @@ spec:
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
       securityContext: {}
-      imagePullSecrets:
-        - name: githubregistrycredential
-      schedulerName: default-scheduler
+      
   strategy:
     type: RollingUpdate
     rollingUpdate:
