@@ -19,7 +19,7 @@ FROM alpine
 RUN apk --no-cache update && \
       apk --no-cache add ca-certificates && \
       rm -rf /var/cache/apk/* &&\
-      # mkdir /usr/local/bin/log && \
+      mkdir /usr/local/bin/log && \
       touch /usr/local/bin/log/helloprofile.log
       
 COPY --from=builder /opt/app/app /usr/local/bin/app
