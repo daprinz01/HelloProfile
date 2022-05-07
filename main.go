@@ -154,7 +154,7 @@ func main() {
 	// Enable metrics middleware
 	e.Use(echoPrometheus.MetricsMiddleware())
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
-
+	e.GET("/ping", controllers.Ping)
 	apiNoAuth := e.Group("/api/v1")
 	// apiNoAuth.Use(env.CheckApplication)
 	auth := apiNoAuth.Group("/auth")

@@ -8,7 +8,6 @@ metadata:
   labels:
     app: helloprofile
   annotations:
-    deployment.kubernetes.io/revision: "1"
     persianblackid: io.helloprofile.backend.deployment
 spec:
   replicas: 1
@@ -48,6 +47,14 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           imagePullPolicy: Always
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8083
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8083 
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
