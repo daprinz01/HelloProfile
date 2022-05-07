@@ -143,7 +143,7 @@ func AuthorizeAdmin(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 func Ping(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "persian.black.devtroy.communication.service", "function": "Ping", "application": "communication"}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "Ping"}
 	log.WithFields(fields).Info("Ping request received...")
 	successResponse := &models.SuccessResponse{
 		ResponseCode:    "00",
