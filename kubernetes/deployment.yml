@@ -35,11 +35,11 @@ spec:
                 name: helloprofilesecrets
           resources:
             limits:
-              cpu: 400m
-              memory: 1500Mi
+              cpu: 200m
+              memory: 15Mi
             requests:
-              cpu: 350m
-              memory: 1000Mi
+              cpu: 180m
+              memory: 10Mi
           volumeMounts:
             - name: helloprofile-logs-backend
               mountPath: /var/local/bin/log
