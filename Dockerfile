@@ -19,14 +19,14 @@ FROM alpine
 RUN apk --no-cache update && \
       apk --no-cache add ca-certificates && \
       rm -rf /var/cache/apk/* &&\
-      mkdir /var/local/bin/log && \
-      touch /var/local/bin/log/helloprofile.log
+      mkdir /usr/local/bin/log && \
+      touch /usr/local/bin/log/helloprofile.log
       
 COPY --from=builder /opt/app/app /usr/local/bin/app
 COPY --from=builder /opt/app/gcp-storage-config.json /usr/local/bin/gcp-storage-config.json
  
 
-ENV LOG_FILE_LOCATION=/var/local/bin/log/helloprofile.log \
+ENV LOG_FILE_LOCATION=/usr/local/bin/log/helloprofile.log \
 DB_HOST=drona.db.elephantsql.com DB_PORT=5432 DB_USER=iuyegkoq \
  DB_PASSWORD=Zm032Nh7TJO_A_vifLUk8gX1R49YPEMe DB_NAME=iuyegkoq DB_SSL_MODE=disable \
   JWT_SECRET_KEY=QWh1aWFzdWRoaXloa1VZYmpoamFzaGQ4OTA4ODc5OHVpaEhH \
