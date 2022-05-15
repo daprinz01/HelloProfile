@@ -6,3 +6,4 @@ spec:
   domains:
     - helloprofile.test.api.devtroy.com
     - communication.test.api.devtroy.com
+    - test.api.helloprofile.io
