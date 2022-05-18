@@ -31,7 +31,7 @@ func (env *Env) AddContactBlock(c echo.Context) (err error) {
 			return err
 		}
 		profileId, err := uuid.Parse(c.Param("profileId"))
-		if err != nil {
+		if err != nil || profileId == uuid.Nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
@@ -138,12 +138,20 @@ func (env *Env) DeleteContactBlock(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteContactBlock"}
 	log.WithFields(fields).Info("Delete contact block request received...")
-	if c.QueryParam("id") != "" {
+	if c.QueryParam("id") != "" && c.QueryParam("profileId") != "" {
 		id, err := uuid.Parse(c.QueryParam("id"))
 		if err != nil {
 			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Incorrect id format passed for delete contact block")
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
+		}
+		profileId, err := uuid.Parse(c.QueryParam("profileId"))
+		if err != nil {
+			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Incorrect id format passed for profileId in delete contact block")
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
@@ -155,6 +163,20 @@ func (env *Env) DeleteContactBlock(c echo.Context) (err error) {
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		} else {
+			//update the profile to remove the contact ID from the profile
+			profile, _ := env.HelloProfileDb.GetProfile(context.Background(), profileId)
+			profile.ContactBlockID = uuid.NullUUID{UUID: uuid.Nil, Valid: true}
+			_ = env.HelloProfileDb.UpdateProfile(context.Background(), helloprofiledb.UpdateProfileParams{
+				UserID:         profile.UserID,
+				Status:         profile.Status,
+				ProfileName:    profile.ProfileName,
+				BasicBlockID:   profile.BasicBlockID,
+				ContactBlockID: profile.ContactBlockID,
+				PageColor:      profile.PageColor,
+				Font:           profile.Font,
+				IsDefault:      profile.IsDefault,
+				ID:             profile.ID,
+			})
 			log.WithFields(fields).Info("Successfully deleted contact block")
 			response := &models.SuccessResponse{
 				ResponseCode:    util.SUCCESS_RESPONSE_CODE,
