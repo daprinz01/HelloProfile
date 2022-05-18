@@ -42,8 +42,10 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 		}
 		if c.QueryParam("type") == "default" {
 			profile := new(models.Profile)
+			log.WithFields(fields).Info(`All profiles %v`, profiles)
 			for _, value := range profiles {
 				if value.IsDefault {
+					log.WithFields(fields).Info(`Default profile %v`, &value)
 					profile = &value
 				}
 			}
