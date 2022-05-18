@@ -41,12 +41,12 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 			return err
 		}
 		if c.QueryParam("type") == "default" {
-			profile := new(models.Profile)
+			var profile models.Profile
 			log.WithFields(fields).Info(`All profiles %v`, profiles)
 			for _, value := range profiles {
 				if value.IsDefault {
-					log.WithFields(fields).Info(`Default profile %v`, &value)
-					profile = &value
+					log.WithFields(fields).Info(`Default profile %v`, value)
+					profile = value
 				}
 			}
 			response := &models.SuccessResponse{
@@ -85,6 +85,12 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 				IsDefault:   value.IsDefault,
 				PageColor:   value.PageColor,
 				Font:        value.Font,
+				ContactBlock: models.ContactBlock{
+					ID: value.ContactBlockID.UUID,
+				},
+				Basic: models.Basic{
+					ID: value.BasicBlockID.UUID,
+				},
 			}
 			profilesResponse[index] = profile
 		}
