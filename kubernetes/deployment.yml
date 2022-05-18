@@ -35,10 +35,10 @@ spec:
                 name: helloprofilesecrets
           resources:
             limits:
-              cpu: 200m
+              cpu: 20m
               memory: 1500Mi
             requests:
-              cpu: 100m
+              cpu: 15m
               memory: 1000Mi
           volumeMounts:
             - name: helloprofile-logs-backend
