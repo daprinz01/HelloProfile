@@ -32,6 +32,7 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 			profiles <- profileList
 		}
 		for _, value := range dbProfiles {
+			log.WithFields(fields).Info(`dbprofile to get %v`, value)
 			go env.getBasicBlock(value.BasicBlockID.UUID, basicBlock, fields)
 			go env.getContactBlock(value.ContactBlockID.UUID, contactBlock, fields)
 			go env.getSocails(value.ID, socials, fields)
