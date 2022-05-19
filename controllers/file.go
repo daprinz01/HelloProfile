@@ -36,7 +36,7 @@ func (env *Env) UploadFile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	err = env.Uploader.UploadFile(blobFile, file.Filename)
+	uploadPath, err := env.Uploader.UploadFile(blobFile, file.Filename)
 	if err != nil {
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to upload file")
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
@@ -49,14 +49,14 @@ func (env *Env) UploadFile(c echo.Context) (err error) {
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-		ResponseDetails: "path to file",
+		ResponseDetails: uploadPath,
 	}
 	c.JSON(http.StatusOK, response)
 	return err
 }
 
 // UploadFile uploads an object
-func (c *ClientUploader) UploadFile(file multipart.File, object string) error {
+func (c *ClientUploader) UploadFile(file multipart.File, object string) (string, error) {
 	ctx := context.Background()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
@@ -65,11 +65,11 @@ func (c *ClientUploader) UploadFile(file multipart.File, object string) error {
 	// Upload an object with storage.Writer.
 	wc := c.Cl.Bucket(c.BucketName).Object(c.UploadPath + object).NewWriter(ctx)
 	if _, err := io.Copy(wc, file); err != nil {
-		return fmt.Errorf("io.Copy: %v", err)
+		return "", fmt.Errorf("io.Copy: %v", err)
 	}
 	if err := wc.Close(); err != nil {
-		return fmt.Errorf("Writer.Close: %v", err)
+		return "", fmt.Errorf("Writer.Close: %v", err)
 	}
 
-	return nil
+	return wc.MediaLink, nil
 }
