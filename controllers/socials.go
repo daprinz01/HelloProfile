@@ -113,6 +113,7 @@ func (env *Env) AddMultipleSocialsBlock(c echo.Context) (err error) {
 				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding socials block for profile ", profileId)
 			}
 			social.ID = dbAddSocialsResult.ID
+			social.ProfileID = profileId
 			socialResponse = append(socialResponse, social)
 		}
 
