@@ -100,15 +100,23 @@ func (env *Env) UpdateContentBlock(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbContent := new(helloprofiledb.UpdateProfileContentParams)
-	dbContent.CallToActionID = request.CallToActionID
-	dbContent.Description = request.Description
-	dbContent.DisplayTitle = request.Title
-	dbContent.Order = request.Order
-	dbContent.Title = strings.ToLower(request.Title)
-	dbContent.Url = request.Url
-	dbContent.ID = request.ID
-	err = env.HelloProfileDb.UpdateProfileContent(context.Background(), *dbContent)
+	dbContent, err := env.HelloProfileDb.GetProfileContent(context.Background(), request.ID)
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("content block update failed. content block not found")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	err = env.HelloProfileDb.UpdateProfileContent(context.Background(), helloprofiledb.UpdateProfileContentParams{
+		Title:          env.GetValue(strings.ToLower(request.Title), dbContent.Title),
+		DisplayTitle:   env.GetValue(request.Title, dbContent.Title),
+		Description:    env.GetValue(request.Description, dbContent.Description),
+		Url:            env.GetValue(request.Url, dbContent.Url),
+		CallToActionID: env.GetUUIDValue(request.CallToActionID, dbContent.CallToActionID),
+		Order:          env.GetIntValue(request.Order, dbContent.Order),
+		ID:             request.ID,
+	})
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE
 		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

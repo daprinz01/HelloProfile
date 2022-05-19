@@ -108,14 +108,23 @@ func (env *Env) UpdateBasicBlock(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbBasic := new(helloprofiledb.UpdateBasicBlockParams)
-	dbBasic.Bio = request.Bio
-	dbBasic.Fullname = request.Fullname
-	dbBasic.Title = request.Title
-	dbBasic.CoverColour = sql.NullString{String: request.CoverColour, Valid: true}
-	dbBasic.CoverPhotoUrl = sql.NullString{String: request.CoverPhotoUrl, Valid: true}
-	dbBasic.ProfilePhotoUrl = sql.NullString{String: request.ProfilePhotoUrl, Valid: true}
-	err = env.HelloProfileDb.UpdateBasicBlock(context.Background(), *dbBasic)
+	dbBasic, err := env.HelloProfileDb.GetBasicBlock(context.Background(), request.ID)
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Basic block update failed. Basic block not found")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	err = env.HelloProfileDb.UpdateBasicBlock(context.Background(), helloprofiledb.UpdateBasicBlockParams{
+		ProfilePhotoUrl: sql.NullString{String: env.GetValue(request.ProfilePhotoUrl, dbBasic.ProfilePhotoUrl.String), Valid: true},
+		CoverPhotoUrl:   sql.NullString{String: env.GetValue(request.CoverPhotoUrl, dbBasic.CoverPhotoUrl.String), Valid: true},
+		CoverColour:     sql.NullString{String: env.GetValue(request.CoverColour, dbBasic.CoverColour.String), Valid: true},
+		Fullname:        env.GetValue(request.Fullname, dbBasic.Fullname),
+		Title:           env.GetValue(request.Title, dbBasic.Title),
+		Bio:             env.GetValue(request.Bio, dbBasic.Bio),
+		ID:              request.ID,
+	})
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE
 		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

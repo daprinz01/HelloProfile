@@ -164,11 +164,19 @@ func (env *Env) UpdateSocialsBlock(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbSocials := new(helloprofiledb.UpdateProfileSocialParams)
-	dbSocials.ID = request.ID
-	dbSocials.Order = request.Order
-	dbSocials.Username = request.Username
-	err = env.HelloProfileDb.UpdateProfileSocial(context.Background(), *dbSocials)
+	dbSocials, err := env.HelloProfileDb.GetProfileSocial(context.Background(), request.ID)
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Socials  update failed. Socials not found")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	err = env.HelloProfileDb.UpdateProfileSocial(context.Background(), helloprofiledb.UpdateProfileSocialParams{
+		Username: env.GetValue(request.Username, dbSocials.Username),
+		Order:    env.GetIntValue(request.Order, dbSocials.Order),
+		ID:       request.ID,
+	})
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE
 		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

@@ -189,22 +189,17 @@ func (env *Env) UpdateProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbProfile.Font = request.Font
-	dbProfile.IsDefault = request.IsDefault
-	dbProfile.PageColor = request.PageColor
-	dbProfile.ProfileName = request.ProfileName
-	dbProfile.Status = request.Status
-	dbProfile.ID = request.ID
+
 	err = env.HelloProfileDb.UpdateProfile(context.Background(), helloprofiledb.UpdateProfileParams{
 		UserID:         dbProfile.UserID,
 		Status:         request.Status,
-		ProfileName:    request.ProfileName,
+		ProfileName:    env.GetValue(request.ProfileName, dbProfile.ProfileName),
 		BasicBlockID:   dbProfile.BasicBlockID,
 		ContactBlockID: dbProfile.ContactBlockID,
-		PageColor:      request.PageColor,
-		Font:           request.Font,
+		PageColor:      env.GetValue(request.PageColor, dbProfile.PageColor),
+		Font:           env.GetValue(request.Font, dbProfile.Font),
 		IsDefault:      request.IsDefault,
-		ID:             dbProfile.ID,
+		ID:             request.ID,
 	})
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE

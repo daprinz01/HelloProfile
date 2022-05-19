@@ -82,6 +82,23 @@ func (q *Queries) DeleteSocial(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getProfileSocial = `-- name: GetProfileSocial :one
+select id, username, socials_id, profile_id, "order" from profile_socials where id=$1
+`
+
+func (q *Queries) GetProfileSocial(ctx context.Context, id uuid.UUID) (ProfileSocial, error) {
+	row := q.queryRow(ctx, q.getProfileSocialStmt, getProfileSocial, id)
+	var i ProfileSocial
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.SocialsID,
+		&i.ProfileID,
+		&i.Order,
+	)
+	return i, err
+}
+
 const getProfileSocials = `-- name: GetProfileSocials :many
 select a.username, b.name, b.placeholder, b.image_url, a."order", a.socials_id, a.profile_id, a.id from profile_socials a 
 left join socials b on a.socials_id = b.id and a.profile_id = $1

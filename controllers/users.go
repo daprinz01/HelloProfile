@@ -186,19 +186,19 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
 
 			Email:                     user.Email,
-			Firstname:                 sql.NullString{String: getValue(request.Firstname, user.Firstname.String), Valid: true},
-			ImageUrl:                  sql.NullString{String: getValue(request.ProfilePicture, user.ProfilePicture.String), Valid: true},
+			Firstname:                 sql.NullString{String: env.GetValue(request.Firstname, user.Firstname.String), Valid: true},
+			ImageUrl:                  sql.NullString{String: env.GetValue(request.ProfilePicture, user.ProfilePicture.String), Valid: true},
 			IsActive:                  user.IsActive,
 			IsEmailConfirmed:          user.IsEmailConfirmed,
 			IsLockedOut:               user.IsLockedOut,
 			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
-			Lastname:                  sql.NullString{String: getValue(request.Lastname, user.Lastname.String), Valid: true},
+			Lastname:                  sql.NullString{String: env.GetValue(request.Lastname, user.Lastname.String), Valid: true},
 			Password:                  user.Password,
-			Username:                  sql.NullString{String: getValue(request.Username, user.Username.String), Valid: true},
-			Phone:                     sql.NullString{String: getValue(request.Phone, user.Phone.String), Valid: true},
+			Username:                  sql.NullString{String: env.GetValue(request.Username, user.Username.String), Valid: true},
+			Phone:                     sql.NullString{String: env.GetValue(request.Phone, user.Phone.String), Valid: true},
 			Username_2:                sql.NullString{String: user.Email, Valid: true},
-			Country:                   sql.NullString{String: getValue(request.Country, user.Country.String), Valid: true},
-			City:                      sql.NullString{String: getValue(request.City, user.City.String), Valid: true},
+			Country:                   sql.NullString{String: env.GetValue(request.Country, user.Country.String), Valid: true},
+			City:                      sql.NullString{String: env.GetValue(request.City, user.City.String), Valid: true},
 		})
 
 		if err != nil {
@@ -374,11 +374,4 @@ func (env *Env) DeleteUser(c echo.Context) (err error) {
 	}
 	c.JSON(http.StatusOK, response)
 	return err
-}
-
-func getValue(request, user string) string {
-	if request == "" {
-		return user
-	}
-	return request
 }

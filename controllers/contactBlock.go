@@ -107,13 +107,21 @@ func (env *Env) UpdateContactBlock(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	dbContact := new(helloprofiledb.UpdateContactBlockParams)
-	dbContact.Address = request.Address
-	dbContact.Email = request.Email
-	dbContact.Phone = request.Phone
-	dbContact.Website = request.Website
-	dbContact.ID = request.ID
-	err = env.HelloProfileDb.UpdateContactBlock(context.Background(), *dbContact)
+	dbContact, err := env.HelloProfileDb.GetContactBlock(context.Background(), request.ID)
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Contact block update failed. Contact block not found")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	err = env.HelloProfileDb.UpdateContactBlock(context.Background(), helloprofiledb.UpdateContactBlockParams{
+		Phone:   env.GetValue(request.Phone, dbContact.Phone),
+		Email:   env.GetValue(request.Email, dbContact.Email),
+		Address: env.GetValue(request.Address, dbContact.Address),
+		Website: env.GetValue(request.Website, dbContact.Website),
+		ID:      request.ID,
+	})
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE
 		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

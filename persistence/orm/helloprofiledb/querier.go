@@ -58,6 +58,7 @@ type Querier interface {
 	GetProfile(ctx context.Context, id uuid.UUID) (Profile, error)
 	GetProfileContent(ctx context.Context, id uuid.UUID) (ProfileContent, error)
 	GetProfileContents(ctx context.Context, profileID uuid.UUID) ([]ProfileContent, error)
+	GetProfileSocial(ctx context.Context, id uuid.UUID) (ProfileSocial, error)
 	GetProfileSocials(ctx context.Context, profileID uuid.UUID) ([]GetProfileSocialsRow, error)
 	GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile, error)
 	GetRefreshToken(ctx context.Context, token string) (RefreshToken, error)
