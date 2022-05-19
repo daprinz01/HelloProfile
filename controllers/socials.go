@@ -20,63 +20,48 @@ func (env *Env) AddSocialsBlock(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddSocialsBlock"}
 	log.WithFields(fields).Info("Add socials request received...")
-
-	if c.Param("profileId") != "" {
-		request := new(models.Socials)
-		if err = c.Bind(request); err != nil {
-			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
-			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-		profileId, err := uuid.Parse(c.Param("profileId"))
-		if err != nil {
-			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
-			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile id passed is invalid and not of type uuid")
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-		isProfileExist, err := env.HelloProfileDb.IsProfileExist(context.Background(), profileId)
-		if err != nil || isProfileExist {
-			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
-			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found while trying to add socials")
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-
-		log.WithFields(fields).Info(fmt.Sprintf("Socials block to add to profile %s : %v", profileId, request))
-		dbSocials := new(helloprofiledb.AddProfileSocialParams)
-		dbSocials.Order = request.Order
-		dbSocials.ProfileID = profileId
-		dbSocials.SocialsID = request.SocialsID
-		dbSocials.Username = request.Username
-		dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), *dbSocials)
-		if err != nil {
-			errorResponse.Errorcode = util.SQL_ERROR_CODE
-			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding socials block for profile ", profileId)
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-		log.WithFields(fields).Info("Successfully added socials block for profile ", profileId)
-
-		response := &models.SuccessResponse{
-			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
-			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-			ResponseDetails: dbAddSocialsResult.ID,
-		}
-		c.JSON(http.StatusOK, response)
-		return err
-	} else {
+	request := new(models.Socials)
+	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("ProfileID was not passed in the url params")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
+
+	isProfileExist, err := env.HelloProfileDb.IsProfileExist(context.Background(), request.ProfileID)
+	if err != nil || !isProfileExist {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found while trying to add socials")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	log.WithFields(fields).Info(fmt.Sprintf("Socials block to add to profile %s : %v", request.ProfileID, request))
+
+	dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
+		Username:  request.Username,
+		SocialsID: request.SocialsID,
+		ProfileID: request.ProfileID,
+		Order:     request.Order,
+	})
+	if err != nil {
+		errorResponse.Errorcode = util.SQL_ERROR_CODE
+		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding socials block for profile ", request.ProfileID)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.WithFields(fields).Info("Successfully added socials block for profile ", request.ProfileID)
+
+	response := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+		ResponseDetails: dbAddSocialsResult.ID,
+	}
+	c.JSON(http.StatusOK, response)
+	return err
 }
 
 // AddSocialsBlock is used create a new socials
@@ -115,12 +100,13 @@ func (env *Env) AddMultipleSocialsBlock(c echo.Context) (err error) {
 
 		log.WithFields(fields).Info(fmt.Sprintf("Socials block to add to profile %s : %v", profileId, request))
 		for _, social := range *request {
-			dbSocials := new(helloprofiledb.AddProfileSocialParams)
-			dbSocials.Order = social.Order
-			dbSocials.ProfileID = profileId
-			dbSocials.SocialsID = social.SocialsID
-			dbSocials.Username = social.Username
-			dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), *dbSocials)
+
+			dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
+				Username:  social.Username,
+				SocialsID: social.SocialsID,
+				ProfileID: profileId,
+				Order:     social.Order,
+			})
 			if err != nil {
 				errorResponse.Errorcode = util.SQL_ERROR_CODE
 				errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
