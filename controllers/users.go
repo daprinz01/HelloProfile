@@ -96,6 +96,8 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
 			Profiles:                  <-profiles,
+			Country:                   user.Country.String,
+			City:                      user.City.String,
 		},
 	}
 	c.JSON(http.StatusOK, response)
@@ -135,6 +137,8 @@ func (env *Env) GetUsers(c echo.Context) (err error) {
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
 			Profiles:                  <-profiles,
+			Country:                   user.Country.String,
+			City:                      user.City.String,
 		}
 		userResponse[index] = tempUser
 	}
@@ -193,6 +197,8 @@ func (env *Env) UpdateUser(c echo.Context) (err error) {
 			Username:                  sql.NullString{String: getValue(request.Username, user.Username.String), Valid: true},
 			Phone:                     sql.NullString{String: getValue(request.Phone, user.Phone.String), Valid: true},
 			Username_2:                sql.NullString{String: user.Email, Valid: true},
+			Country:                   sql.NullString{String: getValue(request.Country, user.Country.String), Valid: true},
+			City:                      sql.NullString{String: getValue(request.City, user.City.String), Valid: true},
 		})
 
 		if err != nil {
