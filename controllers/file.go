@@ -71,5 +71,5 @@ func (c *ClientUploader) UploadFile(file multipart.File, object string) (string,
 		return "", fmt.Errorf("Writer.Close: %v", err)
 	}
 
-	return wc.Attrs().MediaLink, nil
+	return wc.ObjectAttrs.MediaLink, nil
 }
