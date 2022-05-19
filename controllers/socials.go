@@ -100,7 +100,6 @@ func (env *Env) AddMultipleSocialsBlock(c echo.Context) (err error) {
 
 		log.WithFields(fields).Info(fmt.Sprintf("Socials block to add to profile %s : %v", profileId, request))
 		for _, social := range *request {
-
 			dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
 				Username:  social.Username,
 				SocialsID: social.SocialsID,
