@@ -90,7 +90,7 @@ func (env *Env) AddMultipleSocialsBlock(c echo.Context) (err error) {
 			return err
 		}
 		isProfileExist, err := env.HelloProfileDb.IsProfileExist(context.Background(), profileId)
-		if err != nil || isProfileExist {
+		if err != nil || !isProfileExist {
 			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found while trying to add socials")
