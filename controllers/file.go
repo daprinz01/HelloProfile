@@ -50,7 +50,7 @@ func (env *Env) UploadFile(c echo.Context) (err error) {
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-		ResponseDetails: fmt.Sprintf("%s/%s/%s", os.Getenv("GCP_PUBLIC_HOST"), os.Getenv("GCP_BUCKET_NAME"), file.Filename),
+		ResponseDetails: fmt.Sprintf("%s/%s/%s%s", os.Getenv("GCP_PUBLIC_HOST"), os.Getenv("GCP_BUCKET_NAME"), os.Getenv("GCP_UPLOAD_PATH"), file.Filename),
 	}
 	c.JSON(http.StatusOK, response)
 	return err
