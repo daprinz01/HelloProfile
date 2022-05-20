@@ -662,7 +662,7 @@ func (env *Env) DoEmailVerification(c echo.Context) (err error) {
 			From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "HelloProfile"},
 			To:      []models.EmailAddress{{Email: request.Email}},
 			Subject: fmt.Sprintf(util.EMAIL_VERIFICATION_SUBJECT, strings.ToTitle(request.Application)),
-			Message: fmt.Sprintf(util.EMAIL_VERIFICATION_MESSAGE, request.VerifyPath, request.Email, otp),
+			Message: fmt.Sprintf(util.EMAIL_VERIFICATION_MESSAGE, otp),
 		}
 		emailRequestBytes, _ := json.Marshal(emailRequest)
 		emailRequestReader := bytes.NewReader(emailRequestBytes)
