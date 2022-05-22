@@ -41,16 +41,16 @@ type Profile struct {
 	IsDefault    bool         `json:"isDefault,omitempty"`
 	PageColor    string       `json:"pageColor,omitempty"`
 	Font         string       `json:"font,omitempty"`
+	Url          string       `json:"url,omitempty"`
 	Basic        Basic        `json:"basic,omitempty"`
 	ContactBlock ContactBlock `json:"contact,omitempty"`
 	Socials      []Socials    `json:"socials,omitempty"`
-	Links        []Content    `json:"links,omitempty"`
-	Articles     []Content    `json:"articles,omitempty"`
-	Videos       []Content    `json:"videos,omitempty"`
-	Audios       []Content    `json:"audios,omitempty"`
-	Forms        []Content    `json:"forms,omitempty"`
-	Meetings     []Content    `json:"meetings,omitempty"`
-	Events       []Content    `json:"events,omitempty"`
+	Contents     []Content    `json:"contents,omitempty"`
+}
+
+type ProfileUrlRequest struct {
+	ProfileId uuid.UUID `json:"profileId,omitempty"`
+	Url       string    `json:"url,omitempty"`
 }
 
 // Socials keeps the social accounts a user has added to their profile
@@ -82,6 +82,7 @@ type Content struct {
 	Description    string       `json:"description,omitempty"`
 	Url            string       `json:"url,omitempty"`
 	Order          int32        `json:"order,omitempty"`
+	Type           string       `json:"type,omitempty"`
 	CallToAction   CallToAction `json:"callToAction,omitempty"`
 	CallToActionID uuid.UUID    `json:"callToActionId,omitempty"`
 	ContentID      uuid.UUID    `json:"contentId,omitempty"`

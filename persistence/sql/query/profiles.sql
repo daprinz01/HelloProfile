@@ -38,3 +38,6 @@ update profiles set
 
 -- name: DeleteProfile :exec
 delete from profiles where id=$1;
+
+-- name: UpdateProfileUrl :exec
+update profiles set url=$1 where id=$2;

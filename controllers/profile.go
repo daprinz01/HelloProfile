@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -85,6 +86,7 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 				IsDefault:   value.IsDefault,
 				PageColor:   value.PageColor,
 				Font:        value.Font,
+				Url:         env.GetValue(value.Url.String, fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), value.ID)),
 				ContactBlock: models.ContactBlock{
 					ID: value.ContactBlockID.UUID,
 				},
@@ -130,16 +132,17 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 			return err
 		}
 		log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, request))
-		dbProfile := new(helloprofiledb.AddProfileParams)
-		dbProfile.BasicBlockID = uuid.NullUUID{UUID: request.Basic.ID, Valid: true}
-		dbProfile.ContactBlockID = uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true}
-		dbProfile.Font = request.Font
-		dbProfile.IsDefault = request.IsDefault
-		dbProfile.PageColor = request.PageColor
-		dbProfile.ProfileName = request.ProfileName
-		dbProfile.Status = request.Status
-		dbProfile.UserID = user.ID
-		dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), *dbProfile)
+
+		dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+			BasicBlockID:   uuid.NullUUID{UUID: request.Basic.ID, Valid: true},
+			ContactBlockID: uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true},
+			Font:           request.Font,
+			IsDefault:      request.IsDefault,
+			PageColor:      request.PageColor,
+			ProfileName:    request.ProfileName,
+			Status:         request.Status,
+			UserID:         user.ID,
+		})
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
@@ -147,6 +150,7 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
+
 		log.WithFields(fields).Info("Successfully added profile")
 
 		response := &models.SuccessResponse{
@@ -257,4 +261,41 @@ func (env *Env) DeleteProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
+}
+
+func (env *Env) UpdateProfileUrl(c echo.Context) (err error) {
+
+	errorResponse := new(models.Errormessage)
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "UpdateProfile"}
+	log.WithFields(fields).Info("Update profile request received...")
+
+	request := new(models.ProfileUrlRequest)
+	if err = c.Bind(request); err != nil {
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	exists, err := env.HelloProfileDb.IsProfileExist(context.Background(), request.ProfileId)
+	if err != nil {
+
+		return err
+	}
+	if !exists {
+		//Profile doesnt exist
+		log.WithFields(fields).Error("Profile to update URL for does not exist")
+	}
+	err = env.HelloProfileDb.UpdateProfileUrl(context.Background(), helloprofiledb.UpdateProfileUrlParams{
+		Url: sql.NullString{String: request.Url},
+		ID:  request.ProfileId,
+	})
+	log.WithFields(fields).Info("Successfully updated profile url")
+	response := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+	}
+	c.JSON(http.StatusOK, response)
+	return err
 }

@@ -5,6 +5,7 @@ package helloprofiledb
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -22,7 +23,7 @@ insert into profiles(
 ) VALUES(
     $1, $2, $3, $4, $5, $6, $7, $8
 )
-returning id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default
+returning id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, url, is_default
 `
 
 type AddProfileParams struct {
@@ -57,6 +58,7 @@ func (q *Queries) AddProfile(ctx context.Context, arg AddProfileParams) (Profile
 		&i.ProfileName,
 		&i.PageColor,
 		&i.Font,
+		&i.Url,
 		&i.IsDefault,
 	)
 	return i, err
@@ -72,7 +74,7 @@ func (q *Queries) DeleteProfile(ctx context.Context, id uuid.UUID) error {
 }
 
 const getAllProfiles = `-- name: GetAllProfiles :many
-select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default from profiles
+select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, url, is_default from profiles
 `
 
 func (q *Queries) GetAllProfiles(ctx context.Context) ([]Profile, error) {
@@ -93,6 +95,7 @@ func (q *Queries) GetAllProfiles(ctx context.Context) ([]Profile, error) {
 			&i.ProfileName,
 			&i.PageColor,
 			&i.Font,
+			&i.Url,
 			&i.IsDefault,
 		); err != nil {
 			return nil, err
@@ -109,7 +112,7 @@ func (q *Queries) GetAllProfiles(ctx context.Context) ([]Profile, error) {
 }
 
 const getProfile = `-- name: GetProfile :one
-select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default from profiles where id=$1 limit 1
+select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, url, is_default from profiles where id=$1 limit 1
 `
 
 func (q *Queries) GetProfile(ctx context.Context, id uuid.UUID) (Profile, error) {
@@ -124,13 +127,14 @@ func (q *Queries) GetProfile(ctx context.Context, id uuid.UUID) (Profile, error)
 		&i.ProfileName,
 		&i.PageColor,
 		&i.Font,
+		&i.Url,
 		&i.IsDefault,
 	)
 	return i, err
 }
 
 const getProfiles = `-- name: GetProfiles :many
-select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, is_default from profiles where user_id=$1
+select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, url, is_default from profiles where user_id=$1
 `
 
 func (q *Queries) GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile, error) {
@@ -151,6 +155,7 @@ func (q *Queries) GetProfiles(ctx context.Context, userID uuid.UUID) ([]Profile,
 			&i.ProfileName,
 			&i.PageColor,
 			&i.Font,
+			&i.Url,
 			&i.IsDefault,
 		); err != nil {
 			return nil, err
@@ -213,5 +218,19 @@ func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) er
 		arg.IsDefault,
 		arg.ID,
 	)
+	return err
+}
+
+const updateProfileUrl = `-- name: UpdateProfileUrl :exec
+update profiles set url=$1 where id=$2
+`
+
+type UpdateProfileUrlParams struct {
+	Url sql.NullString `json:"url"`
+	ID  uuid.UUID      `json:"id"`
+}
+
+func (q *Queries) UpdateProfileUrl(ctx context.Context, arg UpdateProfileUrlParams) error {
+	_, err := q.exec(ctx, q.updateProfileUrlStmt, updateProfileUrl, arg.Url, arg.ID)
 	return err
 }

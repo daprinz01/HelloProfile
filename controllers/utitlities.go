@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
@@ -13,13 +14,7 @@ import (
 func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fields log.Fields) {
 
 	socials := make(chan []models.Socials)
-	linkContents := make(chan []models.Content)
-	articleContents := make(chan []models.Content)
-	videoContents := make(chan []models.Content)
-	audioContents := make(chan []models.Content)
-	meetingContents := make(chan []models.Content)
-	eventsContents := make(chan []models.Content)
-	formContents := make(chan []models.Content)
+	contents := make(chan []models.Content)
 	basicBlock := make(chan models.Basic)
 	contactBlock := make(chan models.ContactBlock)
 
@@ -36,7 +31,7 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 			go env.getBasicBlock(value.BasicBlockID.UUID, basicBlock, fields)
 			go env.getContactBlock(value.ContactBlockID.UUID, contactBlock, fields)
 			go env.getSocails(value.ID, socials, fields)
-			go env.getContents(value.ID, linkContents, articleContents, videoContents, audioContents, meetingContents, eventsContents, formContents, fields)
+			go env.getContents(value.ID, contents, fields)
 			profileList = append(profileList, models.Profile{
 				ID:           value.ID,
 				Status:       value.Status,
@@ -44,16 +39,11 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 				PageColor:    value.PageColor,
 				Font:         value.Font,
 				IsDefault:    value.IsDefault,
+				Url:          env.GetValue(value.Url.String, fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), value.ID)),
 				Basic:        <-basicBlock,
 				ContactBlock: <-contactBlock,
 				Socials:      <-socials,
-				Links:        <-linkContents,
-				Articles:     <-articleContents,
-				Videos:       <-videoContents,
-				Audios:       <-audioContents,
-				Forms:        <-formContents,
-				Meetings:     <-meetingContents,
-				Events:       <-eventsContents,
+				Contents:     <-contents,
 			})
 		}
 		profiles <- profileList
@@ -63,13 +53,7 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 func (env *Env) getProfile(profileID uuid.UUID, profile chan models.Profile, fields log.Fields) {
 
 	socials := make(chan []models.Socials)
-	linkContents := make(chan []models.Content)
-	articleContents := make(chan []models.Content)
-	videoContents := make(chan []models.Content)
-	audioContents := make(chan []models.Content)
-	meetingContents := make(chan []models.Content)
-	eventsContents := make(chan []models.Content)
-	formContents := make(chan []models.Content)
+	contents := make(chan []models.Content)
 	basicBlock := make(chan models.Basic)
 	contactBlock := make(chan models.ContactBlock)
 
@@ -85,7 +69,7 @@ func (env *Env) getProfile(profileID uuid.UUID, profile chan models.Profile, fie
 		go env.getBasicBlock(dbProfile.BasicBlockID.UUID, basicBlock, fields)
 		go env.getContactBlock(dbProfile.ContactBlockID.UUID, contactBlock, fields)
 		go env.getSocails(dbProfile.ID, socials, fields)
-		go env.getContents(dbProfile.ID, linkContents, articleContents, videoContents, audioContents, meetingContents, eventsContents, formContents, fields)
+		go env.getContents(dbProfile.ID, contents, fields)
 		profileResult = models.Profile{
 			ID:           dbProfile.ID,
 			Status:       dbProfile.Status,
@@ -93,16 +77,11 @@ func (env *Env) getProfile(profileID uuid.UUID, profile chan models.Profile, fie
 			PageColor:    dbProfile.PageColor,
 			Font:         dbProfile.Font,
 			IsDefault:    dbProfile.IsDefault,
+			Url:          env.GetValue(dbProfile.Url.String, fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), dbProfile.ID)),
 			Basic:        <-basicBlock,
 			ContactBlock: <-contactBlock,
 			Socials:      <-socials,
-			Links:        <-linkContents,
-			Articles:     <-articleContents,
-			Videos:       <-videoContents,
-			Audios:       <-audioContents,
-			Forms:        <-formContents,
-			Meetings:     <-meetingContents,
-			Events:       <-eventsContents,
+			Contents:     <-contents,
 		}
 
 		profile <- profileResult
@@ -148,101 +127,89 @@ func (env *Env) getSocails(profileID uuid.UUID, socials chan []models.Socials, f
 	socials <- socialsList
 }
 
-func (env *Env) getContents(profileID uuid.UUID, linkContents chan []models.Content, articleContents chan []models.Content, videoContents chan []models.Content, audioContents chan []models.Content, meetingContents chan []models.Content, eventsContents chan []models.Content, formContents chan []models.Content, fields log.Fields) {
+func (env *Env) getContents(profileID uuid.UUID, contents chan []models.Content, fields log.Fields) {
 	log.WithFields(fields).Info(`Getting the socials for the user profile`)
-	var linkContentList []models.Content
-	var articleContentList []models.Content
-	var videoContentList []models.Content
-	var audioContentList []models.Content
-	var meetingContentList []models.Content
-	var eventsContentList []models.Content
-	var formContentList []models.Content
+	var contentList []models.Content
+
 	dbContents, err := env.HelloProfileDb.GetProfileContents(context.Background(), profileID)
 	if err != nil {
 		log.WithFields(fields).WithError(err).Error(`Error occured fetching contents for user profile`)
-		linkContents <- linkContentList
-		articleContents <- articleContentList
-		videoContents <- videoContentList
-		audioContents <- audioContentList
-		meetingContents <- meetingContentList
-		eventsContents <- eventsContentList
-		formContents <- formContentList
+		contents <- contentList
+
 		return
 	}
 	dbCallToActions, err := env.HelloProfileDb.GetCallToActions(context.Background())
 	if err != nil {
 		log.WithFields(fields).WithError(err).Error(`Error occured fetching call to action for profile contents`)
-		linkContents <- linkContentList
-		articleContents <- articleContentList
-		videoContents <- videoContentList
-		audioContents <- audioContentList
-		meetingContents <- meetingContentList
-		eventsContents <- eventsContentList
-		formContents <- formContentList
+		contents <- contentList
+
 		return
 	}
 	dbContentTypes, err := env.HelloProfileDb.GetAllContentTypes(context.Background())
 	if err != nil {
 		log.WithFields(fields).WithError(err).Error(`Error occured fetching call to action for profile contents`)
-		linkContents <- linkContentList
-		articleContents <- articleContentList
-		videoContents <- videoContentList
-		audioContents <- audioContentList
-		meetingContents <- meetingContentList
-		eventsContents <- eventsContentList
-		formContents <- formContentList
+		contents <- contentList
+
 		return
 	}
 	//Sort contents
 	//Get links
-	for _, value := range dbContentTypes {
-		if value.Type == "links" {
-			go env.sortContents(dbContents, dbCallToActions, linkContents, value.ID)
-		} else if value.Type == "articles" {
-			go env.sortContents(dbContents, dbCallToActions, articleContents, value.ID)
-		} else if value.Type == "embedded videos" {
-			go env.sortContents(dbContents, dbCallToActions, videoContents, value.ID)
-		} else if value.Type == "embedded audios" {
-			go env.sortContents(dbContents, dbCallToActions, audioContents, value.ID)
-		} else if value.Type == "forms" {
-			go env.sortContents(dbContents, dbCallToActions, formContents, value.ID)
-		} else if value.Type == "meetings" {
-			go env.sortContents(dbContents, dbCallToActions, meetingContents, value.ID)
-		} else if value.Type == "events" {
-			go env.sortContents(dbContents, dbCallToActions, eventsContents, value.ID)
-		}
-	}
+	go env.enrichContents(dbContents, dbCallToActions, contents, dbContentTypes)
+	// for _, value := range dbContentTypes {
+	// 	if value.Type == "links" {
+	// 		go env.sortContents(dbContents, dbCallToActions, linkContents, value.Type)
+	// 	} else if value.Type == "articles" {
+	// 		go env.sortContents(dbContents, dbCallToActions, articleContents, value.ID)
+	// 	} else if value.Type == "embedded videos" {
+	// 		go env.sortContents(dbContents, dbCallToActions, videoContents, value.ID)
+	// 	} else if value.Type == "embedded audios" {
+	// 		go env.sortContents(dbContents, dbCallToActions, audioContents, value.ID)
+	// 	} else if value.Type == "forms" {
+	// 		go env.sortContents(dbContents, dbCallToActions, formContents, value.ID)
+	// 	} else if value.Type == "meetings" {
+	// 		go env.sortContents(dbContents, dbCallToActions, meetingContents, value.ID)
+	// 	} else if value.Type == "events" {
+	// 		go env.sortContents(dbContents, dbCallToActions, eventsContents, value.ID)
+	// 	}
+	// }
 
 }
 
-func (env *Env) sortContents(contentResult []helloprofiledb.ProfileContent, callToActions []helloprofiledb.CallToAction, contentChannel chan []models.Content, contentTypeID uuid.UUID) {
+func (env *Env) enrichContents(contentResult []helloprofiledb.ProfileContent, callToActions []helloprofiledb.CallToAction, contentChannel chan []models.Content, contentTypes []helloprofiledb.Content) {
 	var contentList []models.Content
+	var contentType helloprofiledb.Content
 	for _, value := range contentResult {
-		if value.ContentID == contentTypeID {
-			callToAction := new(helloprofiledb.CallToAction)
-			for _, action := range callToActions {
-				if value.CallToActionID == action.ID {
-					callToAction.DisplayName = action.DisplayName
-					callToAction.ID = action.ID
-					callToAction.Type = action.Type
-				}
+
+		callToAction := new(helloprofiledb.CallToAction)
+		for _, action := range callToActions {
+			if value.CallToActionID == action.ID {
+				callToAction.DisplayName = action.DisplayName
+				callToAction.ID = action.ID
+				callToAction.Type = action.Type
 			}
-			content := models.Content{
-				ID:          value.ID,
-				Title:       value.DisplayTitle,
-				Description: value.Description,
-				Url:         value.Url,
-				Order:       value.Order,
-				CallToAction: models.CallToAction{
-					ID:          callToAction.ID,
-					Type:        callToAction.Type,
-					DisplayName: callToAction.DisplayName,
-				},
-				CallToActionID: callToAction.ID,
-				ContentID:      contentTypeID,
-			}
-			contentList = append(contentList, content)
 		}
+		for _, contentValue := range contentTypes {
+			if contentValue.ID == value.ContentID {
+				contentType = contentValue
+			}
+		}
+		content := models.Content{
+			ID:          value.ID,
+			Title:       value.DisplayTitle,
+			Description: value.Description,
+			Url:         value.Url,
+			Order:       value.Order,
+			Type:        contentType.Type,
+			CallToAction: models.CallToAction{
+				ID:          callToAction.ID,
+				Type:        callToAction.Type,
+				DisplayName: callToAction.DisplayName,
+			},
+			CallToActionID: callToAction.ID,
+			ContentID:      contentType.ID,
+		}
+		contentList = append(contentList, content)
+
 	}
 	contentChannel <- contentList
 }

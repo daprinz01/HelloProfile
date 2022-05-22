@@ -244,6 +244,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateProfileSocialStmt, err = db.PrepareContext(ctx, updateProfileSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateProfileSocial: %w", err)
 	}
+	if q.updateProfileUrlStmt, err = db.PrepareContext(ctx, updateProfileUrl); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateProfileUrl: %w", err)
+	}
 	if q.updateProfileWithBasicBlockIdStmt, err = db.PrepareContext(ctx, updateProfileWithBasicBlockId); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateProfileWithBasicBlockId: %w", err)
 	}
@@ -646,6 +649,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateProfileSocialStmt: %w", cerr)
 		}
 	}
+	if q.updateProfileUrlStmt != nil {
+		if cerr := q.updateProfileUrlStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateProfileUrlStmt: %w", cerr)
+		}
+	}
 	if q.updateProfileWithBasicBlockIdStmt != nil {
 		if cerr := q.updateProfileWithBasicBlockIdStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateProfileWithBasicBlockIdStmt: %w", cerr)
@@ -804,6 +812,7 @@ type Queries struct {
 	updateProfileStmt                   *sql.Stmt
 	updateProfileContentStmt            *sql.Stmt
 	updateProfileSocialStmt             *sql.Stmt
+	updateProfileUrlStmt                *sql.Stmt
 	updateProfileWithBasicBlockIdStmt   *sql.Stmt
 	updateProfileWithContactBlockIdStmt *sql.Stmt
 	updateRefreshTokenStmt              *sql.Stmt
@@ -893,6 +902,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateProfileStmt:                   q.updateProfileStmt,
 		updateProfileContentStmt:            q.updateProfileContentStmt,
 		updateProfileSocialStmt:             q.updateProfileSocialStmt,
+		updateProfileUrlStmt:                q.updateProfileUrlStmt,
 		updateProfileWithBasicBlockIdStmt:   q.updateProfileWithBasicBlockIdStmt,
 		updateProfileWithContactBlockIdStmt: q.updateProfileWithContactBlockIdStmt,
 		updateRefreshTokenStmt:              q.updateRefreshTokenStmt,

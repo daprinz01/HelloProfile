@@ -2,6 +2,8 @@ migrationCreate:
 	migrate create -ext sql -dir persistence/migrations -seq init_schema
 migrationUp:
 	migrate -path persistence/migrations -database "postgres://xenonprimus:Sarah4Daprinz@localhost/helloprofile?sslmode=disable" -verbose up
+migrationUpTest:
+	migrate -path persistence/migrations -database "postgres://ezbtavev:Hoi_daLhSQ8xiStkyLcbfLVey5QHtuAO@heffalump.db.elephantsql.com/ezbtavev?sslmode=disable" -verbose up
 migrationDown:
 	migrate -path persistence/migrations -database "postgres://xenonprimus:Sarah4Daprinz@localhost/helloprofile?sslmode=disable" -verbose down 
 migrationForce:

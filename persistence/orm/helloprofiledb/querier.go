@@ -84,6 +84,7 @@ type Querier interface {
 	UpdateProfile(ctx context.Context, arg UpdateProfileParams) error
 	UpdateProfileContent(ctx context.Context, arg UpdateProfileContentParams) error
 	UpdateProfileSocial(ctx context.Context, arg UpdateProfileSocialParams) error
+	UpdateProfileUrl(ctx context.Context, arg UpdateProfileUrlParams) error
 	UpdateProfileWithBasicBlockId(ctx context.Context, arg UpdateProfileWithBasicBlockIdParams) error
 	UpdateProfileWithContactBlockId(ctx context.Context, arg UpdateProfileWithContactBlockIdParams) error
 	UpdateRefreshToken(ctx context.Context, arg UpdateRefreshTokenParams) (RefreshToken, error)

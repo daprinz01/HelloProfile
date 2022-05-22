@@ -41,6 +41,7 @@ CREATE TABLE profiles (
     profile_name varchar NOT NULL,
     page_color VARCHAR not Null,
     font VARCHAR not null,
+    "url" VARCHAR ,
     is_default boolean NOT NULL DEFAULT FALSE,
     CONSTRAINT "uc_profiles" UNIQUE (user_id, profile_name)
 );

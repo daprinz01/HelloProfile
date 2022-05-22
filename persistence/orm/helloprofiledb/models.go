@@ -68,15 +68,16 @@ type Otp struct {
 }
 
 type Profile struct {
-	ID             uuid.UUID     `json:"id"`
-	UserID         uuid.UUID     `json:"user_id"`
-	BasicBlockID   uuid.NullUUID `json:"basic_block_id"`
-	ContactBlockID uuid.NullUUID `json:"contact_block_id"`
-	Status         bool          `json:"status"`
-	ProfileName    string        `json:"profile_name"`
-	PageColor      string        `json:"page_color"`
-	Font           string        `json:"font"`
-	IsDefault      bool          `json:"is_default"`
+	ID             uuid.UUID      `json:"id"`
+	UserID         uuid.UUID      `json:"user_id"`
+	BasicBlockID   uuid.NullUUID  `json:"basic_block_id"`
+	ContactBlockID uuid.NullUUID  `json:"contact_block_id"`
+	Status         bool           `json:"status"`
+	ProfileName    string         `json:"profile_name"`
+	PageColor      string         `json:"page_color"`
+	Font           string         `json:"font"`
+	Url            sql.NullString `json:"url"`
+	IsDefault      bool           `json:"is_default"`
 }
 
 type ProfileContent struct {
