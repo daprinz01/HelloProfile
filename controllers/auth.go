@@ -858,7 +858,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 
 // ResetPassword password is used to reset account password
 func (env *Env) ResetPassword(c echo.Context) (err error) {
-	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application"), "function": "ResetPassword"}
 	log.WithFields(fields).Info("Password Reset Request received")
 	errorResponse := new(models.Errormessage)
 
@@ -942,20 +942,64 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 	return err
 }
 
-// commentID := -1
-// if val, ok := pathParams["commentID"]; ok {
-// 	commentID, err = strconv.Atoi(val)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
-// 		w.Write([]byte(`{"message": "need a number"}`))
-// 		return
+func (env *Env) Feedback(c echo.Context) (err error) {
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application"), "function": "Feedback"}
+	log.WithFields(fields).Info("Password Reset Request received")
+	errorResponse := new(models.Errormessage)
+	request := new(models.FeedbackRequest)
+	if err = c.Bind(request); err != nil {
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.WithFields(fields).Info("Sending feedback message to the support team...")
+	communicationEndpoint := os.Getenv("COMMUNICATION_SERVICE_ENDPOINT")
 
-// 		query := r.URL.Query()
-// 		name := query.Get("name")
-// 		if name == "" {
-// 			name = "Guest"
-// 		}
-// 		log.Printf("Received request for %s\n", name)
-// 		w.Write([]byte(fmt.Sprintf("Hello, %s\n", name)))
-// 	}
-// }
+	emailPath := os.Getenv("EMAIL_PATH")
+	emailRequest := models.SendEmailRequest{
+		From:    models.EmailAddress{Email: os.Getenv("SMTP_USER"), Name: "HelloProfile"},
+		To:      []models.EmailAddress{{Email: os.Getenv("SMTP_USER"), Name: "Support"}},
+		CC:      []models.EmailAddress{{Email: "daprinz.op@gmail.com", Name: "Prince Okechukwu"}, {Email: "calveen.chikezie@gmail.com", Name: "Kelvin Chikezie"}, {Email: "amehugochukwu@gmail.com", Name: "Julius Ameh"}},
+		Subject: util.FEEDBACK_SUBJECT,
+		Message: fmt.Sprintf(util.FEEDBACK_MESSAGE, request.Sender, request.Message, request.AttachmentUrl),
+	}
+	emailRequestBytes, _ := json.Marshal(emailRequest)
+	emailRequestReader := bytes.NewReader(emailRequestBytes)
+	log.WithFields(fields).Info("Sending support email to the support team...")
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", fmt.Sprintf("%s%s", communicationEndpoint, emailPath), emailRequestReader)
+	req.Header.Add("Client_Id", "persianblack")
+	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	emailResponse, err := client.Do(req)
+
+	// emailResponse, err := http.Post(fmt.Sprintf("%s%s", communicationEndpoint, emailPath), "application/json", bytes.NewBuffer(emailRequestBytes))
+	if err != nil {
+		errorResponse.Errorcode = util.SUPPORT_EMAIL_SENDING_FAILURE_CODE
+		errorResponse.ErrorMessage = util.SUPPORT_EMAIL_SENDING_FAILURE_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured sending otp")
+		c.JSON(http.StatusUnauthorized, errorResponse)
+		return err
+	} else {
+		if emailResponse.StatusCode == 200 {
+			log.WithFields(fields).Info("Email sent successfully")
+		} else {
+			errorResponse.Errorcode = util.SUPPORT_EMAIL_SENDING_FAILURE_CODE
+			errorResponse.ErrorMessage = util.SUPPORT_EMAIL_SENDING_FAILURE_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured sending Email")
+			c.JSON(http.StatusUnauthorized, errorResponse)
+			return err
+		}
+		emailBody, _ := ioutil.ReadAll(emailResponse.Body)
+		log.WithFields(fields).Info(fmt.Sprintf("Response body from email request: %s", emailBody))
+		c.JSON(http.StatusUnauthorized, models.SuccessResponse{
+			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+		})
+		return err
+	}
+
+}
