@@ -981,7 +981,7 @@ func (env *Env) Feedback(c echo.Context) (err error) {
 		errorResponse.Errorcode = util.SUPPORT_EMAIL_SENDING_FAILURE_CODE
 		errorResponse.ErrorMessage = util.SUPPORT_EMAIL_SENDING_FAILURE_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured sending otp")
-		c.JSON(http.StatusUnauthorized, errorResponse)
+		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	} else {
 		if emailResponse.StatusCode == 200 {
@@ -990,12 +990,12 @@ func (env *Env) Feedback(c echo.Context) (err error) {
 			errorResponse.Errorcode = util.SUPPORT_EMAIL_SENDING_FAILURE_CODE
 			errorResponse.ErrorMessage = util.SUPPORT_EMAIL_SENDING_FAILURE_MESSAGE
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured sending Email")
-			c.JSON(http.StatusUnauthorized, errorResponse)
+			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
 		emailBody, _ := ioutil.ReadAll(emailResponse.Body)
 		log.WithFields(fields).Info(fmt.Sprintf("Response body from email request: %s", emailBody))
-		c.JSON(http.StatusUnauthorized, models.SuccessResponse{
+		c.JSON(http.StatusOK, models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
 		})
