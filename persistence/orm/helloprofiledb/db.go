@@ -226,6 +226,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.isProfileExistStmt, err = db.PrepareContext(ctx, isProfileExist); err != nil {
 		return nil, fmt.Errorf("error preparing query IsProfileExist: %w", err)
 	}
+	if q.isUrlExistsStmt, err = db.PrepareContext(ctx, isUrlExists); err != nil {
+		return nil, fmt.Errorf("error preparing query IsUrlExists: %w", err)
+	}
 	if q.updateBasicBlockStmt, err = db.PrepareContext(ctx, updateBasicBlock); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateBasicBlock: %w", err)
 	}
@@ -619,6 +622,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing isProfileExistStmt: %w", cerr)
 		}
 	}
+	if q.isUrlExistsStmt != nil {
+		if cerr := q.isUrlExistsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing isUrlExistsStmt: %w", cerr)
+		}
+	}
 	if q.updateBasicBlockStmt != nil {
 		if cerr := q.updateBasicBlockStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateBasicBlockStmt: %w", cerr)
@@ -806,6 +814,7 @@ type Queries struct {
 	getUserRolesStmt                    *sql.Stmt
 	getUsersStmt                        *sql.Stmt
 	isProfileExistStmt                  *sql.Stmt
+	isUrlExistsStmt                     *sql.Stmt
 	updateBasicBlockStmt                *sql.Stmt
 	updateContactBlockStmt              *sql.Stmt
 	updateContactCategoryStmt           *sql.Stmt
@@ -896,6 +905,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getUserRolesStmt:                    q.getUserRolesStmt,
 		getUsersStmt:                        q.getUsersStmt,
 		isProfileExistStmt:                  q.isProfileExistStmt,
+		isUrlExistsStmt:                     q.isUrlExistsStmt,
 		updateBasicBlockStmt:                q.updateBasicBlockStmt,
 		updateContactBlockStmt:              q.updateContactBlockStmt,
 		updateContactCategoryStmt:           q.updateContactCategoryStmt,

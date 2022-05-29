@@ -41,3 +41,6 @@ delete from profiles where id=$1;
 
 -- name: UpdateProfileUrl :exec
 update profiles set url=$1 where id=$2;
+
+-- name: IsUrlExists :one
+select exists(select 1 from profiles where "url"=$1) AS "exists";

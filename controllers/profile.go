@@ -293,6 +293,22 @@ func (env *Env) UpdateProfileUrl(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
+	isUrlExist, err := env.HelloProfileDb.IsUrlExists(context.Background(), sql.NullString{String: request.ProfileName, Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = util.PROFILE_NAME_ALREADY_EXISTS_CODE
+		errorResponse.ErrorMessage = util.PROFILE_NAME_ALREADY_EXISTS_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("SQL exception occured while checking if name exists")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	if isUrlExist {
+		errorResponse.Errorcode = util.PROFILE_NAME_ALREADY_EXISTS_CODE
+		errorResponse.ErrorMessage = util.PROFILE_NAME_ALREADY_EXISTS_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("The name you chose already exists")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
 	err = env.HelloProfileDb.UpdateProfileUrl(context.Background(), helloprofiledb.UpdateProfileUrlParams{
 		Url: sql.NullString{String: request.ProfileName, Valid: true},
 		ID:  request.ProfileId,
@@ -304,6 +320,7 @@ func (env *Env) UpdateProfileUrl(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
+
 	log.WithFields(fields).Info("Successfully updated profile url")
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,

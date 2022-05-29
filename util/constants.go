@@ -63,6 +63,9 @@ const TERMS_NOT_AGREED_ERROR_MESSAGE = "Sorry we cannot save your profile, kindl
 const SUPPORT_EMAIL_SENDING_FAILURE_CODE = "17"
 const SUPPORT_EMAIL_SENDING_FAILURE_MESSAGE = "Sorry, we could not complete your request at this time. Please try again later."
 
+const PROFILE_NAME_ALREADY_EXISTS_CODE = "18"
+const PROFILE_NAME_ALREADY_EXISTS_MESSAGE = "Sorry, another user already chose that name. Kindly choose another name"
+
 const SQL_ERROR_CODE = "98"
 const SQL_ERROR_MESSAGE = "Error occured while running an operation. Please contact our support if error persists after 3 trials."
 

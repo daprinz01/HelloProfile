@@ -182,6 +182,17 @@ func (q *Queries) IsProfileExist(ctx context.Context, id uuid.UUID) (bool, error
 	return exists, err
 }
 
+const isUrlExists = `-- name: IsUrlExists :one
+select exists(select 1 from profiles where "url"=$1) AS "exists"
+`
+
+func (q *Queries) IsUrlExists(ctx context.Context, url sql.NullString) (bool, error) {
+	row := q.queryRow(ctx, q.isUrlExistsStmt, isUrlExists, url)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const updateProfile = `-- name: UpdateProfile :exec
 update profiles set
    user_id = $1,

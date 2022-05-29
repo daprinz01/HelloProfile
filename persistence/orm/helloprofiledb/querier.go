@@ -78,6 +78,7 @@ type Querier interface {
 	GetUserRoles(ctx context.Context, username sql.NullString) ([]string, error)
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	IsProfileExist(ctx context.Context, id uuid.UUID) (bool, error)
+	IsUrlExists(ctx context.Context, url sql.NullString) (bool, error)
 	UpdateBasicBlock(ctx context.Context, arg UpdateBasicBlockParams) error
 	UpdateContactBlock(ctx context.Context, arg UpdateContactBlockParams) error
 	UpdateContactCategory(ctx context.Context, arg UpdateContactCategoryParams) error
