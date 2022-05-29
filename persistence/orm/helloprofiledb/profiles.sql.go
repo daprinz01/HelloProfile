@@ -133,6 +133,17 @@ func (q *Queries) GetProfile(ctx context.Context, id uuid.UUID) (Profile, error)
 	return i, err
 }
 
+const getProfileIdByProfileUrl = `-- name: GetProfileIdByProfileUrl :one
+select id from profiles where "url"=$1 limit 1
+`
+
+func (q *Queries) GetProfileIdByProfileUrl(ctx context.Context, url sql.NullString) (uuid.UUID, error) {
+	row := q.queryRow(ctx, q.getProfileIdByProfileUrlStmt, getProfileIdByProfileUrl, url)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getProfiles = `-- name: GetProfiles :many
 select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, url, is_default from profiles where user_id=$1
 `

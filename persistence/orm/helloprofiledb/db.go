@@ -166,6 +166,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getProfileContentsStmt, err = db.PrepareContext(ctx, getProfileContents); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileContents: %w", err)
 	}
+	if q.getProfileIdByProfileUrlStmt, err = db.PrepareContext(ctx, getProfileIdByProfileUrl); err != nil {
+		return nil, fmt.Errorf("error preparing query GetProfileIdByProfileUrl: %w", err)
+	}
 	if q.getProfileSocialStmt, err = db.PrepareContext(ctx, getProfileSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query GetProfileSocial: %w", err)
 	}
@@ -522,6 +525,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getProfileContentsStmt: %w", cerr)
 		}
 	}
+	if q.getProfileIdByProfileUrlStmt != nil {
+		if cerr := q.getProfileIdByProfileUrlStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getProfileIdByProfileUrlStmt: %w", cerr)
+		}
+	}
 	if q.getProfileSocialStmt != nil {
 		if cerr := q.getProfileSocialStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getProfileSocialStmt: %w", cerr)
@@ -794,6 +802,7 @@ type Queries struct {
 	getProfileStmt                      *sql.Stmt
 	getProfileContentStmt               *sql.Stmt
 	getProfileContentsStmt              *sql.Stmt
+	getProfileIdByProfileUrlStmt        *sql.Stmt
 	getProfileSocialStmt                *sql.Stmt
 	getProfileSocialsStmt               *sql.Stmt
 	getProfilesStmt                     *sql.Stmt
@@ -885,6 +894,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getProfileStmt:                      q.getProfileStmt,
 		getProfileContentStmt:               q.getProfileContentStmt,
 		getProfileContentsStmt:              q.getProfileContentsStmt,
+		getProfileIdByProfileUrlStmt:        q.getProfileIdByProfileUrlStmt,
 		getProfileSocialStmt:                q.getProfileSocialStmt,
 		getProfileSocialsStmt:               q.getProfileSocialsStmt,
 		getProfilesStmt:                     q.getProfilesStmt,

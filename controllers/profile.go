@@ -106,6 +106,46 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 	return err
 }
 
+// GetProfile is used get a single profile
+func (env *Env) GetProfile(c echo.Context) (err error) {
+
+	errorResponse := new(models.Errormessage)
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "GetProfile"}
+	log.WithFields(fields).Info("Get profile request received...")
+	if c.Param("profileId") != "" {
+		checkProfileID, err := uuid.Parse(c.Param("profileId"))
+		if err != nil {
+			checkProfileID, err = env.HelloProfileDb.GetProfileIdByProfileUrl(context.Background(), sql.NullString{String: c.Param("profileId"), Valid: true})
+			if err != nil {
+				errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+				errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+				log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found")
+				c.JSON(http.StatusNotFound, errorResponse)
+				return err
+			}
+		}
+
+		profilesChan := make(chan models.Profile)
+		env.getProfile(checkProfileID, profilesChan, fields)
+		profile := <-profilesChan
+		response := &models.SuccessResponse{
+			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+			ResponseDetails: &profile,
+		}
+		c.JSON(http.StatusOK, response)
+		return err
+	} else {
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+
+	}
+}
+
 // AddProfile is used create a new profile
 func (env *Env) AddProfile(c echo.Context) (err error) {
 

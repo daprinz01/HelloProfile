@@ -191,6 +191,7 @@ func main() {
 
 	//Profile operations
 	apiNoAuth.GET("/profile", env.GetProfiles)
+	apiNoAuth.GET("/profile/:profileId", env.GetProfile)
 	apiAuth.POST("/profile/:email", env.AddProfile)
 	apiAuth.PUT("/profile", env.UpdateProfile)
 	apiAuth.PUT("/profile", env.DeleteProfile)
