@@ -49,8 +49,8 @@ type Profile struct {
 }
 
 type ProfileUrlRequest struct {
-	ProfileId uuid.UUID `json:"profileId,omitempty"`
-	Url       string    `json:"url,omitempty"`
+	ProfileId   uuid.UUID `json:"profileId,omitempty"`
+	ProfileName string    `json:"profileName,omitempty"`
 }
 
 // Socials keeps the social accounts a user has added to their profile

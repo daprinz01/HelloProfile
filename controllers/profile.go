@@ -280,17 +280,30 @@ func (env *Env) UpdateProfileUrl(c echo.Context) (err error) {
 	}
 	exists, err := env.HelloProfileDb.IsProfileExist(context.Background(), request.ProfileId)
 	if err != nil {
-
+		errorResponse.Errorcode = util.PROFILE_NOT_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.PROFILE_NOT_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile does not exist")
+		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
 	if !exists {
-		//Profile doesnt exist
-		log.WithFields(fields).Error("Profile to update URL for does not exist")
+		errorResponse.Errorcode = util.PROFILE_NOT_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.PROFILE_NOT_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile to update profileName does not exist")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
 	}
 	err = env.HelloProfileDb.UpdateProfileUrl(context.Background(), helloprofiledb.UpdateProfileUrlParams{
-		Url: sql.NullString{String: request.Url},
+		Url: sql.NullString{String: request.ProfileName, Valid: true},
 		ID:  request.ProfileId,
 	})
+	if err != nil {
+		errorResponse.Errorcode = util.PROFILE_NOT_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.PROFILE_NOT_FOUND_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile does not exist")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
 	log.WithFields(fields).Info("Successfully updated profile url")
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,

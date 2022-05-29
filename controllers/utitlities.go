@@ -39,7 +39,7 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 				PageColor:    value.PageColor,
 				Font:         value.Font,
 				IsDefault:    value.IsDefault,
-				Url:          env.GetValue(value.Url.String, fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), value.ID)),
+				Url:          env.GetValue(fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), value.Url.String), fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), value.ID)),
 				Basic:        <-basicBlock,
 				ContactBlock: <-contactBlock,
 				Socials:      <-socials,
