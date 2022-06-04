@@ -10,7 +10,7 @@ spec:
   - hosts:
     - test.api.helloprofile.io
     - helloprofile.test.api.devtroy.com
-    secretName: hello-kubernetes-tls
+    secretName: helloprofile-kubernetes-tls
   rules:
   - host: "test.api.helloprofile.io"
     http:
