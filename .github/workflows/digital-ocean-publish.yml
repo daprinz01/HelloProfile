@@ -1,3 +1,5 @@
+name: DigitalOcean Kubernetes Deployment
+
 on:
   push:
     branches:
