@@ -7,6 +7,11 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-test
 spec:
   ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: helloprofile-service
+      port:
+        number: 8083
   tls:
   - hosts:
     - test.api.helloprofile.io
