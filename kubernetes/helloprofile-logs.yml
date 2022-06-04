@@ -31,4 +31,4 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/var/local/bin/log"
+    path: "/usr/local/bin/log"
