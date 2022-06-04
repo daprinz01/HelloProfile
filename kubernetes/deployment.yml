@@ -26,7 +26,7 @@ spec:
             readOnly: false
       containers:
         - name: helloprofile
-          image: gcr.io/bionic-region-347614/github.com/daprinz01/helloprofile
+          image: registry.digitalocean.com/asb/helloprofile:develop
           ports:
             - containerPort: 8083
               protocol: TCP
