@@ -89,7 +89,7 @@ type GoogleJWT struct {
 	GoogleJWT string `json:"token"`
 }
 type FeedbackRequest struct {
-	Sender        string `json:"sender,omitempty"`
-	Message       string `json:"message,omitempty"`
-	AttachmentUrl string `json:"attachmentUrl,omitempty"`
+	Sender        string   `json:"sender,omitempty"`
+	Message       string   `json:"message,omitempty"`
+	AttachmentUrl []string `json:"attachments,omitempty"`
 }
