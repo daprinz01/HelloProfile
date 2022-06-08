@@ -66,6 +66,9 @@ const SUPPORT_EMAIL_SENDING_FAILURE_MESSAGE = "Sorry, we could not complete your
 const PROFILE_NAME_ALREADY_EXISTS_CODE = "18"
 const PROFILE_NAME_ALREADY_EXISTS_MESSAGE = "Sorry, another user already chose that name. Kindly choose another name"
 
+const USER_SUPPLIED_OLD_PASSWORD_INCORRECT_ERROR_CODE = "19"
+const USER_SUPPLIED_OLD_PASSWORD_INCORRECT_ERROR_MESSAGE = "Old password is incorrect..."
+
 const SQL_ERROR_CODE = "98"
 const SQL_ERROR_MESSAGE = "Error occured while running an operation. Please contact our support if error persists after 3 trials."
 

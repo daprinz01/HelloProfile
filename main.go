@@ -175,6 +175,7 @@ func main() {
 	apiNoAuth.POST("/confirm/email", env.DoEmailVerification)
 	apiNoAuth.POST("/verify/email", env.VerifyEmailToken)
 	apiNoAuth.POST("/feedback", env.Feedback)
+	apiAuth.POST("/password/change", env.ChangePassword)
 
 	// Methods that check application themselves and use the applicaiton information
 	auth.POST("/login", env.Login)

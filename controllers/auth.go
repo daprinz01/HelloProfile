@@ -944,6 +944,99 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 	return err
 }
 
+// ChangePassword password is used to change account password using the old password
+func (env *Env) ChangePassword(c echo.Context) (err error) {
+	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application"), "function": "ResetPassword"}
+	log.WithFields(fields).Info("Password Reset Request received")
+	errorResponse := new(models.Errormessage)
+
+	var authCode string
+	authArray := strings.Split(c.Request().Header.Get("Authorization"), " ")
+	if len(authArray) != 2 {
+		errorResponse.Errorcode = util.INVALID_AUTHENTICATION_SCHEME_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error(util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	authCode = authArray[1]
+
+	verifiedClaims, err := util.VerifyToken(authCode)
+
+	if err != nil || verifiedClaims.Email == "" {
+		errorResponse.Errorcode = util.SESSION_EXPIRED_ERROR_CODE
+		errorResponse.ErrorMessage = util.RESET_PASSWORD_TOKEN_EXPIRED_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Token has expired...")
+		c.JSON(http.StatusUnauthorized, errorResponse)
+		return err
+	}
+
+	request := new(models.ChangePasswordRequest)
+	if err = c.Bind(request); err != nil {
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	// Try to update password
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: strings.ToLower(verifiedClaims.Email), Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NAME_OR_PASSWORD_INCORRECT_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error fetching user")
+		c.JSON(http.StatusUnauthorized, errorResponse)
+		return err
+	}
+	if util.GenerateHash(request.OldPassword) != user.Password.String {
+		errorResponse.Errorcode = util.USER_SUPPLIED_OLD_PASSWORD_INCORRECT_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_SUPPLIED_OLD_PASSWORD_INCORRECT_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Old password supplied is incorrect")
+		c.JSON(http.StatusUnauthorized, errorResponse)
+		return err
+	}
+	go func() {
+		var hashedPassword string
+		if request.NewPassword != "" {
+			hashedPassword = util.GenerateHash(request.NewPassword)
+		}
+		_, err := env.HelloProfileDb.UpdateUser(context.Background(), helloprofiledb.UpdateUserParams{
+			Username_2:                user.Username,
+			IsLockedOut:               false,
+			Email:                     user.Email,
+			Firstname:                 user.Firstname,
+			ImageUrl:                  user.ProfilePicture,
+			IsActive:                  user.IsActive,
+			IsEmailConfirmed:          user.IsEmailConfirmed,
+			IsPasswordSystemGenerated: user.IsPasswordSystemGenerated,
+			Lastname:                  user.Lastname,
+			Password:                  sql.NullString{String: hashedPassword, Valid: true},
+			Username:                  user.Username,
+			Phone:                     user.Phone,
+		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to update account")
+		}
+		log.WithFields(fields).Info("Successfully changed password...")
+
+	}()
+	go func() {
+		err := env.HelloProfileDb.UpdateResolvedLogin(context.Background(), user.ID)
+		if err != nil {
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured clearing failed user logins after successful login...")
+		}
+		log.WithFields(fields).Info("Successsfully updated failed logins ")
+
+	}()
+	resetResponse := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+	}
+	c.JSON(http.StatusOK, resetResponse)
+	return err
+}
+
 func (env *Env) Feedback(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application"), "function": "Feedback"}
 	log.WithFields(fields).Info("Password Reset Request received")
