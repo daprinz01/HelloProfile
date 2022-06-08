@@ -120,6 +120,8 @@ func (env *Env) Login(c echo.Context) (err error) {
 				Lastname:                  user.Lastname.String,
 				Username:                  user.Username.String,
 				Phone:                     user.Phone.String,
+				Country:                   user.City.String,
+				City:                      user.City.String,
 				Profiles:                  <-profiles,
 			},
 		}
