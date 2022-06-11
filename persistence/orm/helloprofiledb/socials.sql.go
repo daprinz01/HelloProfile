@@ -5,7 +5,6 @@ package helloprofiledb
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/google/uuid"
 )
@@ -101,18 +100,18 @@ func (q *Queries) GetProfileSocial(ctx context.Context, id uuid.UUID) (ProfileSo
 
 const getProfileSocials = `-- name: GetProfileSocials :many
 select a.username, b.name, b.placeholder, b.image_url, a."order", a.socials_id, a.profile_id, a.id from profile_socials a 
-left join socials b on a.socials_id = b.id and a.profile_id = $1
+inner join socials b on a.socials_id = b.id and a.profile_id = $1
 `
 
 type GetProfileSocialsRow struct {
-	Username    string         `json:"username"`
-	Name        sql.NullString `json:"name"`
-	Placeholder sql.NullString `json:"placeholder"`
-	ImageUrl    sql.NullString `json:"image_url"`
-	Order       int32          `json:"order"`
-	SocialsID   uuid.UUID      `json:"socials_id"`
-	ProfileID   uuid.UUID      `json:"profile_id"`
-	ID          uuid.UUID      `json:"id"`
+	Username    string    `json:"username"`
+	Name        string    `json:"name"`
+	Placeholder string    `json:"placeholder"`
+	ImageUrl    string    `json:"image_url"`
+	Order       int32     `json:"order"`
+	SocialsID   uuid.UUID `json:"socials_id"`
+	ProfileID   uuid.UUID `json:"profile_id"`
+	ID          uuid.UUID `json:"id"`
 }
 
 func (q *Queries) GetProfileSocials(ctx context.Context, profileID uuid.UUID) ([]GetProfileSocialsRow, error) {
