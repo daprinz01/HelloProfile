@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -41,7 +42,7 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 			c.JSON(http.StatusNotFound, errorResponse)
 			return err
 		}
-		if c.QueryParam("type") == "default" {
+		if strings.ToLower(c.QueryParam("type")) == "default" {
 			var profile models.Profile
 			log.WithFields(fields).Info(`All profiles %v`, profiles)
 			for _, value := range profiles {
@@ -66,6 +67,29 @@ func (env *Env) GetProfiles(c echo.Context) (err error) {
 
 		}
 		return err
+	} else if strings.ToLower(c.QueryParam("type")) == "template" {
+		templateProfile := os.Getenv("PROFILE_TEMPLATES")
+		if templateProfile == "" {
+			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+			errorResponse.ErrorMessage = util.NO_RECORD_FOUND_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("No template profile configured")
+			c.JSON(http.StatusNotFound, errorResponse)
+			return err
+		}
+		templateProfileIDs := strings.Split(templateProfile, ",")
+		profilesChan := make(chan models.Profile)
+		var profiles []models.Profile
+		for _, templateID := range templateProfileIDs {
+			templateGuid := uuid.MustParse(templateID)
+			env.getProfile(templateGuid, profilesChan, fields)
+			profiles = append(profiles, <-profilesChan)
+		}
+		response := &models.SuccessResponse{
+			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+			ResponseDetails: profiles,
+		}
+		c.JSON(http.StatusOK, response)
 	} else {
 		profiles, err := env.HelloProfileDb.GetAllProfiles(context.Background())
 		if err != nil {
