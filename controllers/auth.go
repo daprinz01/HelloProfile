@@ -1059,7 +1059,7 @@ func (env *Env) Feedback(c echo.Context) (err error) {
 		To:      []models.EmailAddress{{Email: os.Getenv("SMTP_USER"), Name: "Support"}},
 		CC:      []models.EmailAddress{{Email: "daprinz.op@gmail.com", Name: "Prince Okechukwu"}, {Email: "calveen.chikezie@gmail.com", Name: "Kelvin Chikezie"}, {Email: "amehugochukwu@gmail.com", Name: "Julius Ameh"}},
 		Subject: util.FEEDBACK_SUBJECT,
-		Message: fmt.Sprintf(util.FEEDBACK_MESSAGE, request.Sender, request.Message, strings.Join(request.AttachmentUrl, "</br>")),
+		Message: fmt.Sprintf(util.FEEDBACK_MESSAGE, request.Sender, request.Message, strings.Join(request.AttachmentUrl, "<br>")),
 	}
 	emailRequestBytes, _ := json.Marshal(emailRequest)
 	emailRequestReader := bytes.NewReader(emailRequestBytes)
