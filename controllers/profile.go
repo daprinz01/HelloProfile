@@ -227,6 +227,102 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 
 }
 
+// AddProfile is used create a new profile
+func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
+
+	errorResponse := new(models.Errormessage)
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddProfile"}
+	log.WithFields(fields).Info("Add profile from template request received...")
+
+	email := c.Request().Header.Get("email")
+	request := new(models.AddProfileFromTemplateRequest)
+	if err = c.Bind(request); err != nil {
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: email, Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found while trying to add profile")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Fetching profile %v to add to user %s", request.TemplateID, user.Email))
+	profilesChan := make(chan models.Profile)
+	env.getProfile(request.TemplateID, profilesChan, fields)
+	profile := <-profilesChan
+
+	log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, profile))
+	dbAddContactResult, _ := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
+		Address: profile.ContactBlock.Address,
+		Email:   profile.ContactBlock.Email,
+		Phone:   profile.ContactBlock.Phone,
+		Website: profile.ContactBlock.Website,
+	})
+	dbAddBasicResult, _ := env.HelloProfileDb.AddBasicBlock(context.Background(), helloprofiledb.AddBasicBlockParams{
+		Bio:             profile.Basic.Bio,
+		Fullname:        profile.Basic.Fullname,
+		Title:           profile.Basic.Title,
+		CoverColour:     sql.NullString{String: profile.Basic.CoverColour, Valid: true},
+		CoverPhotoUrl:   sql.NullString{String: profile.Basic.CoverPhotoUrl, Valid: true},
+		ProfilePhotoUrl: sql.NullString{String: profile.Basic.ProfilePhotoUrl, Valid: true},
+	})
+	dbProfileAddResult, _ := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+		BasicBlockID:   uuid.NullUUID{UUID: dbAddBasicResult.ID, Valid: true},
+		ContactBlockID: uuid.NullUUID{UUID: dbAddContactResult.ID, Valid: true},
+		Font:           profile.Font,
+		IsDefault:      profile.IsDefault,
+		PageColor:      profile.PageColor,
+		ProfileName:    profile.ProfileName,
+		Status:         profile.Status,
+		UserID:         user.ID,
+	})
+	for _, content := range profile.Contents {
+		_, _ = env.HelloProfileDb.AddProfileContent(context.Background(), helloprofiledb.AddProfileContentParams{
+			CallToActionID: content.CallToActionID,
+			ContentID:      content.ContentID,
+			Description:    content.Description,
+			DisplayTitle:   content.Title,
+			Order:          content.Order,
+			Title:          content.Title,
+			Url:            content.Url,
+			ProfileID:      dbProfileAddResult.ID,
+		})
+	}
+	for _, social := range profile.Socials {
+		_, _ = env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
+			Username:  social.Username,
+			SocialsID: social.SocialsID,
+			ProfileID: social.ProfileID,
+			Order:     social.Order,
+		})
+	}
+
+	if err != nil {
+		errorResponse.Errorcode = util.SQL_ERROR_CODE
+		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added profile template %v to user %s", request.TemplateID, user.Email))
+
+	response := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+		ResponseDetails: dbProfileAddResult.ID,
+	}
+	c.JSON(http.StatusOK, response)
+	return err
+
+}
+
 // UpdateProfile is used udpate a profile
 func (env *Env) UpdateProfile(c echo.Context) (err error) {
 

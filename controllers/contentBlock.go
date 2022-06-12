@@ -49,16 +49,17 @@ func (env *Env) AddContentBlock(c echo.Context) (err error) {
 		}
 
 		log.WithFields(fields).Info(fmt.Sprintf("Content block to add to profile %s : %v", profileId, request))
-		dbContent := new(helloprofiledb.AddProfileContentParams)
-		dbContent.CallToActionID = request.CallToActionID
-		dbContent.ContentID = request.ContentID
-		dbContent.Description = request.Description
-		dbContent.DisplayTitle = request.Title
-		dbContent.Order = request.Order
-		dbContent.Title = request.Title
-		dbContent.Url = request.Url
-		dbContent.ProfileID = profileId
-		dbAddContentResult, err := env.HelloProfileDb.AddProfileContent(context.Background(), *dbContent)
+
+		dbAddContentResult, err := env.HelloProfileDb.AddProfileContent(context.Background(), helloprofiledb.AddProfileContentParams{
+			CallToActionID: request.CallToActionID,
+			ContentID:      request.ContentID,
+			Description:    request.Description,
+			DisplayTitle:   request.Title,
+			Order:          request.Order,
+			Title:          request.Title,
+			Url:            request.Url,
+			ProfileID:      profileId,
+		})
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

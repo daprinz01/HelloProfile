@@ -55,12 +55,13 @@ func (env *Env) AddContactBlock(c echo.Context) (err error) {
 		}
 
 		log.WithFields(fields).Info(fmt.Sprintf("Contact block to add to profile %s : %v", profileId, request))
-		dbContact := new(helloprofiledb.AddContactBlockParams)
-		dbContact.Address = request.Address
-		dbContact.Email = request.Email
-		dbContact.Phone = request.Phone
-		dbContact.Website = request.Website
-		dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), *dbContact)
+
+		dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
+			Address: request.Address,
+			Email:   request.Email,
+			Phone:   request.Phone,
+			Website: request.Website,
+		})
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

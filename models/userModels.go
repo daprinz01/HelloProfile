@@ -125,3 +125,7 @@ type SaveProfileRequest struct {
 	ProfileId     uuid.UUID `json:"profileId,omitempty"`
 	IsTermsAgreed bool      `json:"isTermsAgreed,omitempty"`
 }
+
+type AddProfileFromTemplateRequest struct {
+	TemplateID uuid.UUID `json:"templateId,omitempty"`
+}
