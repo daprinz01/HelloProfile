@@ -153,6 +153,14 @@ func (env *Env) GetProfile(c echo.Context) (err error) {
 		profilesChan := make(chan models.Profile)
 		env.getProfile(checkProfileID, profilesChan, fields)
 		profile := <-profilesChan
+
+		if profile.ID == uuid.Nil {
+			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+			errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found")
+			c.JSON(http.StatusNotFound, errorResponse)
+			return err
+		}
 		response := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
@@ -312,9 +320,9 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 		UserID:         user.ID,
 	})
 	if err != nil {
-		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding profile from template %v for user %s", profile.ID, user.Email))
+		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while updating profile from template %v for user %s", profile.ID, user.Email))
 	}
-	log.WithFields(fields).Info(fmt.Sprintf("Successfully added profile %v from template %v for user %s", dbProfileAddResult.ID, profile.ID, user.Email))
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated profile %v from template %v for user %s with contact block ID and social block ID", dbProfileAddResult.ID, profile.ID, user.Email))
 
 	for _, content := range profile.Contents {
 		dbAddContentResult, err := env.HelloProfileDb.AddProfileContent(context.Background(), helloprofiledb.AddProfileContentParams{
