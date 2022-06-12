@@ -193,9 +193,9 @@ func main() {
 	//Profile operations
 	apiNoAuth.GET("/profile", env.GetProfiles)
 	apiNoAuth.GET("/profile/:profileId", env.GetProfile)
-	apiAuth.POST("/profile/:email", env.AddProfile)
+	apiAuth.POST("/profile", env.AddProfile)
 	apiAuth.PUT("/profile", env.UpdateProfile)
-	apiAuth.PUT("/profile", env.DeleteProfile)
+	apiAuth.DELETE("/profile", env.DeleteProfile)
 	apiAuth.PUT("/profile/url", env.UpdateProfileUrl)
 
 	// User Role operations

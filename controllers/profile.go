@@ -178,59 +178,53 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddProfile"}
 	log.WithFields(fields).Info("Add profile request received...")
 
-	if c.Param("email") != "" {
-		request := new(models.Profile)
-		if err = c.Bind(request); err != nil {
-			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
-			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: c.Param("email"), Valid: true})
-		if err != nil {
-			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
-			errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found while trying to add profile")
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-		log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, request))
-
-		dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
-			BasicBlockID:   uuid.NullUUID{UUID: request.Basic.ID, Valid: true},
-			ContactBlockID: uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true},
-			Font:           request.Font,
-			IsDefault:      request.IsDefault,
-			PageColor:      request.PageColor,
-			ProfileName:    request.ProfileName,
-			Status:         request.Status,
-			UserID:         user.ID,
-		})
-		if err != nil {
-			errorResponse.Errorcode = util.SQL_ERROR_CODE
-			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-
-		log.WithFields(fields).Info("Successfully added profile")
-
-		response := &models.SuccessResponse{
-			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
-			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-			ResponseDetails: dbProfileAddResult.ID,
-		}
-		c.JSON(http.StatusOK, response)
-		return err
-	} else {
+	email := c.Request().Header.Get("email")
+	request := new(models.Profile)
+	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Email was not passed in the url params")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: email, Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found while trying to add profile")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, request))
+
+	dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+		BasicBlockID:   uuid.NullUUID{UUID: request.Basic.ID, Valid: true},
+		ContactBlockID: uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true},
+		Font:           request.Font,
+		IsDefault:      request.IsDefault,
+		PageColor:      request.PageColor,
+		ProfileName:    request.ProfileName,
+		Status:         request.Status,
+		UserID:         user.ID,
+	})
+	if err != nil {
+		errorResponse.Errorcode = util.SQL_ERROR_CODE
+		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	log.WithFields(fields).Info("Successfully added profile")
+
+	response := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+		ResponseDetails: dbProfileAddResult.ID,
+	}
+	c.JSON(http.StatusOK, response)
+	return err
+
 }
 
 // UpdateProfile is used udpate a profile
