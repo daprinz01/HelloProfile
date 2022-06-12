@@ -258,13 +258,17 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 	profile := <-profilesChan
 
 	log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, profile))
-	dbAddContactResult, _ := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
+	dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
 		Address: profile.ContactBlock.Address,
 		Email:   profile.ContactBlock.Email,
 		Phone:   profile.ContactBlock.Phone,
 		Website: profile.ContactBlock.Website,
 	})
-	dbAddBasicResult, _ := env.HelloProfileDb.AddBasicBlock(context.Background(), helloprofiledb.AddBasicBlockParams{
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding contact block from template %v for user %s from profile with ID %v", profile.ContactBlock.ID, user.Email, profile.ID))
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added contact block %v from template %v for user %s", dbAddContactResult.ID, profile.ID, user.Email))
+	dbAddBasicResult, err := env.HelloProfileDb.AddBasicBlock(context.Background(), helloprofiledb.AddBasicBlockParams{
 		Bio:             profile.Basic.Bio,
 		Fullname:        profile.Basic.Fullname,
 		Title:           profile.Basic.Title,
@@ -272,7 +276,12 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 		CoverPhotoUrl:   sql.NullString{String: profile.Basic.CoverPhotoUrl, Valid: true},
 		ProfilePhotoUrl: sql.NullString{String: profile.Basic.ProfilePhotoUrl, Valid: true},
 	})
-	dbProfileAddResult, _ := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding basic block from template %v for user %s from profile with ID %v", profile.Basic.ID, user.Email, profile.ID))
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added basic block %v from template %v for user %s", dbAddBasicResult.ID, profile.ID, user.Email))
+
+	dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
 		BasicBlockID:   uuid.NullUUID{UUID: dbAddBasicResult.ID, Valid: true},
 		ContactBlockID: uuid.NullUUID{UUID: dbAddContactResult.ID, Valid: true},
 		Font:           profile.Font,
@@ -282,8 +291,13 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 		Status:         profile.Status,
 		UserID:         user.ID,
 	})
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding profile from template %v for user %s", profile.ID, user.Email))
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added profile %v from template %v for user %s", dbProfileAddResult.ID, profile.ID, user.Email))
+
 	for _, content := range profile.Contents {
-		_, _ = env.HelloProfileDb.AddProfileContent(context.Background(), helloprofiledb.AddProfileContentParams{
+		dbAddContentResult, err := env.HelloProfileDb.AddProfileContent(context.Background(), helloprofiledb.AddProfileContentParams{
 			CallToActionID: content.CallToActionID,
 			ContentID:      content.ContentID,
 			Description:    content.Description,
@@ -293,14 +307,24 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 			Url:            content.Url,
 			ProfileID:      dbProfileAddResult.ID,
 		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding content from template %v for user %s from profile with ID %v", content.ID, user.Email, profile.ID))
+		}
+		log.WithFields(fields).Info(fmt.Sprintf("Successfully added contact %v from template %v for user %s", dbAddContentResult.ID, profile.ID, user.Email))
+
 	}
 	for _, social := range profile.Socials {
-		_, _ = env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
+		dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
 			Username:  social.Username,
 			SocialsID: social.SocialsID,
 			ProfileID: social.ProfileID,
 			Order:     social.Order,
 		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding socials from template %v for user %s from profile with ID %v", social.ID, user.Email, profile.ID))
+		}
+		log.WithFields(fields).Info(fmt.Sprintf("Successfully added social block %v from template %v for user %s", dbAddSocialsResult.ID, profile.ID, user.Email))
+
 	}
 
 	if err != nil {
