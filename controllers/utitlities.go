@@ -114,9 +114,9 @@ func (env *Env) getSocails(profileID uuid.UUID, socials chan []models.Socials, f
 	for _, value := range dbSocials {
 		social := models.Socials{
 			Username:    value.Username,
-			Name:        value.Name.String,
-			Placeholder: value.Placeholder.String,
-			ImageUrl:    value.ImageUrl.String,
+			Name:        value.Name,
+			Placeholder: value.Placeholder,
+			ImageUrl:    value.ImageUrl,
 			Order:       value.Order,
 			SocialsID:   value.SocialsID,
 			ProfileID:   value.ProfileID,

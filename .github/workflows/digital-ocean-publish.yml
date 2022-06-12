@@ -1,3 +1,5 @@
+name: DigitalOcean Kubernetes Deployment
+
 on:
   push:
     branches:
@@ -14,14 +16,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Checkout main
+    - name: Checkout develop
       uses: actions/checkout@v2
 
-    - name: Update SHA
-      run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/site/_meta
+    # - name: Update SHA
+    #   run: echo $GITHUB_SHA > $GITHUB_WORKSPACE/site/_meta
 
     - name: Build container image
-      run: docker build -t registry.digitalocean.com/asb/helloprofile:$(echo $GITHUB_SHA | head -c7) .
+      run: docker build -t registry.digitalocean.com/helloprofile/helloprofile:$(echo $GITHUB_SHA | head -c7) .
 
     - name: Install doctl
       uses: digitalocean/action-doctl@v2
@@ -32,13 +34,13 @@ jobs:
       run: doctl registry login --expiry-seconds 600
 
     - name: Push image to DigitalOcean Container Registry
-      run: docker push registry.digitalocean.com/asb/helloprofile:$(echo $GITHUB_SHA | head -c7)
+      run: docker push registry.digitalocean.com/helloprofile/helloprofile:$(echo $GITHUB_SHA | head -c7)
 
     - name: Update deployment file
-      run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|registry.digitalocean.com/asb/helloprofile:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
+      run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|registry.digitalocean.com/helloprofile/helloprofile:'${TAG}'|' $GITHUB_WORKSPACE/kubernetes/deployment.yml
 
     - name: Save DigitalOcean kubeconfig with short-lived credentials
-      run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 actions-example-k8s-1-18
+      run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 k8s-helloprofile-test
 
     - name: Deploy secrets to DigitalOcean Kubernetes
       run: kubectl apply -f $GITHUB_WORKSPACE/kubernetes/secrets.yml

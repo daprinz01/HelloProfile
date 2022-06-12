@@ -17,7 +17,7 @@ delete from socials where id=$1;
 
 -- name: GetProfileSocials :many
 select a.username, b.name, b.placeholder, b.image_url, a."order", a.socials_id, a.profile_id, a.id from profile_socials a 
-left join socials b on a.socials_id = b.id and a.profile_id = $1;
+inner join socials b on a.socials_id = b.id and a.profile_id = $1;
 
 -- name: GetProfileSocial :one
 select * from profile_socials where id=$1;

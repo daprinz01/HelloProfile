@@ -76,6 +76,12 @@ type ResetPasswordRequest struct {
 	NewPassword string `json:"newPassword,omitempty"`
 }
 
+// ChangePasswordRequest is used to change the user's password with new password
+type ChangePasswordRequest struct {
+	OldPassword string `json:"oldPassword"`
+	NewPassword string `json:"newPassword"`
+}
+
 // GoogleClaims -
 type GoogleClaims struct {
 	Email         string `json:"email"`
@@ -89,7 +95,7 @@ type GoogleJWT struct {
 	GoogleJWT string `json:"token"`
 }
 type FeedbackRequest struct {
-	Sender        string `json:"sender,omitempty"`
-	Message       string `json:"message,omitempty"`
-	AttachmentUrl string `json:"attachmentUrl,omitempty"`
+	Sender        string   `json:"sender,omitempty"`
+	Message       string   `json:"message,omitempty"`
+	AttachmentUrl []string `json:"attachments,omitempty"`
 }
