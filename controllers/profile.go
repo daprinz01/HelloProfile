@@ -256,8 +256,28 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 	profilesChan := make(chan models.Profile)
 	env.getProfile(request.TemplateID, profilesChan, fields)
 	profile := <-profilesChan
-
 	log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, profile))
+
+	dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+		Font:        profile.Font,
+		IsDefault:   profile.IsDefault,
+		PageColor:   profile.PageColor,
+		ProfileName: profile.ProfileName,
+		Status:      profile.Status,
+		UserID:      user.ID,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "uc_profiles") {
+			errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_CODE
+			errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
+		} else {
+			errorResponse.Errorcode = util.SQL_ERROR_CODE
+			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		}
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
 	dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
 		Address: profile.ContactBlock.Address,
 		Email:   profile.ContactBlock.Email,
@@ -281,7 +301,7 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 	}
 	log.WithFields(fields).Info(fmt.Sprintf("Successfully added basic block %v from template %v for user %s", dbAddBasicResult.ID, profile.ID, user.Email))
 
-	dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+	err = env.HelloProfileDb.UpdateProfile(context.Background(), helloprofiledb.UpdateProfileParams{
 		BasicBlockID:   uuid.NullUUID{UUID: dbAddBasicResult.ID, Valid: true},
 		ContactBlockID: uuid.NullUUID{UUID: dbAddContactResult.ID, Valid: true},
 		Font:           profile.Font,
