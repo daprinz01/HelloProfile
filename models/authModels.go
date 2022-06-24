@@ -43,9 +43,9 @@ type UserDetail struct {
 	LanguageName              string    `json:"languageName,omitempty"`
 	TimezoneName              string    `json:"timezoneName,omitempty"`
 	Zone                      string    `json:"zone,omitempty"`
-	Profiles                  []Profile `json:"profiles,omitempty"`
 	Country                   string    `json:"country,omitempty"`
 	City                      string    `json:"city,omitempty"`
+	Profiles                  []Profile `json:"profiles,omitempty"`
 }
 
 // RefreshResponse is used to send success message for a successful refresh of auth token

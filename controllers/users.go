@@ -95,9 +95,9 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 			Lastname:                  user.Lastname.String,
 			Username:                  user.Username.String,
 			Phone:                     user.Phone.String,
-			Profiles:                  <-profiles,
 			Country:                   user.Country.String,
 			City:                      user.City.String,
+			Profiles:                  <-profiles,
 		},
 	}
 	c.JSON(http.StatusOK, response)
