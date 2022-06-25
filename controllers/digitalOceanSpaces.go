@@ -38,7 +38,7 @@ func UploadFile(fields log.Fields, fileName string, file io.ReadSeeker) error {
 		Body:   file,
 		ACL:    aws.String("public-read"),
 		Metadata: map[string]*string{
-			"x-amz-meta-my-key": aws.String(os.Getenv("SPACES_KEY")),
+			"x-amz-meta-my-key": aws.String(os.Getenv("SPACES_SECRET")),
 		},
 	}
 	s3Client, err := ConfigureClient(fields)
