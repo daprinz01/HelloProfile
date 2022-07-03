@@ -288,8 +288,8 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 	}
 	dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
 		Address: profile.ContactBlock.Address,
-		Email:   profile.ContactBlock.Email,
-		Phone:   profile.ContactBlock.Phone,
+		Email:   user.Email,
+		Phone:   user.Phone.String,
 		Website: profile.ContactBlock.Website,
 	})
 	if err != nil {
@@ -345,7 +345,7 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 		dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
 			Username:  social.Username,
 			SocialsID: social.SocialsID,
-			ProfileID: social.ProfileID,
+			ProfileID: dbProfileAddResult.ID,
 			Order:     social.Order,
 		})
 		if err != nil {
