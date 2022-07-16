@@ -186,7 +186,7 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddProfile"}
 	log.WithFields(fields).Info("Add profile request received...")
 
-	email := c.Request().Header.Get("email")
+	email := strings.ToLower(c.Request().Header.Get("email"))
 	request := new(models.Profile)
 	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
@@ -243,7 +243,7 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddProfile"}
 	log.WithFields(fields).Info("Add profile from template request received...")
 
-	email := c.Request().Header.Get("email")
+	email := strings.ToLower(c.Request().Header.Get("email"))
 	request := new(models.AddProfileFromTemplateRequest)
 	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE

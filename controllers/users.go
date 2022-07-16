@@ -56,7 +56,7 @@ func (env *Env) GetUser(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend"}
 	log.WithFields(fields).Info("Get User Request received")
 
-	email := c.Request().Header.Get("email")
+	email := strings.ToLower(c.Request().Header.Get("email"))
 	errorResponse := new(models.Errormessage)
 
 	if err != nil {
