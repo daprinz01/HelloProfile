@@ -55,14 +55,15 @@ func (env *Env) AddBasicBlock(c echo.Context) (err error) {
 			return err
 		}
 		log.WithFields(fields).Info(fmt.Sprintf("Basic block to add to profile %s : %v", profileId, request))
-		dbBasic := new(helloprofiledb.AddBasicBlockParams)
-		dbBasic.Bio = request.Bio
-		dbBasic.Fullname = request.Fullname
-		dbBasic.Title = request.Title
-		dbBasic.CoverColour = sql.NullString{String: request.CoverColour, Valid: true}
-		dbBasic.CoverPhotoUrl = sql.NullString{String: request.CoverPhotoUrl, Valid: true}
-		dbBasic.ProfilePhotoUrl = sql.NullString{String: request.ProfilePhotoUrl, Valid: true}
-		dbAddBasicResult, err := env.HelloProfileDb.AddBasicBlock(context.Background(), *dbBasic)
+
+		dbAddBasicResult, err := env.HelloProfileDb.AddBasicBlock(context.Background(), helloprofiledb.AddBasicBlockParams{
+			Bio:             request.Bio,
+			Fullname:        request.Fullname,
+			Title:           request.Title,
+			CoverColour:     sql.NullString{String: request.CoverColour, Valid: true},
+			CoverPhotoUrl:   sql.NullString{String: request.CoverPhotoUrl, Valid: true},
+			ProfilePhotoUrl: sql.NullString{String: request.ProfilePhotoUrl, Valid: true},
+		})
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE
 			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE

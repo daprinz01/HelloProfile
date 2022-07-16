@@ -39,6 +39,7 @@ DB_HOST=drona.db.elephantsql.com DB_PORT=5432 DB_USER=iuyegkoq \
   GOOGLE_CLIENT_ID_ANDROID=954287935322-7nmsff5amchso29k2csvpsqrjqgkjv1l.apps.googleusercontent.com \
   GOOGLE_APPLICATION_CREDENTIALS=/usr/local/bin/gcp-storage-config.json GCP_BUCKET_NAME=helloprofile-test GCP_BUCKET_PROJECT_ID=bionic-region-347614 \
   GCP_UPLOAD_PATH=test/ GCP_PUBLIC_HOST=http://storage.googleapis.com \
-  PROFILE_TEMPLATES=c49450f6-e1bb-43de-9b4f-519fabb0eb6e,b1fefdcb-caca-4b16-baf6-b5bf21a54356,2234ef30-b756-403c-958e-b56e11038d1a,1fea9c1e-8911-4a99-a522-1310fb99e74c
-
+  PROFILE_TEMPLATES=c49450f6-e1bb-43de-9b4f-519fabb0eb6e,b1fefdcb-caca-4b16-baf6-b5bf21a54356,2234ef30-b756-403c-958e-b56e11038d1a,1fea9c1e-8911-4a99-a522-1310fb99e74c \
+  SPACES_KEY=key SPACES_SECRET=secret DIGITAL_OCEAN_SPACES_ENDPOINT=https://fra1.digitaloceanspaces.com DIGITAL_OCEAN_SPACE_NAME=helloprofile \
+  DIGITAL_OCEAN_SPACES_CDN=https://helloprofile.fra1.cdn.digitaloceanspaces.com
 CMD ["/usr/local/bin/app", "--help"]

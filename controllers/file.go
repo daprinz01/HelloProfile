@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -37,11 +38,21 @@ func (env *Env) UploadFile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	err = env.Uploader.UploadFile(blobFile, file.Filename)
+	var size int64 = file.Size
+	buffer := make([]byte, size)
+	_, err = blobFile.Read(buffer)
 	if err != nil {
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to upload file")
-		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
-		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		errorResponse.Errorcode = util.FILE_UPLOAD_ERROR_CODE
+		errorResponse.ErrorMessage = util.FILE_UPLOAD_ERROR_MESSAGE
+		c.JSON(http.StatusInternalServerError, errorResponse)
+		return err
+	}
+	err = UploadFile(fields, file.Filename, bytes.NewReader(buffer))
+	if err != nil {
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to upload file")
+		errorResponse.Errorcode = util.FILE_UPLOAD_ERROR_CODE
+		errorResponse.ErrorMessage = util.FILE_UPLOAD_ERROR_MESSAGE
 		c.JSON(http.StatusInternalServerError, errorResponse)
 		return err
 	}
@@ -50,7 +61,7 @@ func (env *Env) UploadFile(c echo.Context) (err error) {
 	response := &models.SuccessResponse{
 		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-		ResponseDetails: fmt.Sprintf("%s/%s/%s%s", os.Getenv("GCP_PUBLIC_HOST"), os.Getenv("GCP_BUCKET_NAME"), os.Getenv("GCP_UPLOAD_PATH"), file.Filename),
+		ResponseDetails: fmt.Sprintf("%s/%s", os.Getenv("DIGITAL_OCEAN_SPACES_CDN"), file.Filename),
 	}
 	c.JSON(http.StatusOK, response)
 	return err

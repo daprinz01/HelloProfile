@@ -153,6 +153,14 @@ func (env *Env) GetProfile(c echo.Context) (err error) {
 		profilesChan := make(chan models.Profile)
 		env.getProfile(checkProfileID, profilesChan, fields)
 		profile := <-profilesChan
+
+		if profile.ID == uuid.Nil {
+			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+			errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile was not found")
+			c.JSON(http.StatusNotFound, errorResponse)
+			return err
+		}
 		response := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
 			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
@@ -178,59 +186,193 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddProfile"}
 	log.WithFields(fields).Info("Add profile request received...")
 
-	if c.Param("email") != "" {
-		request := new(models.Profile)
-		if err = c.Bind(request); err != nil {
-			errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
-			errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: c.Param("email"), Valid: true})
-		if err != nil {
-			errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
-			errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found while trying to add profile")
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-		log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, request))
-
-		dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
-			BasicBlockID:   uuid.NullUUID{UUID: request.Basic.ID, Valid: true},
-			ContactBlockID: uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true},
-			Font:           request.Font,
-			IsDefault:      request.IsDefault,
-			PageColor:      request.PageColor,
-			ProfileName:    request.ProfileName,
-			Status:         request.Status,
-			UserID:         user.ID,
-		})
-		if err != nil {
-			errorResponse.Errorcode = util.SQL_ERROR_CODE
-			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
-			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
-			c.JSON(http.StatusBadRequest, errorResponse)
-			return err
-		}
-
-		log.WithFields(fields).Info("Successfully added profile")
-
-		response := &models.SuccessResponse{
-			ResponseCode:    util.SUCCESS_RESPONSE_CODE,
-			ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
-			ResponseDetails: dbProfileAddResult.ID,
-		}
-		c.JSON(http.StatusOK, response)
-		return err
-	} else {
+	email := strings.ToLower(c.Request().Header.Get("email"))
+	request := new(models.Profile)
+	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
 		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
-		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Email was not passed in the url params")
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: email, Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found while trying to add profile")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, request))
+
+	dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+		BasicBlockID:   uuid.NullUUID{UUID: request.Basic.ID, Valid: true},
+		ContactBlockID: uuid.NullUUID{UUID: request.ContactBlock.ID, Valid: true},
+		Font:           request.Font,
+		IsDefault:      request.IsDefault,
+		PageColor:      request.PageColor,
+		ProfileName:    request.ProfileName,
+		Status:         request.Status,
+		UserID:         user.ID,
+	})
+	if err != nil {
+		errorResponse.Errorcode = util.SQL_ERROR_CODE
+		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	log.WithFields(fields).Info("Successfully added profile")
+
+	response := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+		ResponseDetails: dbProfileAddResult.ID,
+	}
+	c.JSON(http.StatusOK, response)
+	return err
+
+}
+
+// AddProfile is used create a new profile
+func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
+
+	errorResponse := new(models.Errormessage)
+
+	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddProfile"}
+	log.WithFields(fields).Info("Add profile from template request received...")
+
+	email := strings.ToLower(c.Request().Header.Get("email"))
+	request := new(models.AddProfileFromTemplateRequest)
+	if err = c.Bind(request); err != nil {
+		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
+		errorResponse.ErrorMessage = util.MODEL_VALIDATION_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to marshal request")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: email, Valid: true})
+	if err != nil {
+		errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
+		errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("User was not found while trying to add profile")
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Fetching profile %v to add to user %s", request.TemplateID, user.Email))
+	profilesChan := make(chan models.Profile)
+	env.getProfile(request.TemplateID, profilesChan, fields)
+	profile := <-profilesChan
+	log.WithFields(fields).Info(fmt.Sprintf("Profile to add to user %s : %v", user.Email, profile))
+
+	dbProfileAddResult, err := env.HelloProfileDb.AddProfile(context.Background(), helloprofiledb.AddProfileParams{
+		Font:        profile.Font,
+		IsDefault:   profile.IsDefault,
+		PageColor:   profile.PageColor,
+		ProfileName: profile.ProfileName,
+		Status:      profile.Status,
+		UserID:      user.ID,
+	})
+	if err != nil {
+		if strings.Contains(err.Error(), "uc_profiles") {
+			errorResponse.Errorcode = util.DUPLICATE_RECORD_ERROR_CODE
+			errorResponse.ErrorMessage = util.DUPLICATE_RECORD_ERROR_MESSAGE
+		} else {
+			errorResponse.Errorcode = util.SQL_ERROR_CODE
+			errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		}
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+	dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
+		Address: profile.ContactBlock.Address,
+		Email:   user.Email,
+		Phone:   user.Phone.String,
+		Website: profile.ContactBlock.Website,
+	})
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding contact block from template %v for user %s from profile with ID %v", profile.ContactBlock.ID, user.Email, profile.ID))
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added contact block %v from template %v for user %s", dbAddContactResult.ID, profile.ID, user.Email))
+	dbAddBasicResult, err := env.HelloProfileDb.AddBasicBlock(context.Background(), helloprofiledb.AddBasicBlockParams{
+		Bio:             profile.Basic.Bio,
+		Fullname:        profile.Basic.Fullname,
+		Title:           profile.Basic.Title,
+		CoverColour:     sql.NullString{String: profile.Basic.CoverColour, Valid: true},
+		CoverPhotoUrl:   sql.NullString{String: profile.Basic.CoverPhotoUrl, Valid: true},
+		ProfilePhotoUrl: sql.NullString{String: profile.Basic.ProfilePhotoUrl, Valid: true},
+	})
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding basic block from template %v for user %s from profile with ID %v", profile.Basic.ID, user.Email, profile.ID))
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added basic block %v from template %v for user %s", dbAddBasicResult.ID, profile.ID, user.Email))
+
+	err = env.HelloProfileDb.UpdateProfile(context.Background(), helloprofiledb.UpdateProfileParams{
+		BasicBlockID:   uuid.NullUUID{UUID: dbAddBasicResult.ID, Valid: true},
+		ContactBlockID: uuid.NullUUID{UUID: dbAddContactResult.ID, Valid: true},
+		Font:           profile.Font,
+		IsDefault:      profile.IsDefault,
+		PageColor:      profile.PageColor,
+		ProfileName:    profile.ProfileName,
+		Status:         profile.Status,
+		UserID:         user.ID,
+	})
+	if err != nil {
+		log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while updating profile from template %v for user %s", profile.ID, user.Email))
+	}
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully updated profile %v from template %v for user %s with contact block ID and social block ID", dbProfileAddResult.ID, profile.ID, user.Email))
+
+	for _, content := range profile.Contents {
+		dbAddContentResult, err := env.HelloProfileDb.AddProfileContent(context.Background(), helloprofiledb.AddProfileContentParams{
+			CallToActionID: content.CallToActionID,
+			ContentID:      content.ContentID,
+			Description:    content.Description,
+			DisplayTitle:   content.Title,
+			Order:          content.Order,
+			Title:          content.Title,
+			Url:            content.Url,
+			ProfileID:      dbProfileAddResult.ID,
+		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding content from template %v for user %s from profile with ID %v", content.ID, user.Email, profile.ID))
+		}
+		log.WithFields(fields).Info(fmt.Sprintf("Successfully added contact %v from template %v for user %s", dbAddContentResult.ID, profile.ID, user.Email))
+
+	}
+	for _, social := range profile.Socials {
+		dbAddSocialsResult, err := env.HelloProfileDb.AddProfileSocial(context.Background(), helloprofiledb.AddProfileSocialParams{
+			Username:  social.Username,
+			SocialsID: social.SocialsID,
+			ProfileID: dbProfileAddResult.ID,
+			Order:     social.Order,
+		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Error occured while adding socials from template %v for user %s from profile with ID %v", social.ID, user.Email, profile.ID))
+		}
+		log.WithFields(fields).Info(fmt.Sprintf("Successfully added social block %v from template %v for user %s", dbAddSocialsResult.ID, profile.ID, user.Email))
+
+	}
+
+	if err != nil {
+		errorResponse.Errorcode = util.SQL_ERROR_CODE
+		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
+		c.JSON(http.StatusBadRequest, errorResponse)
+		return err
+	}
+
+	log.WithFields(fields).Info(fmt.Sprintf("Successfully added profile template %v to user %s", request.TemplateID, user.Email))
+
+	response := &models.SuccessResponse{
+		ResponseCode:    util.SUCCESS_RESPONSE_CODE,
+		ResponseMessage: util.SUCCESS_RESPONSE_MESSAGE,
+		ResponseDetails: dbProfileAddResult.ID,
+	}
+	c.JSON(http.StatusOK, response)
+	return err
+
 }
 
 // UpdateProfile is used udpate a profile

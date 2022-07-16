@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -20,7 +21,7 @@ func (env *Env) GetContacts(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "GetProfiles"}
 	log.WithFields(fields).Info("Get contacts belonging to the logged in user request received...")
-	email := c.Request().Header.Get("email")
+	email := strings.ToLower(c.Request().Header.Get("email"))
 	if email != "" {
 		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: email, Valid: true})
 		if err != nil {
@@ -68,7 +69,7 @@ func (env *Env) AddContact(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "AddContact"}
 	log.WithFields(fields).Info("Add contact request received...")
-	email := c.Request().Header.Get("email")
+	email := strings.ToLower(c.Request().Header.Get("email"))
 	if email != "" {
 		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: email, Valid: true})
 		if err != nil {
@@ -120,7 +121,7 @@ func (env *Env) DeleteContact(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": "backend", "function": "DeleteContact"}
 	log.WithFields(fields).Info("Delete contact request received...")
-	email := c.Request().Header.Get("email")
+	email := strings.ToLower(c.Request().Header.Get("email"))
 	if c.QueryParam("id") != "" && email != "" {
 		user, err := env.HelloProfileDb.GetUser(context.Background(), sql.NullString{String: email, Valid: true})
 		if err != nil {
