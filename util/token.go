@@ -51,8 +51,8 @@ func GenerateJWT(email string, role []string) (response string, refreshToken str
 	authExpirationTime, _ := time.ParseDuration(os.Getenv("TOKEN_LIFESPAN"))
 	expirationTime := time.Now().Add(authExpirationTime)
 	claims := &models.Claims{
-		Email: email,
-		Role:  strings.Join(role, ":"),
+		Email: strings.ToLower(email),
+		Role:  strings.ToLower(strings.Join(role, ":")),
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 			Issuer:    "helloprofile.io",
