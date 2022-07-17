@@ -1,8 +1,14 @@
 package controllers
 
 import (
+	"context"
+	"path/filepath"
+
 	"cloud.google.com/go/storage"
+	firebase "firebase.google.com/go"
+	"firebase.google.com/go/auth"
 	"github.com/google/uuid"
+	"google.golang.org/api/option"
 	"helloprofile.com/persistence/orm/helloprofiledb"
 )
 
@@ -10,6 +16,7 @@ import (
 type Env struct {
 	HelloProfileDb *helloprofiledb.Queries
 	Uploader       *ClientUploader
+	FirebaseClient *auth.Client
 }
 
 type ClientUploader struct {
@@ -44,4 +51,23 @@ func (env *Env) GetBoolValue(request, user bool) bool {
 		return user
 	}
 	return request
+}
+
+func SetupFirebase() *auth.Client {
+	serviceAccountKeyFilePath, err := filepath.Abs("./serviceAccountKey.json")
+	if err != nil {
+		panic("Unable to load serviceAccountKeys.json file")
+	}
+	opt := option.WithCredentialsFile(serviceAccountKeyFilePath)
+	//Firebase admin SDK initialization
+	app, err := firebase.NewApp(context.Background(), nil, opt)
+	if err != nil {
+		panic("Firebase load error")
+	}
+	//Firebase Auth
+	auth, err := app.Auth(context.Background())
+	if err != nil {
+		panic("Firebase load error")
+	}
+	return auth
 }
