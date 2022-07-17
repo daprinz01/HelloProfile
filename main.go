@@ -117,8 +117,8 @@ func main() {
 		ProjectID:  os.Getenv("GCP_BUCKET_PROJECT_ID"),
 		UploadPath: os.Getenv("GCP_UPLOAD_PATH"),
 	}
-
-	env := &controllers.Env{HelloProfileDb: helloprofiledatabase, Uploader: uploader}
+	firebaseClient := controllers.SetupFirebase()
+	env := &controllers.Env{HelloProfileDb: helloprofiledatabase, Uploader: uploader, FirebaseClient: firebaseClient}
 	log.WithFields(fields).Warn("Successfully connected to database!")
 	// // Create Server and Route Handlers
 	// r := mux.NewRouter()
@@ -181,7 +181,7 @@ func main() {
 	auth.POST("/login", env.Login)
 	auth.POST("/otp/verify", env.VerifyOtp)
 	auth.POST("/login/google", env.GoogleLoginHandler)
-
+	auth.POST("/login/firebase", env.ValidateFireBaseToken)
 	// User operations
 	apiAdminAuth.GET("/user", env.GetUsers)
 	apiNoAuth.GET("/user/:username/check", env.CheckAvailability)
