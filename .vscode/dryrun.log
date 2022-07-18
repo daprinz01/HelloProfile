@@ -1,0 +1,5 @@
+make.exe --dry-run --always-make --keep-going --print-directory
+make: Entering directory 'c:/Users/PrinceOkechukwu/source/repos/personal/go/HelloProfile'
+migrate create -ext sql -dir persistence/migrations -seq init_schema
+make: Leaving directory 'c:/Users/PrinceOkechukwu/source/repos/personal/go/HelloProfile'
+ 

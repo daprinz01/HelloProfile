@@ -1,0 +1,1 @@
+{"buildTargets":[".PHONY","dockerBuild","dockerRun","initialiseGoModules","installSqlc","migrationCreate","migrationDown","migrationForce","migrationGoto","migrationUp","migrationUpTest","sqlcGenerate"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

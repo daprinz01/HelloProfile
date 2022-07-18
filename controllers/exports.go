@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 
 	"cloud.google.com/go/storage"
@@ -67,7 +68,7 @@ func SetupFirebase() *auth.Client {
 	//Firebase Auth
 	auth, err := app.Auth(context.Background())
 	if err != nil {
-		panic("Firebase load error")
+		panic(fmt.Sprintf("Firebase load error => %s", err))
 	}
 	return auth
 }
