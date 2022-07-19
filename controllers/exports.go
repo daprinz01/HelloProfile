@@ -55,7 +55,7 @@ func (env *Env) GetBoolValue(request, user bool) bool {
 }
 
 func SetupFirebase() *auth.Client {
-	serviceAccountKeyFilePath := os.Getenv("FIREBASE_SERVICE_ACCOUNT_CREDENTIAL_PATH")
+	serviceAccountKeyFilePath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	opt := option.WithCredentialsFile(serviceAccountKeyFilePath)
 	//Firebase admin SDK initialization
 	app, err := firebase.NewApp(context.Background(), nil, opt)
