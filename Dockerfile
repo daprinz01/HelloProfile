@@ -23,7 +23,6 @@ RUN apk --no-cache update && \
       touch /usr/local/bin/log/helloprofile.log
       
 COPY --from=builder /opt/app/app /usr/local/bin/app
-COPY --from=builder /opt/app/gcp-storage-config.json /usr/local/bin/gcp-storage-config.json
  
 
 ENV LOG_FILE_LOCATION=/usr/local/bin/log/helloprofile.log \
