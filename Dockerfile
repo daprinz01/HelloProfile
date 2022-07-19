@@ -36,7 +36,7 @@ DB_HOST=drona.db.elephantsql.com DB_PORT=5432 DB_USER=iuyegkoq \
   GOOGLE_CLIENT_ID_WEB=954287935322-knnckb397mk1uo98av0km4cbgilrm4ke.apps.googleusercontent.com \
   GOOGLE_CLIENT_ID_IOS=954287935322-o578q1g3qa042rs91p50rb92t75on2e4.apps.googleusercontent.com \
   GOOGLE_CLIENT_ID_ANDROID=954287935322-7nmsff5amchso29k2csvpsqrjqgkjv1l.apps.googleusercontent.com \
-  FIREBASE_SERVICE_ACCOUNT_CREDENTIAL_PATH=/usr/local/bin/serviceAccountKey.json \
+  FIREBASE_SERVICE_ACCOUNT_CREDENTIAL_PATH=/usr/local/config/serviceAccountKey.json \
   PROFILE_TEMPLATES=c49450f6-e1bb-43de-9b4f-519fabb0eb6e,b1fefdcb-caca-4b16-baf6-b5bf21a54356,2234ef30-b756-403c-958e-b56e11038d1a,1fea9c1e-8911-4a99-a522-1310fb99e74c \
   SPACES_KEY=key SPACES_SECRET=secret DIGITAL_OCEAN_SPACES_ENDPOINT=https://fra1.digitaloceanspaces.com DIGITAL_OCEAN_SPACE_NAME=helloprofile \
   DIGITAL_OCEAN_SPACES_CDN=https://helloprofile.fra1.cdn.digitaloceanspaces.com
