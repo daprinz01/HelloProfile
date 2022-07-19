@@ -43,6 +43,8 @@ jobs:
     - name: Save DigitalOcean kubeconfig with short-lived credentials
       run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 k8s-helloprofile-test
 
+    - name: Deploy configmap volume to DigitalOcean Kubernetes
+      run: kubectl apply -f $GITHUB_WORKSPACE/kubernetes/hcm-service-account-key.yml
     - name: Deploy secrets to DigitalOcean Kubernetes
       run: kubectl apply -f $GITHUB_WORKSPACE/kubernetes/secrets.yml
     - name: Deploy pod to DigitalOcean Kubernetes
@@ -53,6 +55,7 @@ jobs:
       run: kubectl apply -f $GITHUB_WORKSPACE/kubernetes/ingress.yml
     - name: Deploy persistent volume to DigitalOcean Kubernetes
       run: kubectl apply -f $GITHUB_WORKSPACE/kubernetes/helloprofile-logs.yml
+    
       
 
     - name: Verify deployment
