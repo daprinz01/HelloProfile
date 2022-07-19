@@ -43,7 +43,7 @@ jobs:
     - name: Save DigitalOcean kubeconfig with short-lived credentials
       run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 k8s-helloprofile-test
 
-    - name: Deploy configmap volume to DigitalOcean Kubernetes
+    - name: Deploy configmap to DigitalOcean Kubernetes
       run: kubectl apply -f $GITHUB_WORKSPACE/kubernetes/cm-service-account-key.yml
     - name: Deploy secrets to DigitalOcean Kubernetes
       run: kubectl apply -f $GITHUB_WORKSPACE/kubernetes/secrets.yml
