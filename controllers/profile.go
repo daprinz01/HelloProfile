@@ -444,6 +444,23 @@ func (env *Env) DeleteProfile(c echo.Context) (err error) {
 			c.JSON(http.StatusBadRequest, errorResponse)
 			return err
 		}
+		profile, err := env.HelloProfileDb.GetProfile(context.Background(), id)
+		if err != nil {
+			errorResponse.Errorcode = util.PROFILE_NOT_FOUND_ERROR_CODE
+			errorResponse.ErrorMessage = util.PROFILE_NOT_FOUND_ERROR_MESSAGE
+			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Profile deletion failed: Profile not found")
+			c.JSON(http.StatusBadRequest, errorResponse)
+			return err
+		}
+		if profile.BasicBlockID.Valid {
+			_ = env.HelloProfileDb.DeleteBasicBlock(context.Background(), profile.BasicBlockID.UUID)
+		}
+		if profile.ContactBlockID.Valid {
+			_ = env.HelloProfileDb.DeleteContactBlock(context.Background(), profile.ContactBlockID.UUID)
+		}
+		_ = env.HelloProfileDb.DeleteProfileContents(context.Background(), profile.ID)
+		_ = env.HelloProfileDb.DeleteProfileSocials(context.Background(), profile.ID)
+		_ = env.HelloProfileDb.DeleteSavedProfiles(context.Background(), profile.ID)
 		err = env.HelloProfileDb.DeleteProfile(context.Background(), id)
 		if err != nil {
 			errorResponse.Errorcode = util.SQL_ERROR_CODE

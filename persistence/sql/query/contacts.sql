@@ -22,3 +22,6 @@ RETURNING
 
 -- name: DeleteContact :exec
 delete from contacts where user_id=$1 and profile_id=$2;
+
+-- name: DeleteProfileContact :exec
+delete from contacts where profile_id=$1;

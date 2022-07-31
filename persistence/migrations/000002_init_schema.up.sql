@@ -10,4 +10,4 @@ create table saved_profiles(
 );
 
 ALTER TABLE "saved_profiles"
-    ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id");
+    ADD FOREIGN KEY ("profile_id") REFERENCES "profiles" ("id") ON DELETE CASCADE;

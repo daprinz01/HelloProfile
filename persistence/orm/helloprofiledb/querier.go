@@ -33,11 +33,15 @@ type Querier interface {
 	DeleteEmailVerification(ctx context.Context, otp string) error
 	DeleteOtp(ctx context.Context, arg DeleteOtpParams) error
 	DeleteProfile(ctx context.Context, id uuid.UUID) error
+	DeleteProfileContact(ctx context.Context, profileID uuid.UUID) error
 	DeleteProfileContent(ctx context.Context, id uuid.UUID) error
+	DeleteProfileContents(ctx context.Context, profileID uuid.UUID) error
 	DeleteProfileSocial(ctx context.Context, id uuid.UUID) error
+	DeleteProfileSocials(ctx context.Context, profileID uuid.UUID) error
 	DeleteRefreshToken(ctx context.Context, token string) error
 	DeleteRoles(ctx context.Context, name string) error
 	DeleteSavedProfile(ctx context.Context, id uuid.UUID) error
+	DeleteSavedProfiles(ctx context.Context, profileID uuid.UUID) error
 	DeleteSocial(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, email string) error
 	DeleteUserLogin(ctx context.Context, userID uuid.UUID) error

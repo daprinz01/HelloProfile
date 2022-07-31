@@ -15,5 +15,8 @@ where id=$7;
 -- name: DeleteProfileContent :exec
 delete from profile_contents CASCADE where id=$1;
 
+-- name: DeleteProfileContents :exec
+delete from profile_contents where profile_id=$1;
+
 -- name: GetAllContentTypes :many
 select * from content;

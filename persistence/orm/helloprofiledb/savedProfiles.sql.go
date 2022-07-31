@@ -52,6 +52,15 @@ func (q *Queries) DeleteSavedProfile(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const deleteSavedProfiles = `-- name: DeleteSavedProfiles :exec
+delete from saved_profiles where profile_id=$1
+`
+
+func (q *Queries) DeleteSavedProfiles(ctx context.Context, profileID uuid.UUID) error {
+	_, err := q.exec(ctx, q.deleteSavedProfilesStmt, deleteSavedProfiles, profileID)
+	return err
+}
+
 const getSavedProfile = `-- name: GetSavedProfile :one
 select id, profile_id, first_name, last_name, email, is_added from saved_profiles where 
 id = $1  limit 1

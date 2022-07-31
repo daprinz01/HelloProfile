@@ -72,6 +72,15 @@ func (q *Queries) DeleteProfileSocial(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const deleteProfileSocials = `-- name: DeleteProfileSocials :exec
+delete from profile_socials where profile_id=$1
+`
+
+func (q *Queries) DeleteProfileSocials(ctx context.Context, profileID uuid.UUID) error {
+	_, err := q.exec(ctx, q.deleteProfileSocialsStmt, deleteProfileSocials, profileID)
+	return err
+}
+
 const deleteSocial = `-- name: DeleteSocial :exec
 delete from socials where id=$1
 `

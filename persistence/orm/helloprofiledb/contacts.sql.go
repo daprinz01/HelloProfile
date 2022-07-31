@@ -42,6 +42,15 @@ func (q *Queries) DeleteContact(ctx context.Context, arg DeleteContactParams) er
 	return err
 }
 
+const deleteProfileContact = `-- name: DeleteProfileContact :exec
+delete from contacts where profile_id=$1
+`
+
+func (q *Queries) DeleteProfileContact(ctx context.Context, profileID uuid.UUID) error {
+	_, err := q.exec(ctx, q.deleteProfileContactStmt, deleteProfileContact, profileID)
+	return err
+}
+
 const getAllContacts = `-- name: GetAllContacts :many
 SELECT
     id, user_id, profile_id

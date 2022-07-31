@@ -91,11 +91,20 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteProfileStmt, err = db.PrepareContext(ctx, deleteProfile); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteProfile: %w", err)
 	}
+	if q.deleteProfileContactStmt, err = db.PrepareContext(ctx, deleteProfileContact); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteProfileContact: %w", err)
+	}
 	if q.deleteProfileContentStmt, err = db.PrepareContext(ctx, deleteProfileContent); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteProfileContent: %w", err)
 	}
+	if q.deleteProfileContentsStmt, err = db.PrepareContext(ctx, deleteProfileContents); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteProfileContents: %w", err)
+	}
 	if q.deleteProfileSocialStmt, err = db.PrepareContext(ctx, deleteProfileSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteProfileSocial: %w", err)
+	}
+	if q.deleteProfileSocialsStmt, err = db.PrepareContext(ctx, deleteProfileSocials); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteProfileSocials: %w", err)
 	}
 	if q.deleteRefreshTokenStmt, err = db.PrepareContext(ctx, deleteRefreshToken); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteRefreshToken: %w", err)
@@ -105,6 +114,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.deleteSavedProfileStmt, err = db.PrepareContext(ctx, deleteSavedProfile); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSavedProfile: %w", err)
+	}
+	if q.deleteSavedProfilesStmt, err = db.PrepareContext(ctx, deleteSavedProfiles); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteSavedProfiles: %w", err)
 	}
 	if q.deleteSocialStmt, err = db.PrepareContext(ctx, deleteSocial); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSocial: %w", err)
@@ -400,14 +412,29 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteProfileStmt: %w", cerr)
 		}
 	}
+	if q.deleteProfileContactStmt != nil {
+		if cerr := q.deleteProfileContactStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteProfileContactStmt: %w", cerr)
+		}
+	}
 	if q.deleteProfileContentStmt != nil {
 		if cerr := q.deleteProfileContentStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteProfileContentStmt: %w", cerr)
 		}
 	}
+	if q.deleteProfileContentsStmt != nil {
+		if cerr := q.deleteProfileContentsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteProfileContentsStmt: %w", cerr)
+		}
+	}
 	if q.deleteProfileSocialStmt != nil {
 		if cerr := q.deleteProfileSocialStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteProfileSocialStmt: %w", cerr)
+		}
+	}
+	if q.deleteProfileSocialsStmt != nil {
+		if cerr := q.deleteProfileSocialsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteProfileSocialsStmt: %w", cerr)
 		}
 	}
 	if q.deleteRefreshTokenStmt != nil {
@@ -423,6 +450,11 @@ func (q *Queries) Close() error {
 	if q.deleteSavedProfileStmt != nil {
 		if cerr := q.deleteSavedProfileStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSavedProfileStmt: %w", cerr)
+		}
+	}
+	if q.deleteSavedProfilesStmt != nil {
+		if cerr := q.deleteSavedProfilesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteSavedProfilesStmt: %w", cerr)
 		}
 	}
 	if q.deleteSocialStmt != nil {
@@ -777,11 +809,15 @@ type Queries struct {
 	deleteEmailVerificationStmt         *sql.Stmt
 	deleteOtpStmt                       *sql.Stmt
 	deleteProfileStmt                   *sql.Stmt
+	deleteProfileContactStmt            *sql.Stmt
 	deleteProfileContentStmt            *sql.Stmt
+	deleteProfileContentsStmt           *sql.Stmt
 	deleteProfileSocialStmt             *sql.Stmt
+	deleteProfileSocialsStmt            *sql.Stmt
 	deleteRefreshTokenStmt              *sql.Stmt
 	deleteRolesStmt                     *sql.Stmt
 	deleteSavedProfileStmt              *sql.Stmt
+	deleteSavedProfilesStmt             *sql.Stmt
 	deleteSocialStmt                    *sql.Stmt
 	deleteUserStmt                      *sql.Stmt
 	deleteUserLoginStmt                 *sql.Stmt
@@ -869,11 +905,15 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteEmailVerificationStmt:         q.deleteEmailVerificationStmt,
 		deleteOtpStmt:                       q.deleteOtpStmt,
 		deleteProfileStmt:                   q.deleteProfileStmt,
+		deleteProfileContactStmt:            q.deleteProfileContactStmt,
 		deleteProfileContentStmt:            q.deleteProfileContentStmt,
+		deleteProfileContentsStmt:           q.deleteProfileContentsStmt,
 		deleteProfileSocialStmt:             q.deleteProfileSocialStmt,
+		deleteProfileSocialsStmt:            q.deleteProfileSocialsStmt,
 		deleteRefreshTokenStmt:              q.deleteRefreshTokenStmt,
 		deleteRolesStmt:                     q.deleteRolesStmt,
 		deleteSavedProfileStmt:              q.deleteSavedProfileStmt,
+		deleteSavedProfilesStmt:             q.deleteSavedProfilesStmt,
 		deleteSocialStmt:                    q.deleteSocialStmt,
 		deleteUserStmt:                      q.deleteUserStmt,
 		deleteUserLoginStmt:                 q.deleteUserLoginStmt,

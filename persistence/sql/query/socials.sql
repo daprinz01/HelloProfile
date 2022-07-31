@@ -31,3 +31,6 @@ update profile_socials set username=$1, "order"=$2 where id = $3;
 
 -- name: DeleteProfileSocial :exec
 delete from profile_socials where id=$1;
+
+-- name: DeleteProfileSocials :exec
+delete from profile_socials where profile_id=$1;

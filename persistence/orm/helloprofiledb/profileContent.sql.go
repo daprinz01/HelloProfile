@@ -60,6 +60,15 @@ func (q *Queries) DeleteProfileContent(ctx context.Context, id uuid.UUID) error 
 	return err
 }
 
+const deleteProfileContents = `-- name: DeleteProfileContents :exec
+delete from profile_contents where profile_id=$1
+`
+
+func (q *Queries) DeleteProfileContents(ctx context.Context, profileID uuid.UUID) error {
+	_, err := q.exec(ctx, q.deleteProfileContentsStmt, deleteProfileContents, profileID)
+	return err
+}
+
 const getAllContentTypes = `-- name: GetAllContentTypes :many
 select id, type, image_url from content
 `

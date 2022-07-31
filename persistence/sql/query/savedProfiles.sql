@@ -24,3 +24,6 @@ returning *;
 
 -- name: DeleteSavedProfile :exec
 delete from saved_profiles where id = $1 ;
+
+-- name: DeleteSavedProfiles :exec
+delete from saved_profiles where profile_id=$1;
