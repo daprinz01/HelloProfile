@@ -32,6 +32,7 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 			go env.getContactBlock(value.ContactBlockID.UUID, contactBlock, fields)
 			go env.getSocails(value.ID, socials, fields)
 			go env.getContents(value.ID, contents, fields)
+			profileName := env.GetValue(value.Url.String, value.ID.String())
 			profileList = append(profileList, models.Profile{
 				ID:           value.ID,
 				Status:       value.Status,
@@ -39,7 +40,7 @@ func (env *Env) getProfiles(userID uuid.UUID, profiles chan []models.Profile, fi
 				PageColor:    value.PageColor,
 				Font:         value.Font,
 				IsDefault:    value.IsDefault,
-				Url:          env.GetValue(fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), value.Url.String), fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), value.ID)),
+				Url:          fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), profileName),
 				Basic:        <-basicBlock,
 				ContactBlock: <-contactBlock,
 				Socials:      <-socials,
@@ -70,6 +71,7 @@ func (env *Env) getProfile(profileID uuid.UUID, profile chan models.Profile, fie
 		go env.getContactBlock(dbProfile.ContactBlockID.UUID, contactBlock, fields)
 		go env.getSocails(dbProfile.ID, socials, fields)
 		go env.getContents(dbProfile.ID, contents, fields)
+		profileName := env.GetValue(dbProfile.Url.String, dbProfile.ID.String())
 		profileResult = models.Profile{
 			ID:           dbProfile.ID,
 			Status:       dbProfile.Status,
@@ -77,7 +79,7 @@ func (env *Env) getProfile(profileID uuid.UUID, profile chan models.Profile, fie
 			PageColor:    dbProfile.PageColor,
 			Font:         dbProfile.Font,
 			IsDefault:    dbProfile.IsDefault,
-			Url:          env.GetValue(dbProfile.Url.String, fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), dbProfile.ID)),
+			Url:          fmt.Sprintf("%s/%s", os.Getenv("HELLOPROFILE_HOME"), profileName),
 			Basic:        <-basicBlock,
 			ContactBlock: <-contactBlock,
 			Socials:      <-socials,

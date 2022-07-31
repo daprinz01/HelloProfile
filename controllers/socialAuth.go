@@ -17,7 +17,7 @@ import (
 func (env Env) GoogleLoginHandler(c echo.Context) (err error) {
 
 	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
-	log.WithFields(fields).Info("Login Request received")
+	log.WithFields(fields).Info("Login with google request received")
 
 	errorResponse := new(models.Errormessage)
 	request := new(models.GoogleJWT)
@@ -233,7 +233,7 @@ func (env Env) GoogleLoginHandler(c echo.Context) (err error) {
 // AuthMiddleware : to verify all authorized operations
 func (env Env) ValidateFireBaseToken(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
-	log.WithFields(fields).Info("Login Request received")
+	log.WithFields(fields).Info("Login with firebase request received")
 
 	errorResponse := new(models.Errormessage)
 	firebaseAuth := env.FirebaseClient
