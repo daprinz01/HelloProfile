@@ -46,13 +46,14 @@ func VerifyHash(correctPassword string, plainPassword string) bool {
 var jwtSecretKey = []byte("AnyString")
 
 // GenerateJWT func will used to create the JWT while signing in and signing out
-func GenerateJWT(email string, role []string) (response string, refreshToken string, err error) {
+func GenerateJWT(email string, role []string, extraData string) (response string, refreshToken string, err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "function": "VerifyHash"}
 	authExpirationTime, _ := time.ParseDuration(os.Getenv("TOKEN_LIFESPAN"))
 	expirationTime := time.Now().Add(authExpirationTime)
 	claims := &models.Claims{
 		Email: strings.ToLower(email),
 		Role:  strings.ToLower(strings.Join(role, ":")),
+		Extra: extraData,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 			Issuer:    "helloprofile.io",

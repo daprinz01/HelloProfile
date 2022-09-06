@@ -17,6 +17,7 @@ type LoginRequest struct {
 type Claims struct {
 	Email string `json:"email,omitempty"`
 	Role  string `json:"role,omitempty"`
+	Extra string `json:"extra,omitempty"`
 	jwt.StandardClaims
 }
 

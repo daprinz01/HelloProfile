@@ -110,7 +110,7 @@ func (env Env) GoogleLoginHandler(c echo.Context) (err error) {
 				}
 				log.WithFields(fields).Info(fmt.Sprintf("Successfully added user to role.. User Role Id: %s", userRole.ID))
 			}()
-			authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"))
+			authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"), "")
 			if err != nil {
 				errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 				errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
@@ -163,7 +163,7 @@ func (env Env) GoogleLoginHandler(c echo.Context) (err error) {
 	}
 
 	log.WithFields(fields).Info(fmt.Sprintf("Generating authentication token for user: %s role: %v...", user.Email, userRoles))
-	authToken, refreshToken, err := util.GenerateJWT(user.Email, userRoles)
+	authToken, refreshToken, err := util.GenerateJWT(user.Email, userRoles, "")
 	if err != nil {
 		errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 		errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
@@ -350,7 +350,7 @@ func (env Env) ValidateFireBaseToken(c echo.Context) (err error) {
 				}
 				log.WithFields(fields).Info(fmt.Sprintf("Successfully added user to role.. User Role Id: %s", userRole.ID))
 			}()
-			authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"))
+			authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"), "")
 			if err != nil {
 				errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 				errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
@@ -403,7 +403,7 @@ func (env Env) ValidateFireBaseToken(c echo.Context) (err error) {
 	}
 
 	log.WithFields(fields).Info(fmt.Sprintf("Generating authentication token for user: %s role: %v...", user.Email, userRoles))
-	authToken, refreshToken, err := util.GenerateJWT(user.Email, userRoles)
+	authToken, refreshToken, err := util.GenerateJWT(user.Email, userRoles, "")
 	if err != nil {
 		errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 		errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE

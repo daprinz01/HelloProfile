@@ -62,7 +62,7 @@ func (env *Env) Login(c echo.Context) (err error) {
 		}
 
 		log.WithFields(fields).Info(fmt.Sprintf("Generating authentication token for user: %s role: %v...", user.Email, userRoles))
-		authToken, refreshToken, err := util.GenerateJWT(user.Email, userRoles)
+		authToken, refreshToken, err := util.GenerateJWT(user.Email, userRoles, "")
 		if err != nil {
 			errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 			errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
@@ -336,7 +336,7 @@ func (env *Env) Register(c echo.Context) (err error) {
 		}
 		log.WithFields(fields).Info(fmt.Sprintf("Successfully added user to role.. User Role Id: %s", userRole.ID))
 	}()
-	authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"))
+	authToken, refreshToken, err := util.GenerateJWT(user.Email, strings.Split(role, ":"), "")
 	if err != nil {
 		errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 		errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
@@ -432,7 +432,7 @@ func (env *Env) RefreshToken(c echo.Context) (err error) {
 	}
 	if !dbRefreshToken.CreatedAt.Add(refreshTokenDuration).Before(time.Now()) {
 		log.WithFields(fields).Info("Generating authentication token...")
-		authToken, refreshToken, err := util.GenerateJWT(verifiedClaims.Email, strings.Split(verifiedClaims.Role, ":"))
+		authToken, refreshToken, err := util.GenerateJWT(verifiedClaims.Email, strings.Split(verifiedClaims.Role, ":"), "")
 		if err != nil {
 			errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 			errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
@@ -799,7 +799,7 @@ func (env *Env) VerifyOtp(c echo.Context) (err error) {
 		}
 
 		log.WithFields(fields).Info(fmt.Sprintf("Generating authentication token for user: %s role: %s...", request.Email, strings.Join(userRoles, ":")))
-		authToken, refreshToken, err := util.GenerateJWT(request.Email, userRoles)
+		authToken, refreshToken, err := util.GenerateJWT(request.Email, userRoles, "otp")
 		if err != nil {
 			errorResponse.Errorcode = util.OPERATION_FAILED_ERROR_CODE
 			errorResponse.ErrorMessage = util.OPERATION_FAILED_ERROR_MESSAGE
@@ -884,7 +884,13 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
-
+	if verifiedClaims.Extra != "otp"{
+		errorResponse.Errorcode = util.INVALID_AUTHENTICATION_SCHEME_ERROR_CODE
+		errorResponse.ErrorMessage = util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE
+		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Token used to reset password is not from ValidateOtp")
+		c.JSON(http.StatusUnauthorized, errorResponse)
+		return err
+	}
 	request := new(models.ResetPasswordRequest)
 	if err = c.Bind(request); err != nil {
 		errorResponse.Errorcode = util.MODEL_VALIDATION_ERROR_CODE
