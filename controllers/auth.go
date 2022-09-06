@@ -927,6 +927,8 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 			Password:                  sql.NullString{String: hashedPassword, Valid: true},
 			Username:                  user.Username,
 			Phone:                     user.Phone,
+			Country:                   user.Country.String,
+			City:                      user.City.String,
 		})
 		if err != nil {
 			log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while trying to update account")
