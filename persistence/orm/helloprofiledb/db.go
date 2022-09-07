@@ -160,6 +160,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getContactsStmt, err = db.PrepareContext(ctx, getContacts); err != nil {
 		return nil, fmt.Errorf("error preparing query GetContacts: %w", err)
 	}
+	if q.getDefaultProfileStmt, err = db.PrepareContext(ctx, getDefaultProfile); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDefaultProfile: %w", err)
+	}
 	if q.getEmailVerificationStmt, err = db.PrepareContext(ctx, getEmailVerification); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEmailVerification: %w", err)
 	}
@@ -243,6 +246,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.isUrlExistsStmt, err = db.PrepareContext(ctx, isUrlExists); err != nil {
 		return nil, fmt.Errorf("error preparing query IsUrlExists: %w", err)
+	}
+	if q.resetOtherDefaultProfilesStmt, err = db.PrepareContext(ctx, resetOtherDefaultProfiles); err != nil {
+		return nil, fmt.Errorf("error preparing query ResetOtherDefaultProfiles: %w", err)
 	}
 	if q.updateBasicBlockStmt, err = db.PrepareContext(ctx, updateBasicBlock); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateBasicBlock: %w", err)
@@ -527,6 +533,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getContactsStmt: %w", cerr)
 		}
 	}
+	if q.getDefaultProfileStmt != nil {
+		if cerr := q.getDefaultProfileStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDefaultProfileStmt: %w", cerr)
+		}
+	}
 	if q.getEmailVerificationStmt != nil {
 		if cerr := q.getEmailVerificationStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getEmailVerificationStmt: %w", cerr)
@@ -665,6 +676,11 @@ func (q *Queries) Close() error {
 	if q.isUrlExistsStmt != nil {
 		if cerr := q.isUrlExistsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing isUrlExistsStmt: %w", cerr)
+		}
+	}
+	if q.resetOtherDefaultProfilesStmt != nil {
+		if cerr := q.resetOtherDefaultProfilesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing resetOtherDefaultProfilesStmt: %w", cerr)
 		}
 	}
 	if q.updateBasicBlockStmt != nil {
@@ -832,6 +848,7 @@ type Queries struct {
 	getContactBlockStmt                 *sql.Stmt
 	getContactCategoryStmt              *sql.Stmt
 	getContactsStmt                     *sql.Stmt
+	getDefaultProfileStmt               *sql.Stmt
 	getEmailVerificationStmt            *sql.Stmt
 	getEmailVerificationsStmt           *sql.Stmt
 	getOtpStmt                          *sql.Stmt
@@ -860,6 +877,7 @@ type Queries struct {
 	getUsersStmt                        *sql.Stmt
 	isProfileExistStmt                  *sql.Stmt
 	isUrlExistsStmt                     *sql.Stmt
+	resetOtherDefaultProfilesStmt       *sql.Stmt
 	updateBasicBlockStmt                *sql.Stmt
 	updateContactBlockStmt              *sql.Stmt
 	updateContactCategoryStmt           *sql.Stmt
@@ -928,6 +946,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getContactBlockStmt:                 q.getContactBlockStmt,
 		getContactCategoryStmt:              q.getContactCategoryStmt,
 		getContactsStmt:                     q.getContactsStmt,
+		getDefaultProfileStmt:               q.getDefaultProfileStmt,
 		getEmailVerificationStmt:            q.getEmailVerificationStmt,
 		getEmailVerificationsStmt:           q.getEmailVerificationsStmt,
 		getOtpStmt:                          q.getOtpStmt,
@@ -956,6 +975,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getUsersStmt:                        q.getUsersStmt,
 		isProfileExistStmt:                  q.isProfileExistStmt,
 		isUrlExistsStmt:                     q.isUrlExistsStmt,
+		resetOtherDefaultProfilesStmt:       q.resetOtherDefaultProfilesStmt,
 		updateBasicBlockStmt:                q.updateBasicBlockStmt,
 		updateContactBlockStmt:              q.updateContactBlockStmt,
 		updateContactCategoryStmt:           q.updateContactCategoryStmt,

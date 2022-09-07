@@ -10,6 +10,12 @@ select * from profiles where id=$1 limit 1;
 -- name: IsProfileExist :one
 select exists(select 1 from profiles where id=$1) AS "exists";
 
+-- name: GetDefaultProfile :one
+select * from profiles where is_default = TRUE and user_id=$1 limit 1;
+
+-- name: ResetOtherDefaultProfiles :exec
+update profiles set is_default = FALSE where user_id=$1 and id != $2;
+
 -- name: AddProfile :one
 insert into profiles(
     user_id,

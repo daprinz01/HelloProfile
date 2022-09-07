@@ -111,6 +111,28 @@ func (q *Queries) GetAllProfiles(ctx context.Context) ([]Profile, error) {
 	return items, nil
 }
 
+const getDefaultProfile = `-- name: GetDefaultProfile :one
+select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, url, is_default from profiles where is_default = TRUE and user_id=$1 limit 1
+`
+
+func (q *Queries) GetDefaultProfile(ctx context.Context, userID uuid.UUID) (Profile, error) {
+	row := q.queryRow(ctx, q.getDefaultProfileStmt, getDefaultProfile, userID)
+	var i Profile
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.BasicBlockID,
+		&i.ContactBlockID,
+		&i.Status,
+		&i.ProfileName,
+		&i.PageColor,
+		&i.Font,
+		&i.Url,
+		&i.IsDefault,
+	)
+	return i, err
+}
+
 const getProfile = `-- name: GetProfile :one
 select id, user_id, basic_block_id, contact_block_id, status, profile_name, page_color, font, url, is_default from profiles where id=$1 limit 1
 `
@@ -202,6 +224,20 @@ func (q *Queries) IsUrlExists(ctx context.Context, url sql.NullString) (bool, er
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const resetOtherDefaultProfiles = `-- name: ResetOtherDefaultProfiles :exec
+update profiles set is_default = FALSE where user_id=$1 and id != $2
+`
+
+type ResetOtherDefaultProfilesParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	ID     uuid.UUID `json:"id"`
+}
+
+func (q *Queries) ResetOtherDefaultProfiles(ctx context.Context, arg ResetOtherDefaultProfilesParams) error {
+	_, err := q.exec(ctx, q.resetOtherDefaultProfilesStmt, resetOtherDefaultProfiles, arg.UserID, arg.ID)
+	return err
 }
 
 const updateProfile = `-- name: UpdateProfile :exec

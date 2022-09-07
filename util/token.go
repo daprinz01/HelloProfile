@@ -103,11 +103,13 @@ func VerifyToken(tokenString string) (verifiedClaims models.VerifiedClaims, err 
 	if token != nil && token.Valid {
 		verifiedClaim.Email = claims.Email
 		verifiedClaim.Role = claims.Role
+		verifiedClaim.Extra = claims.Extra
 		return verifiedClaim, nil
 	}
 	if token != nil && !token.Valid {
 		verifiedClaim.Email = claims.Email
 		verifiedClaim.Role = claims.Role
+		verifiedClaim.Extra = claims.Extra
 		return verifiedClaim, fmt.Errorf("token is not valid")
 	}
 	return verifiedClaim, err

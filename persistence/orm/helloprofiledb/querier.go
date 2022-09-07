@@ -56,6 +56,7 @@ type Querier interface {
 	GetContactBlock(ctx context.Context, id uuid.UUID) (ContactBlock, error)
 	GetContactCategory(ctx context.Context, name string) (ContactCategory, error)
 	GetContacts(ctx context.Context, userID uuid.UUID) ([]Contact, error)
+	GetDefaultProfile(ctx context.Context, userID uuid.UUID) (Profile, error)
 	GetEmailVerification(ctx context.Context, otp string) (EmailVerification, error)
 	GetEmailVerifications(ctx context.Context) ([]EmailVerification, error)
 	GetOtp(ctx context.Context, arg GetOtpParams) (Otp, error)
@@ -84,6 +85,7 @@ type Querier interface {
 	GetUsers(ctx context.Context) ([]UserDetail, error)
 	IsProfileExist(ctx context.Context, id uuid.UUID) (bool, error)
 	IsUrlExists(ctx context.Context, url sql.NullString) (bool, error)
+	ResetOtherDefaultProfiles(ctx context.Context, arg ResetOtherDefaultProfilesParams) error
 	UpdateBasicBlock(ctx context.Context, arg UpdateBasicBlockParams) error
 	UpdateContactBlock(ctx context.Context, arg UpdateContactBlockParams) error
 	UpdateContactCategory(ctx context.Context, arg UpdateContactCategoryParams) error

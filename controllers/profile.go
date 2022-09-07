@@ -222,7 +222,15 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-
+	if request.IsDefault{
+		err = env.HelloProfileDb.ResetOtherDefaultProfiles(context.Background(), helloprofiledb.ResetOtherDefaultProfilesParams{
+			UserID: user.ID,
+			ID: dbProfileAddResult.ID,
+		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Could not reset other profiles for user %s while adding a new default profile", user.Email))
+		}
+	}
 	log.WithFields(fields).Info("Successfully added profile")
 
 	response := &models.SuccessResponse{
@@ -285,6 +293,15 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Error occured while adding profile for user ", user.Email)
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
+	}
+	if profile.IsDefault{
+		err = env.HelloProfileDb.ResetOtherDefaultProfiles(context.Background(), helloprofiledb.ResetOtherDefaultProfilesParams{
+			UserID: user.ID,
+			ID: dbProfileAddResult.ID,
+		})
+		if err != nil {
+			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Could not reset other profiles for user %s while adding a new default profile", user.Email))
+		}
 	}
 	dbAddContactResult, err := env.HelloProfileDb.AddContactBlock(context.Background(), helloprofiledb.AddContactBlockParams{
 		Address: profile.ContactBlock.Address,
@@ -411,6 +428,7 @@ func (env *Env) UpdateProfile(c echo.Context) (err error) {
 		IsDefault:      request.IsDefault,
 		ID:             request.ID,
 	})
+
 	if err != nil {
 		errorResponse.Errorcode = util.SQL_ERROR_CODE
 		errorResponse.ErrorMessage = util.SQL_ERROR_MESSAGE
@@ -418,6 +436,15 @@ func (env *Env) UpdateProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	} else {
+		if request.IsDefault{
+			err = env.HelloProfileDb.ResetOtherDefaultProfiles(context.Background(), helloprofiledb.ResetOtherDefaultProfilesParams{
+				UserID: dbProfile.UserID,
+				ID: dbProfile.ID,
+			})
+			if err != nil {
+				log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Could not reset other profiles for user %s while adding a new default profile", dbProfile.UserID))
+			}
+		}
 		log.WithFields(fields).Info("Successfully updated profile")
 		response := &models.SuccessResponse{
 			ResponseCode:    util.SUCCESS_RESPONSE_CODE,

@@ -23,8 +23,9 @@ type Claims struct {
 
 // VerifiedClaims is the result from verifying claims
 type VerifiedClaims struct {
-	Email string
-	Role  string
+	Email string `json:"email,omitempty"`
+	Role  string `json:"role,omitempty"`
+	Extra string `json:"extra,omitempty"`
 }
 
 // UserDetail is used to create a new User
