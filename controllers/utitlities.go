@@ -218,13 +218,14 @@ func (env *Env) enrichContents(contentResult []helloprofiledb.ProfileContent, ca
 
 func (env *Env) getBasicBlock(id uuid.UUID, basicBlock chan models.Basic, fields log.Fields) {
 	log.WithFields(fields).Info(`Getting the basic block for the user profile `, id)
-	basic := new(models.Basic)
+	var basic models.Basic
 	dbBasic, err := env.HelloProfileDb.GetBasicBlock(context.Background(), id)
 	if err != nil {
 		log.WithFields(fields).WithError(err).Error(`Error occured fetching basic block for user profile `, id)
-		basicBlock <- *basic
+		basicBlock <- basic
 		return
 	}
+
 	basic.Bio = dbBasic.Bio
 	basic.Fullname = dbBasic.Fullname
 	basic.Title = dbBasic.Title
@@ -232,7 +233,7 @@ func (env *Env) getBasicBlock(id uuid.UUID, basicBlock chan models.Basic, fields
 	basic.CoverPhotoUrl = dbBasic.CoverPhotoUrl.String
 	basic.ProfilePhotoUrl = dbBasic.ProfilePhotoUrl.String
 	basic.ID = dbBasic.ID
-	basicBlock <- *basic
+	basicBlock <- basic
 }
 
 func (env *Env) getContactBlock(id uuid.UUID, contactBlock chan models.ContactBlock, fields log.Fields) {
