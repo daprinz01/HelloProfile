@@ -19,9 +19,10 @@ import (
 	"helloprofile.com/util"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/random"
 )
 
-//Login is used to sign users in
+// Login is used to sign users in
 func (env *Env) Login(c echo.Context) (err error) {
 	fields := log.Fields{"microservice": "helloprofile.service", "application": c.Param("application")}
 	log.WithFields(fields).Info("Login Request received")
@@ -253,6 +254,8 @@ func (env *Env) Register(c echo.Context) (err error) {
 	if request.Password != "" {
 		hashedPassword = util.GenerateHash(request.Password)
 
+	} else {
+		hashedPassword = util.GenerateHash(random.New().String(8))
 	}
 	log.WithFields(fields).Info("Successfully hashed password")
 	log.WithFields(fields).Info("Inserting user...")
@@ -884,7 +887,7 @@ func (env *Env) ResetPassword(c echo.Context) (err error) {
 		c.JSON(http.StatusUnauthorized, errorResponse)
 		return err
 	}
-	if verifiedClaims.Extra != "otp"{
+	if verifiedClaims.Extra != "otp" {
 		errorResponse.Errorcode = util.INVALID_AUTHENTICATION_SCHEME_ERROR_CODE
 		errorResponse.ErrorMessage = util.INVALID_AUTHENTICATION_SCHEME_ERROR_MESSAGE
 		log.WithFields(fields).WithError(err).WithFields(log.Fields{"responseCode": errorResponse.Errorcode, "responseDescription": errorResponse.ErrorMessage}).Error("Token used to reset password is not from ValidateOtp")
