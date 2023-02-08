@@ -140,7 +140,7 @@ func (env *Env) GetProfile(c echo.Context) (err error) {
 	if c.Param("profileId") != "" {
 		checkProfileID, err := uuid.Parse(c.Param("profileId"))
 		if err != nil {
-			checkProfileID, err = env.HelloProfileDb.GetProfileIdByProfileUrl(context.Background(), sql.NullString{String: c.Param("profileId"), Valid: true})
+			checkProfileID, err = env.HelloProfileDb.GetProfileIdByProfileUrl(context.Background(), sql.NullString{String: strings.ToLower(c.Param("profileId")), Valid: true})
 			if err != nil {
 				errorResponse.Errorcode = util.NO_RECORD_FOUND_ERROR_CODE
 				errorResponse.ErrorMessage = util.USER_NOT_FOUND_RESPONSE_MESSAGE
@@ -222,10 +222,10 @@ func (env *Env) AddProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	if request.IsDefault{
+	if request.IsDefault {
 		err = env.HelloProfileDb.ResetOtherDefaultProfiles(context.Background(), helloprofiledb.ResetOtherDefaultProfilesParams{
 			UserID: user.ID,
-			ID: dbProfileAddResult.ID,
+			ID:     dbProfileAddResult.ID,
 		})
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Could not reset other profiles for user %s while adding a new default profile", user.Email))
@@ -294,10 +294,10 @@ func (env *Env) AddProfileFromTemplate(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	if profile.IsDefault{
+	if profile.IsDefault {
 		err = env.HelloProfileDb.ResetOtherDefaultProfiles(context.Background(), helloprofiledb.ResetOtherDefaultProfilesParams{
 			UserID: user.ID,
-			ID: dbProfileAddResult.ID,
+			ID:     dbProfileAddResult.ID,
 		})
 		if err != nil {
 			log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Could not reset other profiles for user %s while adding a new default profile", user.Email))
@@ -436,10 +436,10 @@ func (env *Env) UpdateProfile(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	} else {
-		if request.IsDefault{
+		if request.IsDefault {
 			err = env.HelloProfileDb.ResetOtherDefaultProfiles(context.Background(), helloprofiledb.ResetOtherDefaultProfilesParams{
 				UserID: dbProfile.UserID,
-				ID: dbProfile.ID,
+				ID:     dbProfile.ID,
 			})
 			if err != nil {
 				log.WithFields(fields).WithError(err).Error(fmt.Sprintf("Could not reset other profiles for user %s while adding a new default profile", dbProfile.UserID))
@@ -543,7 +543,7 @@ func (env *Env) UpdateProfileUrl(c echo.Context) (err error) {
 		c.JSON(http.StatusBadRequest, errorResponse)
 		return err
 	}
-	isUrlExist, err := env.HelloProfileDb.IsUrlExists(context.Background(), sql.NullString{String: request.ProfileName, Valid: true})
+	isUrlExist, err := env.HelloProfileDb.IsUrlExists(context.Background(), sql.NullString{String: strings.ToLower(request.ProfileName), Valid: true})
 	if err != nil {
 		errorResponse.Errorcode = util.PROFILE_NAME_ALREADY_EXISTS_CODE
 		errorResponse.ErrorMessage = util.PROFILE_NAME_ALREADY_EXISTS_MESSAGE
@@ -560,7 +560,7 @@ func (env *Env) UpdateProfileUrl(c echo.Context) (err error) {
 		return err
 	}
 	err = env.HelloProfileDb.UpdateProfileUrl(context.Background(), helloprofiledb.UpdateProfileUrlParams{
-		Url: sql.NullString{String: request.ProfileName, Valid: true},
+		Url: sql.NullString{String: strings.ToLower(request.ProfileName), Valid: true},
 		ID:  request.ProfileId,
 	})
 	if err != nil {
