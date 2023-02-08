@@ -81,6 +81,7 @@ type Content struct {
 	Title          string       `json:"title,omitempty"`
 	Description    string       `json:"description,omitempty"`
 	Url            string       `json:"url,omitempty"`
+	ImageUrl       string       `json:"imageUrl,omitempty"`
 	Order          int32        `json:"order,omitempty"`
 	Type           string       `json:"type,omitempty"`
 	CallToAction   CallToAction `json:"callToAction,omitempty"`

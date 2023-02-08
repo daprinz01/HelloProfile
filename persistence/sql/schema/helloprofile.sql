@@ -191,6 +191,7 @@ CREATE TABLE "profile_contents" (
     "call_to_action_id" uuid not null,
     "content_id" uuid not null,
     "order" int not null default 0,
+    "image_url" varchar NULL,
     CONSTRAINT "uc_profile_contents" UNIQUE ("title", "profile_id")
 );
 
